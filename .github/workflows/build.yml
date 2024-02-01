@@ -1,0 +1,10 @@
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  build:
+    uses: gardenlinux/package-build/.github/workflows/build.yml@main
+    with:
+      release: ${{ github.ref == 'refs/heads/main' }}
