@@ -1,7 +1,15 @@
+# Getting latest version of openssl in debian 3.1 branch.
 git_src --branch debian/openssl-3.1.5-1.1 https://salsa.debian.org/debian/openssl.git
+
+# Apply upstream patches
 cp patches/*.patch $dir/src/debian/patches/
 cat patches/series >> $dir/src/debian/patches/series
 cat patches/changelog >> $dir/src/debian/patches/changelog
 
+# Edit the control file so it will build aginst the 1443 
+# build environment.
+sed -i 's/dpkg-dev (>= 1.22.5)/dpkg-dev (>= 1.22.4)/' $dir/src/debian/control
+
+# set the corresponding version of the package.
 version_orig=3.1.7
 version="$version_orig-0"
