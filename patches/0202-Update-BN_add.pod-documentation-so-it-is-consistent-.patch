@@ -1,0 +1,71 @@
+From e5c2d56d574ba69821730acfce15c1f172d78648 Mon Sep 17 00:00:00 2001
+From: JulieDzeze1 <jd1230@g.rit.edu>
+Date: Fri, 19 Apr 2024 17:50:19 -0400
+Subject: [PATCH 202/228] Update BN_add.pod documentation so it is consistent
+ with header declarations
+
+CLA: trivial
+
+Reviewed-by: Nicola Tuveri <nic.tuv@gmail.com>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24215)
+
+(cherry picked from commit e77eb1dc0be75c98c53c932c861dd52e8896cc13)
+---
+ doc/man3/BN_add.pod | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/doc/man3/BN_add.pod b/doc/man3/BN_add.pod
+index 35cfdd1495..4d9cb87224 100644
+--- a/doc/man3/BN_add.pod
++++ b/doc/man3/BN_add.pod
+@@ -14,9 +14,9 @@ arithmetic operations on BIGNUMs
+ 
+  int BN_sub(BIGNUM *r, const BIGNUM *a, const BIGNUM *b);
+ 
+- int BN_mul(BIGNUM *r, BIGNUM *a, BIGNUM *b, BN_CTX *ctx);
++ int BN_mul(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx);
+ 
+- int BN_sqr(BIGNUM *r, BIGNUM *a, BN_CTX *ctx);
++ int BN_sqr(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx);
+ 
+  int BN_div(BIGNUM *dv, BIGNUM *rem, const BIGNUM *a, const BIGNUM *d,
+             BN_CTX *ctx);
+@@ -25,25 +25,25 @@ arithmetic operations on BIGNUMs
+ 
+  int BN_nnmod(BIGNUM *r, const BIGNUM *a, const BIGNUM *m, BN_CTX *ctx);
+ 
+- int BN_mod_add(BIGNUM *r, BIGNUM *a, BIGNUM *b, const BIGNUM *m,
++ int BN_mod_add(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *m,
+                 BN_CTX *ctx);
+ 
+- int BN_mod_sub(BIGNUM *r, BIGNUM *a, BIGNUM *b, const BIGNUM *m,
++ int BN_mod_sub(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *m,
+                 BN_CTX *ctx);
+ 
+- int BN_mod_mul(BIGNUM *r, BIGNUM *a, BIGNUM *b, const BIGNUM *m,
++ int BN_mod_mul(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *m,
+                 BN_CTX *ctx);
+ 
+- int BN_mod_sqr(BIGNUM *r, BIGNUM *a, const BIGNUM *m, BN_CTX *ctx);
++ int BN_mod_sqr(BIGNUM *r, const BIGNUM *a, const BIGNUM *m, BN_CTX *ctx);
+ 
+- BIGNUM *BN_mod_sqrt(BIGNUM *in, BIGNUM *a, const BIGNUM *p, BN_CTX *ctx);
++ BIGNUM *BN_mod_sqrt(BIGNUM *in, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx);
+ 
+- int BN_exp(BIGNUM *r, BIGNUM *a, BIGNUM *p, BN_CTX *ctx);
++ int BN_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx);
+ 
+- int BN_mod_exp(BIGNUM *r, BIGNUM *a, const BIGNUM *p,
++ int BN_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
+                 const BIGNUM *m, BN_CTX *ctx);
+ 
+- int BN_gcd(BIGNUM *r, BIGNUM *a, BIGNUM *b, BN_CTX *ctx);
++ int BN_gcd(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx);
+ 
+ =head1 DESCRIPTION
+ 
+-- 
+2.39.5 (Apple Git-154)
+

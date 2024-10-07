@@ -1,0 +1,32 @@
+From c4ecb00823dc0f1a60fac5f2a2b3adbc9b52935d Mon Sep 17 00:00:00 2001
+From: irosay <59870261+irosay@users.noreply.github.com>
+Date: Fri, 10 May 2024 17:37:52 +0100
+Subject: [PATCH 094/228] Release pkey_ctx on initialization failure
+
+CLA: trivial
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24366)
+
+(cherry picked from commit 3e9d933882407a0792dc3466ba9a0d53d40677a7)
+---
+ ssl/statem/statem_srvr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ssl/statem/statem_srvr.c b/ssl/statem/statem_srvr.c
+index 8e493176f6..2afadcf231 100644
+--- a/ssl/statem/statem_srvr.c
++++ b/ssl/statem/statem_srvr.c
+@@ -3134,7 +3134,7 @@ static int tls_process_cke_gost(SSL *s, PACKET *pkt)
+     }
+     if (EVP_PKEY_decrypt_init(pkey_ctx) <= 0) {
+         SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+-        return 0;
++        goto err;
+     }
+     /*
+      * If client certificate is present and is of the same type, maybe
+-- 
+2.39.5 (Apple Git-154)
+

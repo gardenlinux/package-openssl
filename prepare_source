@@ -1,1 +1,5 @@
-apt_src openssl
+git_src --branch debian/openssl-3.1.5-1.1 https://salsa.debian.org/debian/openssl.git
+cp patches/*.patch $dir/src/debian/patches/
+cat patches/series >> $dir/src/debian/patches/series
+cat patches/changelog >> $dir/src/debian/patches/changelog
+

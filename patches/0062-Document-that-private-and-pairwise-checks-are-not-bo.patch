@@ -1,0 +1,34 @@
+From 9ed416bcd06c38c95a02add0a883a2ac9cf08ad6 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Fri, 5 Apr 2024 16:31:05 +0200
+Subject: [PATCH 062/228] Document that private and pairwise checks are not
+ bounded by key size
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Shane Lontis <shane.lontis@oracle.com>
+(Merged from https://github.com/openssl/openssl/pull/24049)
+
+(cherry picked from commit 27005cecc75ec7a22a673d57fc35a11dea30ac0a)
+---
+ doc/man3/EVP_PKEY_check.pod | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/doc/man3/EVP_PKEY_check.pod b/doc/man3/EVP_PKEY_check.pod
+index a16fdbbd50..198a0923c5 100644
+--- a/doc/man3/EVP_PKEY_check.pod
++++ b/doc/man3/EVP_PKEY_check.pod
+@@ -61,6 +61,11 @@ It is not necessary to call these functions after locally calling an approved ke
+ generation method, but may be required for assurance purposes when receiving
+ keys from a third party.
+ 
++The EVP_PKEY_pairwise_check() and EVP_PKEY_private_check() might not be bounded
++by any key size limits as private keys are not expected to be supplied by
++attackers. For that reason they might take an unbounded time if run on
++arbitrarily large keys.
++
+ =head1 RETURN VALUES
+ 
+ All functions return 1 for success or others for failure.
+-- 
+2.39.5 (Apple Git-154)
+

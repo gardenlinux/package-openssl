@@ -1,0 +1,46 @@
+From 549208d1f1175aca5cc1ea989c4e9e4a41bc558c Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Tue, 30 Apr 2024 11:46:26 +0200
+Subject: [PATCH 089/228] Correct top for EC/DSA nonces if BN_DEBUG is on
+
+Otherwise following operations would bail out in bn_check_top().
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+
+(cherry picked from commit a380ae85be287045b1eaa64d23942101a426c080)
+
+(Merged from https://github.com/openssl/openssl/pull/24317)
+---
+ crypto/bn/bn_rand.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/crypto/bn/bn_rand.c b/crypto/bn/bn_rand.c
+index 420909e094..7fcd03a3cb 100644
+--- a/crypto/bn/bn_rand.c
++++ b/crypto/bn/bn_rand.c
+@@ -276,6 +276,10 @@ int ossl_bn_priv_rand_range_fixed_top(BIGNUM *r, const BIGNUM *range,
+             ossl_bn_mask_bits_fixed_top(r, n);
+         }
+         while (BN_ucmp(r, range) >= 0);
++#ifdef BN_DEBUG
++        /* With BN_DEBUG on a fixed top number cannot be returned */
++        bn_correct_top(r);
++#endif
+     }
+ 
+     return 1;
+@@ -372,6 +376,10 @@ int ossl_bn_gen_dsa_nonce_fixed_top(BIGNUM *out, const BIGNUM *range,
+ 
+         if (BN_ucmp(out, range) < 0) {
+             ret = 1;
++#ifdef BN_DEBUG
++            /* With BN_DEBUG on a fixed top number cannot be returned */
++            bn_correct_top(out);
++#endif
+             goto end;
+         }
+     }
+-- 
+2.39.5 (Apple Git-154)
+

@@ -1,0 +1,63 @@
+From 638e8a648c118073fcffa5c3b85d3d15e81b9808 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Mon, 5 Aug 2024 14:49:52 +0200
+Subject: [PATCH 199/228] do_print_ex(): Avoid possible integer overflow
+
+Fixes Coverity 1604657
+Fixes openssl/project#780
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+(Merged from https://github.com/openssl/openssl/pull/25084)
+
+(cherry picked from commit e3e15e77f14cc4026fd456cc8a2b5190b2d79610)
+---
+ crypto/asn1/a_strex.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/crypto/asn1/a_strex.c b/crypto/asn1/a_strex.c
+index b31761aae6..f61612737a 100644
+--- a/crypto/asn1/a_strex.c
++++ b/crypto/asn1/a_strex.c
+@@ -10,6 +10,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include "internal/cryptlib.h"
++#include "internal/sizes.h"
+ #include "crypto/asn1.h"
+ #include <openssl/crypto.h>
+ #include <openssl/x509.h>
+@@ -345,8 +346,10 @@ static int do_print_ex(char_io *io_ch, void *arg, unsigned long lflags,
+ 
+     if (lflags & ASN1_STRFLGS_SHOW_TYPE) {
+         const char *tagname;
++
+         tagname = ASN1_tag2str(type);
+-        outlen += strlen(tagname);
++        /* We can directly cast here as tagname will never be too large. */
++        outlen += (int)strlen(tagname);
+         if (!io_ch(arg, tagname, outlen) || !io_ch(arg, ":", 1))
+             return -1;
+         outlen++;
+@@ -372,7 +375,7 @@ static int do_print_ex(char_io *io_ch, void *arg, unsigned long lflags,
+ 
+     if (type == -1) {
+         len = do_dump(lflags, io_ch, arg, str);
+-        if (len < 0)
++        if (len < 0 || len > INT_MAX - outlen)
+             return -1;
+         outlen += len;
+         return outlen;
+@@ -391,7 +394,7 @@ static int do_print_ex(char_io *io_ch, void *arg, unsigned long lflags,
+     }
+ 
+     len = do_buf(str->data, str->length, type, flags, &quotes, io_ch, NULL);
+-    if (len < 0)
++    if (len < 0 || len > INT_MAX - 2 - outlen)
+         return -1;
+     outlen += len;
+     if (quotes)
+-- 
+2.39.5 (Apple Git-154)
+

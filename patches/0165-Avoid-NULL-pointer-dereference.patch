@@ -1,0 +1,49 @@
+From 188fadc00a35434c4f7dab244af80744c5373222 Mon Sep 17 00:00:00 2001
+From: Radek Krejci <radek.krejci@oracle.com>
+Date: Thu, 21 Mar 2024 13:19:23 +0100
+Subject: [PATCH 165/228] Avoid NULL pointer dereference
+
+Function readbuffer_gets() misses some of the initial checks of its
+arguments. Not checking them can lead to a later NULL pointer
+dereferences.
+
+The checks are now unified with the checks in readbuffer_read()
+function.
+
+CLA: trivial
+Fixes #23915
+
+Signed-off-by: Radek Krejci <radek.krejci@oracle.com>
+
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23918)
+
+(cherry picked from commit c215d75f94fcaa598817e739221f33b71b53fb39)
+---
+ crypto/bio/bf_readbuff.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/crypto/bio/bf_readbuff.c b/crypto/bio/bf_readbuff.c
+index 135ccef83b..62490b9a2b 100644
+--- a/crypto/bio/bf_readbuff.c
++++ b/crypto/bio/bf_readbuff.c
+@@ -222,10 +222,13 @@ static int readbuffer_gets(BIO *b, char *buf, int size)
+     char *p;
+     int i, j;
+ 
+-    if (size == 0)
++    if (buf == NULL || size == 0)
+         return 0;
+     --size; /* the passed in size includes the terminator - so remove it here */
+     ctx = (BIO_F_BUFFER_CTX *)b->ptr;
++
++    if (ctx == NULL || b->next_bio == NULL)
++        return 0;
+     BIO_clear_retry_flags(b);
+ 
+     /* If data is already buffered then use this first */
+-- 
+2.39.5 (Apple Git-154)
+

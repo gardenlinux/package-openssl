@@ -1,0 +1,82 @@
+From 09d90f9c472172ba21493754b18e5596c8a68030 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Viliam=20Lej=C4=8D=C3=ADk?= <lejcik@gmail.com>
+Date: Mon, 19 Feb 2024 21:39:05 +0100
+Subject: [PATCH 039/228] Add NULL check before accessing PKCS7 encrypted
+ algorithm
+
+Printing content of an invalid test certificate causes application crash, because of NULL dereference:
+
+user@user:~/openssl$ openssl pkcs12 -in test/recipes/80-test_pkcs12_data/bad2.p12 -passin pass: -info
+MAC: sha256, Iteration 2048
+MAC length: 32, salt length: 8
+PKCS7 Encrypted data: Segmentation fault (core dumped)
+
+Added test cases for pkcs12 bad certificates
+
+Reviewed-by: Bernd Edlinger <bernd.edlinger@hotmail.de>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23632)
+
+(cherry picked from commit a4cbffcd8998180b98bb9f7ce6065ed37d079d8b)
+---
+ apps/pkcs12.c                 |  6 +++++-
+ test/recipes/80-test_pkcs12.t | 14 +++++++++++++-
+ 2 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/apps/pkcs12.c b/apps/pkcs12.c
+index b442d358f8..af4f9fce04 100644
+--- a/apps/pkcs12.c
++++ b/apps/pkcs12.c
+@@ -855,7 +855,11 @@ int dump_certs_keys_p12(BIO *out, const PKCS12 *p12, const char *pass,
+         } else if (bagnid == NID_pkcs7_encrypted) {
+             if (options & INFO) {
+                 BIO_printf(bio_err, "PKCS7 Encrypted data: ");
+-                alg_print(p7->d.encrypted->enc_data->algorithm);
++                if (p7->d.encrypted == NULL) {
++                    BIO_printf(bio_err, "<no data>\n");
++                } else {
++                    alg_print(p7->d.encrypted->enc_data->algorithm);
++                }
+             }
+             bags = PKCS12_unpack_p7encdata(p7, pass, passlen);
+         } else {
+diff --git a/test/recipes/80-test_pkcs12.t b/test/recipes/80-test_pkcs12.t
+index 4c5bb5744b..de26cbdca4 100644
+--- a/test/recipes/80-test_pkcs12.t
++++ b/test/recipes/80-test_pkcs12.t
+@@ -54,7 +54,7 @@ if (eval { require Win32::API; 1; }) {
+ }
+ $ENV{OPENSSL_WIN32_UTF8}=1;
+ 
+-plan tests => 17;
++plan tests => 20;
+ 
+ # Test different PKCS#12 formats
+ ok(run(test(["pkcs12_format_test"])), "test pkcs12 formats");
+@@ -162,11 +162,23 @@ with({ exit_checker => sub { return shift == 1; } },
+                     "-nomacver"])),
+            "test bad pkcs12 file 1 (nomacver)");
+ 
++        ok(run(app(["openssl", "pkcs12", "-in", $bad1, "-password", "pass:",
++                    "-info"])),
++           "test bad pkcs12 file 1 (info)");
++
+         ok(run(app(["openssl", "pkcs12", "-in", $bad2, "-password", "pass:"])),
+            "test bad pkcs12 file 2");
+ 
++        ok(run(app(["openssl", "pkcs12", "-in", $bad2, "-password", "pass:",
++                    "-info"])),
++           "test bad pkcs12 file 2 (info)");
++
+         ok(run(app(["openssl", "pkcs12", "-in", $bad3, "-password", "pass:"])),
+            "test bad pkcs12 file 3");
++
++        ok(run(app(["openssl", "pkcs12", "-in", $bad3, "-password", "pass:",
++                    "-info"])),
++           "test bad pkcs12 file 3 (info)");
+      });
+ 
+ SetConsoleOutputCP($savedcp) if (defined($savedcp));
+-- 
+2.39.5 (Apple Git-154)
+

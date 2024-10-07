@@ -1,0 +1,133 @@
+From a70ca93cdbc0ed36bf783b9eadc4cea35986b139 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Thu, 25 Apr 2024 19:26:08 +0200
+Subject: [PATCH 086/228] Add ossl_bn_priv_rand_range_fixed_top() and use it
+ for EC/DSA
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+
+(cherry picked from commit 13b3ca5c998e6db4f7251a56c43541cb1a422bd0)
+
+(Merged from https://github.com/openssl/openssl/pull/24317)
+---
+ crypto/bn/bn_rand.c    | 45 ++++++++++++++++++++++++++++++++++++++++--
+ crypto/dsa/dsa_ossl.c  |  4 ++--
+ crypto/ec/ecdsa_ossl.c |  4 ++--
+ include/crypto/bn.h    |  2 ++
+ 4 files changed, 49 insertions(+), 6 deletions(-)
+
+diff --git a/crypto/bn/bn_rand.c b/crypto/bn/bn_rand.c
+index b0b3d3ffe2..a362e33131 100644
+--- a/crypto/bn/bn_rand.c
++++ b/crypto/bn/bn_rand.c
+@@ -186,8 +186,8 @@ static int bnrand_range(BNRAND_FLAG flag, BIGNUM *r, const BIGNUM *range,
+     } else {
+         do {
+             /* range = 11..._2  or  range = 101..._2 */
+-            if (!bnrand(flag, r, n, BN_RAND_TOP_ANY, BN_RAND_BOTTOM_ANY, 0,
+-                        ctx))
++            if (!bnrand(flag, r, n, BN_RAND_TOP_ANY, BN_RAND_BOTTOM_ANY,
++                        strength, ctx))
+                 return 0;
+ 
+             if (!--count) {
+@@ -240,6 +240,47 @@ int BN_pseudo_rand_range(BIGNUM *r, const BIGNUM *range)
+ # endif
+ #endif
+ 
++int ossl_bn_priv_rand_range_fixed_top(BIGNUM *r, const BIGNUM *range,
++                                      unsigned int strength, BN_CTX *ctx)
++{
++    int n;
++    int count = 100;
++
++    if (r == NULL) {
++        ERR_raise(ERR_LIB_BN, ERR_R_PASSED_NULL_PARAMETER);
++        return 0;
++    }
++
++    if (range->neg || BN_is_zero(range)) {
++        ERR_raise(ERR_LIB_BN, BN_R_INVALID_RANGE);
++        return 0;
++    }
++
++    n = BN_num_bits(range);     /* n > 0 */
++
++    /* BN_is_bit_set(range, n - 1) always holds */
++
++    if (n == 1) {
++        BN_zero(r);
++    } else {
++        BN_set_flags(r, BN_FLG_CONSTTIME);
++        do {
++            if (!bnrand(PRIVATE, r, n + 1, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ANY,
++                        strength, ctx))
++                return 0;
++
++            if (!--count) {
++                ERR_raise(ERR_LIB_BN, BN_R_TOO_MANY_ITERATIONS);
++                return 0;
++            }
++            ossl_bn_mask_bits_fixed_top(r, n);
++        }
++        while (BN_ucmp(r, range) >= 0);
++    }
++
++    return 1;
++}
++
+ /*
+  * BN_generate_dsa_nonce generates a random number 0 <= out < range. Unlike
+  * BN_rand_range, it also includes the contents of |priv| and |message| in
+diff --git a/crypto/dsa/dsa_ossl.c b/crypto/dsa/dsa_ossl.c
+index 8fd66a950e..619b91c795 100644
+--- a/crypto/dsa/dsa_ossl.c
++++ b/crypto/dsa/dsa_ossl.c
+@@ -265,9 +265,9 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
+             if (!BN_generate_dsa_nonce(k, dsa->params.q, dsa->priv_key, dgst,
+                                        dlen, ctx))
+                 goto err;
+-        } else if (!BN_priv_rand_range_ex(k, dsa->params.q, 0, ctx))
++        } else if (!ossl_bn_priv_rand_range_fixed_top(k, dsa->params.q, 0, ctx))
+             goto err;
+-    } while (BN_is_zero(k));
++    } while (ossl_bn_is_word_fixed_top(k, 0));
+ 
+     BN_set_flags(k, BN_FLG_CONSTTIME);
+     BN_set_flags(l, BN_FLG_CONSTTIME);
+diff --git a/crypto/ec/ecdsa_ossl.c b/crypto/ec/ecdsa_ossl.c
+index 0bdf45e6e7..1d3ed66623 100644
+--- a/crypto/ec/ecdsa_ossl.c
++++ b/crypto/ec/ecdsa_ossl.c
+@@ -151,12 +151,12 @@ static int ecdsa_sign_setup(EC_KEY *eckey, BN_CTX *ctx_in,
+                     goto err;
+                 }
+             } else {
+-                if (!BN_priv_rand_range_ex(k, order, 0, ctx)) {
++                if (!ossl_bn_priv_rand_range_fixed_top(k, order, 0, ctx)) {
+                     ERR_raise(ERR_LIB_EC, EC_R_RANDOM_NUMBER_GENERATION_FAILED);
+                     goto err;
+                 }
+             }
+-        } while (BN_is_zero(k));
++        } while (ossl_bn_is_word_fixed_top(k, 0));
+ 
+         /* compute r the x-coordinate of generator * k */
+         if (!EC_POINT_mul(group, tmp_point, k, NULL, NULL, ctx)) {
+diff --git a/include/crypto/bn.h b/include/crypto/bn.h
+index a080a3b462..94a624f064 100644
+--- a/include/crypto/bn.h
++++ b/include/crypto/bn.h
+@@ -89,6 +89,8 @@ int bn_div_fixed_top(BIGNUM *dv, BIGNUM *rem, const BIGNUM *m,
+                      const BIGNUM *d, BN_CTX *ctx);
+ int ossl_bn_mask_bits_fixed_top(BIGNUM *a, int n);
+ int ossl_bn_is_word_fixed_top(const BIGNUM *a, BN_ULONG w);
++int ossl_bn_priv_rand_range_fixed_top(BIGNUM *r, const BIGNUM *range,
++                                      unsigned int strength, BN_CTX *ctx);
+ 
+ #define BN_PRIMETEST_COMPOSITE                    0
+ #define BN_PRIMETEST_COMPOSITE_WITH_FACTOR        1
+-- 
+2.39.5 (Apple Git-154)
+

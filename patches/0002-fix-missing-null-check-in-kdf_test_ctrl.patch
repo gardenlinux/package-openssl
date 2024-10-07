@@ -1,0 +1,74 @@
+From cc8e39297a000df85a90f97f686cb210470d9697 Mon Sep 17 00:00:00 2001
+From: Neil Horman <nhorman@openssl.org>
+Date: Fri, 26 Jan 2024 11:33:18 -0500
+Subject: [PATCH 002/228] fix missing null check in kdf_test_ctrl
+
+Coverity issue 1453632 noted a missing null check in kdf_test_ctrl
+recently.  If a malformed value is passed in from the test file that
+does not contain a ':' character, the p variable will be NULL, leading
+to a NULL derefence prepare_from_text
+
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+(Merged from https://github.com/openssl/openssl/pull/23398)
+
+(cherry picked from commit 6ca1d3ee81b61bc973e4e1079ec68ac73331c159)
+---
+ test/evp_test.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/test/evp_test.c b/test/evp_test.c
+index 4d972b79e6..4d772a8087 100644
+--- a/test/evp_test.c
++++ b/test/evp_test.c
+@@ -2790,7 +2790,9 @@ static int kdf_test_ctrl(EVP_TEST *t, EVP_KDF_CTX *kctx,
+     if (!TEST_ptr(name = OPENSSL_strdup(value)))
+         return 0;
+     p = strchr(name, ':');
+-    if (p != NULL)
++    if (p == NULL)
++        p = "";
++    else
+         *p++ = '\0';
+ 
+     if (strcmp(name, "r") == 0
+@@ -2801,30 +2803,29 @@ static int kdf_test_ctrl(EVP_TEST *t, EVP_KDF_CTX *kctx,
+     }
+ 
+     rv = OSSL_PARAM_allocate_from_text(kdata->p, defs, name, p,
+-                                       p != NULL ? strlen(p) : 0, NULL);
++                                       strlen(p), NULL);
+     *++kdata->p = OSSL_PARAM_construct_end();
+     if (!rv) {
+         t->err = "KDF_PARAM_ERROR";
+         OPENSSL_free(name);
+         return 0;
+     }
+-    if (p != NULL && strcmp(name, "digest") == 0) {
++    if (strcmp(name, "digest") == 0) {
+         if (is_digest_disabled(p)) {
+             TEST_info("skipping, '%s' is disabled", p);
+             t->skip = 1;
+         }
+         goto end;
+     }
+-    if (p != NULL
+-        && (strcmp(name, "cipher") == 0
+-            || strcmp(name, "cekalg") == 0)
++
++    if ((strcmp(name, "cipher") == 0
++        || strcmp(name, "cekalg") == 0)
+         && is_cipher_disabled(p)) {
+         TEST_info("skipping, '%s' is disabled", p);
+         t->skip = 1;
+         goto end;
+     }
+-    if (p != NULL
+-        && (strcmp(name, "mac") == 0)
++    if ((strcmp(name, "mac") == 0)
+         && is_mac_disabled(p)) {
+         TEST_info("skipping, '%s' is disabled", p);
+         t->skip = 1;
+-- 
+2.39.5 (Apple Git-154)
+

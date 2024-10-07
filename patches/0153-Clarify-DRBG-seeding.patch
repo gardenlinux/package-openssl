@@ -1,0 +1,38 @@
+From a648836d1d150166678fe31f2341bb9260bf8f45 Mon Sep 17 00:00:00 2001
+From: Pauli <ppzgs1@gmail.com>
+Date: Thu, 27 Jun 2024 10:08:05 +1000
+Subject: [PATCH 153/228] Clarify DRBG seeding.
+
+There is a legacy code path that OpenSSL won't use anymore but applications
+could.  Add a comment indicating this to avoid confusion for people not
+intimately conversant with the nuances in the RNG code.
+
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24745)
+
+(cherry picked from commit 1eb122aa0ca152dc564e61674caf3f11acd85b57)
+---
+ providers/implementations/rands/drbg.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/providers/implementations/rands/drbg.c b/providers/implementations/rands/drbg.c
+index 3159a9d965..045d9cf1d1 100644
+--- a/providers/implementations/rands/drbg.c
++++ b/providers/implementations/rands/drbg.c
+@@ -205,6 +205,11 @@ static size_t get_entropy(PROV_DRBG *drbg, unsigned char **pout, int entropy,
+         return ossl_crngt_get_entropy(drbg, pout, entropy, min_len, max_len,
+                                       prediction_resistance);
+ #else
++        /*
++         * In normal use (i.e. OpenSSL's own uses), this is never called.
++         * Outside of the FIPS provider, OpenSSL sets its DRBGs up so that
++         * they always have a parent.  This remains purely for legacy reasons.
++         */
+         return ossl_prov_get_entropy(drbg->provctx, pout, entropy, min_len,
+                                      max_len);
+ #endif
+-- 
+2.39.5 (Apple Git-154)
+

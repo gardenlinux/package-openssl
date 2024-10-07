@@ -1,0 +1,32 @@
+From 0c78270e7bb1757348cbe23a132fcce34af1cdfe Mon Sep 17 00:00:00 2001
+From: shridhar kalavagunta <coolshrid@hotmail.com>
+Date: Fri, 26 Jan 2024 21:10:32 -0600
+Subject: [PATCH 024/228] Fix off by one issue in buf2hexstr_sep()
+
+Fixes #23363
+
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23404)
+
+(cherry picked from commit c5cc9c419a0a8d97a44f01f95f0e213f56da4574)
+---
+ crypto/o_str.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/crypto/o_str.c b/crypto/o_str.c
+index 3354ce0927..f9e04f22ed 100644
+--- a/crypto/o_str.c
++++ b/crypto/o_str.c
+@@ -251,7 +251,7 @@ static int buf2hexstr_sep(char *str, size_t str_n, size_t *strlength,
+     *q = CH_ZERO;
+ 
+ #ifdef CHARSET_EBCDIC
+-    ebcdic2ascii(str, str, q - str - 1);
++    ebcdic2ascii(str, str, q - str);
+ #endif
+     return 1;
+ }
+-- 
+2.39.5 (Apple Git-154)
+

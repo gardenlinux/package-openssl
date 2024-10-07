@@ -1,0 +1,47 @@
+From c8dd22a2b654bbc16c18da031921511ec7ba1db0 Mon Sep 17 00:00:00 2001
+From: Matt Caswell <matt@openssl.org>
+Date: Tue, 20 Feb 2024 15:11:26 +0000
+Subject: [PATCH 017/228] Don't print excessively long ASN1 items in fuzzer
+
+Prevent spurious fuzzer timeouts by not printing ASN1 which is excessively
+long.
+
+This fixes a false positive encountered by OSS-Fuzz.
+
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+(Merged from https://github.com/openssl/openssl/pull/23640)
+
+(cherry picked from commit 4a6f70c03182b421d326831532edca32bcdb3fb1)
+---
+ fuzz/asn1.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/fuzz/asn1.c b/fuzz/asn1.c
+index ee602a08a3..d55554b7fd 100644
+--- a/fuzz/asn1.c
++++ b/fuzz/asn1.c
+@@ -312,10 +312,16 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
+         ASN1_VALUE *o = ASN1_item_d2i(NULL, &b, len, i);
+ 
+         if (o != NULL) {
+-            BIO *bio = BIO_new(BIO_s_null());
+-            if (bio != NULL) {
+-                ASN1_item_print(bio, o, 4, i, pctx);
+-                BIO_free(bio);
++            /*
++             * Don't print excessively long output to prevent spurious fuzzer
++             * timeouts.
++             */
++            if (b - buf < 10000) {
++                BIO *bio = BIO_new(BIO_s_null());
++                if (bio != NULL) {
++                    ASN1_item_print(bio, o, 4, i, pctx);
++                    BIO_free(bio);
++                }
+             }
+             if (ASN1_item_i2d(o, &der, i) > 0) {
+                 OPENSSL_free(der);
+-- 
+2.39.5 (Apple Git-154)
+

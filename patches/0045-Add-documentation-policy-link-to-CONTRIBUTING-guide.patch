@@ -1,0 +1,41 @@
+From 9d152795d7fd2e12160e36d51089941385e7ebb7 Mon Sep 17 00:00:00 2001
+From: slontis <shane.lontis@oracle.com>
+Date: Mon, 18 Mar 2024 11:46:12 +1100
+Subject: [PATCH 045/228] Add 'documentation policy' link to CONTRIBUTING
+ guide.
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Dmitry Belyavskiy <beldmit@gmail.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23875)
+
+(cherry picked from commit e817766c0f46f371fabe344fba60d13afcfc3da9)
+---
+ CONTRIBUTING.md | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index 15490fd9f6..0066e7e8ad 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -67,7 +67,8 @@ guidelines:
+     often. We do not accept merge commits, you will have to remove them
+     (usually by rebasing) before it will be acceptable.
+ 
+- 4. Code provided should follow our [coding style] and compile without warnings.
++ 4. Code provided should follow our [coding style] and [documentation policy]
++    and compile without warnings.
+     There is a [Perl tool](util/check-format.pl) that helps
+     finding code formatting mistakes and other coding style nits.
+     Where `gcc` or `clang` is available, you should use the
+@@ -77,6 +78,7 @@ guidelines:
+     whenever a PR is created or updated by committers.
+ 
+     [coding style]: https://www.openssl.org/policies/technical/coding-style.html
++    [documentation policy]: https://openssl.org/policies/technical/documentation-policy.html
+ 
+  5. When at all possible, code contributions should include tests. These can
+     either be added to an existing test, or completely new.  Please see
+-- 
+2.39.5 (Apple Git-154)
+

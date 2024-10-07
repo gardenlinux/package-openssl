@@ -1,0 +1,85 @@
+From a85eb03a5ccaccd7b18f979d4dfb5cc76bb61cea Mon Sep 17 00:00:00 2001
+From: Alexandr Nedvedicky <sashan@openssl.org>
+Date: Mon, 19 Aug 2024 13:16:49 +0200
+Subject: [PATCH 218/228] fix undefined behavior on 3.1
+ (https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=71220)
+
+OpenSSL 3.2 and later are not affected, because they use
+a `safemath` to do integer arithmetics.
+
+This change is specific to 3.1 and 3.0. It changes just
+fixes ssl_session_calculate_timeout().
+
+It avoids overflow by testing operands before executint
+the operation. It is implemented as follows:
+
+	add(a, b) {
+		overflow = MAX_INT - a;
+		if (b > overflow)
+			result = b - overflow
+		else
+			result = a + b
+	}
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/25239)
+---
+ ssl/ssl_sess.c | 35 ++++++++++++++++++++++++-----------
+ 1 file changed, 24 insertions(+), 11 deletions(-)
+
+diff --git a/ssl/ssl_sess.c b/ssl/ssl_sess.c
+index 190dda253b..fd68a2f1b3 100644
+--- a/ssl/ssl_sess.c
++++ b/ssl/ssl_sess.c
+@@ -53,23 +53,36 @@ __owur static int timeoutcmp(SSL_SESSION *a, SSL_SESSION *b)
+     return 0;
+ }
+ 
++#ifdef __DJGPP__ /* time_t is unsigned on djgpp, it's signed anywhere else */
++# define TMAX(_type_) ((time_t)-1)
++#else
++# define TMAX(_type_) ((time_t)(((_type_)-1) >> 1))
++#endif
++
++#define CALCULATE_TIMEOUT(_ss_, _type_) do { \
++        _type_ overflow; \
++        time_t tmax = TMAX(_type_); \
++        overflow = (_type_)tmax - (_type_)(_ss_)->time; \
++        if ((_ss_)->timeout > (time_t)overflow) { \
++            (_ss_)->timeout_ovf = 1; \
++            (_ss_)->calc_timeout = (_ss_)->timeout - (time_t)overflow; \
++        } else { \
++            (_ss_)->timeout_ovf = 0; \
++            (_ss_)->calc_timeout = (_ss_)->time + (_ss_)->timeout; \
++        } \
++    } while (0)
+ /*
+  * Calculates effective timeout, saving overflow state
+  * Locking must be done by the caller of this function
+  */
+ void ssl_session_calculate_timeout(SSL_SESSION *ss)
+ {
+-#ifndef __DJGPP__ /* time_t is unsigned on djgpp */
+-    /* Force positive timeout */
+-    if (ss->timeout < 0)
+-        ss->timeout = 0;
+-#endif
+-    ss->calc_timeout = ss->time + ss->timeout;
+-    /*
+-     * |timeout| is always zero or positive, so the check for
+-     * overflow only needs to consider if |time| is positive
+-     */
+-    ss->timeout_ovf = ss->time > 0 && ss->calc_timeout < ss->time;
++
++    if (sizeof(time_t) == 8)
++        CALCULATE_TIMEOUT(ss, uint64_t);
++    else
++        CALCULATE_TIMEOUT(ss, uint32_t);
++
+     /*
+      * N.B. Realistic overflow can only occur in our lifetimes on a
+      *      32-bit machine with signed time_t, in January 2038.
+-- 
+2.39.5 (Apple Git-154)
+

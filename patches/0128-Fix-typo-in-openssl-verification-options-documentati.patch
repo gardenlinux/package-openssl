@@ -1,0 +1,34 @@
+From 8b6604a00ffbf30bb686310f720cc64e84939206 Mon Sep 17 00:00:00 2001
+From: Jaime Hablutzel <hablutzel1@gmail.com>
+Date: Mon, 17 Jun 2024 11:40:08 -0500
+Subject: [PATCH 128/228] Fix typo in openssl-verification-options
+ documentation.
+
+CLA: trivial
+
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Kurt Roeckx <kurt@roeckx.be>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24662)
+
+(cherry picked from commit f159d861e2761ffc6421b0486fdd482f37215f9f)
+---
+ doc/man1/openssl-verification-options.pod | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/doc/man1/openssl-verification-options.pod b/doc/man1/openssl-verification-options.pod
+index 6888d5244f..44c2983b55 100644
+--- a/doc/man1/openssl-verification-options.pod
++++ b/doc/man1/openssl-verification-options.pod
+@@ -430,7 +430,7 @@ This option may be used multiple times.
+ =item B<-policy> I<arg>
+ 
+ Enable policy processing and add I<arg> to the user-initial-policy-set (see
+-RFC5280). The policy I<arg> can be an object name an OID in numeric form.
++RFC5280). The policy I<arg> can be an object name or an OID in numeric form.
+ This argument can appear more than once.
+ 
+ =item B<-explicit_policy>
+-- 
+2.39.5 (Apple Git-154)
+

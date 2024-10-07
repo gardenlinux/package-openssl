@@ -1,0 +1,45 @@
+From e9ca7da666abda8c6e3e62e71f83f9deb3ae7553 Mon Sep 17 00:00:00 2001
+From: Dimitri Papadopoulos
+ <3234522+DimitriPapadopoulos@users.noreply.github.com>
+Date: Sun, 11 Feb 2024 18:22:43 +0100
+Subject: [PATCH 012/228] Fix typos found by codespell in openssl-3.1
+
+Only modify doc/man* in the openssl-3.1 branch.
+
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23544)
+---
+ doc/internal/man3/ossl_method_construct.pod | 2 +-
+ doc/internal/man3/ossl_provider_new.pod     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/doc/internal/man3/ossl_method_construct.pod b/doc/internal/man3/ossl_method_construct.pod
+index 3683798b06..603930dc1f 100644
+--- a/doc/internal/man3/ossl_method_construct.pod
++++ b/doc/internal/man3/ossl_method_construct.pod
+@@ -93,7 +93,7 @@ This default store should be stored in the library context I<libctx>.
+ The method to be looked up should be identified with data found in I<data>
+ (which is the I<mcm_data> that was passed to ossl_construct_method()).
+ In other words, the ossl_method_construct() caller is entirely responsible
+-for ensuring the necesssary data is made available.
++for ensuring the necessary data is made available.
+ 
+ Optionally, I<prov> may be given as a search criterion, to narrow down the
+ search of a method belonging to just one provider.
+diff --git a/doc/internal/man3/ossl_provider_new.pod b/doc/internal/man3/ossl_provider_new.pod
+index 318351e4fd..a470979ea0 100644
+--- a/doc/internal/man3/ossl_provider_new.pod
++++ b/doc/internal/man3/ossl_provider_new.pod
+@@ -291,7 +291,7 @@ in a bitstring that's internal to I<provider>.
+ 
+ ossl_provider_test_operation_bit() checks if the bit operation I<bitnum>
+ is set (1) or not (0) in the internal I<provider> bitstring, and sets
+-I<*result> to 1 or 0 accorddingly.
++I<*result> to 1 or 0 accordingly.
+ 
+ ossl_provider_init_as_child() stores in the library context I<ctx> references to
+ the necessary upcalls for managing child providers. The I<handle> and I<in>
+-- 
+2.39.5 (Apple Git-154)
+

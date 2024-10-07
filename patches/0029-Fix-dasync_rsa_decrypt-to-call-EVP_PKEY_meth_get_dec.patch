@@ -1,0 +1,33 @@
+From 544c31d530785e59482381952270ea4aa457c40d Mon Sep 17 00:00:00 2001
+From: Vladimirs Ambrosovs <rodriguez.twister@gmail.com>
+Date: Tue, 12 Mar 2024 18:23:55 +0200
+Subject: [PATCH 029/228] Fix dasync_rsa_decrypt to call
+ EVP_PKEY_meth_get_decrypt
+
+Signed-off-by: Vladimirs Ambrosovs <rodriguez.twister@gmail.com>
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23825)
+
+(cherry picked from commit c91f0ca95881d03a54aedee197bbf5ffffc02935)
+---
+ engines/e_dasync.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/engines/e_dasync.c b/engines/e_dasync.c
+index 6baf698f3a..2e855418dd 100644
+--- a/engines/e_dasync.c
++++ b/engines/e_dasync.c
+@@ -985,7 +985,7 @@ static int dasync_rsa_decrypt(EVP_PKEY_CTX *ctx, unsigned char *out,
+                              size_t inlen);
+ 
+     if (pdecrypt == NULL)
+-        EVP_PKEY_meth_get_encrypt(dasync_rsa_orig, NULL, &pdecrypt);
++        EVP_PKEY_meth_get_decrypt(dasync_rsa_orig, NULL, &pdecrypt);
+     return pdecrypt(ctx, out, outlen, in, inlen);
+ }
+ 
+-- 
+2.39.5 (Apple Git-154)
+

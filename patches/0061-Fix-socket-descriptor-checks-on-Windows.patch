@@ -1,0 +1,53 @@
+From 6ac007a4401d6535388cf7e4932aebcb859a158b Mon Sep 17 00:00:00 2001
+From: olszomal <Malgorzata.Olszowka@stunnel.org>
+Date: Thu, 4 Apr 2024 11:34:33 +0200
+Subject: [PATCH 061/228] Fix socket descriptor checks on Windows
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24035)
+
+(cherry picked from commit c89baf871030c811ba316ccbdcea26c294f605ae)
+---
+ crypto/bio/bio_lib.c  | 8 ++++++--
+ crypto/bio/bio_sock.c | 4 ++++
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/crypto/bio/bio_lib.c b/crypto/bio/bio_lib.c
+index faea9a63ef..1dc710dc05 100644
+--- a/crypto/bio/bio_lib.c
++++ b/crypto/bio/bio_lib.c
+@@ -869,8 +869,12 @@ static int bio_wait(BIO *bio, time_t max_time, unsigned int nap_milliseconds)
+         return 1;
+ 
+ #ifndef OPENSSL_NO_SOCK
+-    if (BIO_get_fd(bio, &fd) > 0 && fd < FD_SETSIZE)
+-        return BIO_socket_wait(fd, BIO_should_read(bio), max_time);
++    if (BIO_get_fd(bio, &fd) > 0) {
++        int ret = BIO_socket_wait(fd, BIO_should_read(bio), max_time);
++
++        if (ret != -1)
++            return ret;
++    }
+ #endif
+     /* fall back to polling since no sockets are available */
+ 
+diff --git a/crypto/bio/bio_sock.c b/crypto/bio/bio_sock.c
+index 476cbcc5ce..6537a5062f 100644
+--- a/crypto/bio/bio_sock.c
++++ b/crypto/bio/bio_sock.c
+@@ -396,7 +396,11 @@ int BIO_socket_wait(int fd, int for_read, time_t max_time)
+     struct timeval tv;
+     time_t now;
+ 
++#ifdef _WIN32
++    if ((SOCKET)fd == INVALID_SOCKET)
++#else
+     if (fd < 0 || fd >= FD_SETSIZE)
++#endif
+         return -1;
+     if (max_time == 0)
+         return 1;
+-- 
+2.39.5 (Apple Git-154)
+

@@ -1,0 +1,117 @@
+From 8d60a4f1da13199c727cbc21a9bb807f02509985 Mon Sep 17 00:00:00 2001
+From: Richard Levitte <levitte@openssl.org>
+Date: Mon, 29 Jan 2024 08:51:52 +0100
+Subject: [PATCH 004/228] Fix error reporting in
+ EVP_PKEY_{sign,verify,verify_recover}
+
+For some reason, those functions (and the _init functions too) would
+raise EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE when the passed
+ctx is NULL, and then not check if the provider supplied the function
+that would support these libcrypto functions.
+
+This corrects the situation, and has all those libcrypto functions
+raise ERR_R_PASS_NULL_PARAMETER if ctx is NULL, and then check for the
+corresponding provider supplied, and only when that one is missing,
+raise EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE.
+
+Because 0 doesn't mean error for EVP_PKEY_verify(), -1 is returned when
+ERR_R_PASSED_NULL_PARAMETER is raised.  This is done consistently for all
+affected functions.
+
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Matt Caswell <matt@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23411)
+
+(cherry picked from commit 5a25177d1b07ef6e754fec1747b57ee90ab1e028)
+---
+ crypto/evp/signature.c | 31 +++++++++++++++++++++++--------
+ 1 file changed, 23 insertions(+), 8 deletions(-)
+
+diff --git a/crypto/evp/signature.c b/crypto/evp/signature.c
+index fb269b3bfd..5689505566 100644
+--- a/crypto/evp/signature.c
++++ b/crypto/evp/signature.c
+@@ -403,8 +403,8 @@ static int evp_pkey_signature_init(EVP_PKEY_CTX *ctx, int operation,
+     int iter;
+ 
+     if (ctx == NULL) {
+-        ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
+-        return -2;
++        ERR_raise(ERR_LIB_EVP, ERR_R_PASSED_NULL_PARAMETER);
++        return -1;
+     }
+ 
+     evp_pkey_ctx_free_old_ops(ctx);
+@@ -634,8 +634,8 @@ int EVP_PKEY_sign(EVP_PKEY_CTX *ctx,
+     int ret;
+ 
+     if (ctx == NULL) {
+-        ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
+-        return -2;
++        ERR_raise(ERR_LIB_EVP, ERR_R_PASSED_NULL_PARAMETER);
++        return -1;
+     }
+ 
+     if (ctx->operation != EVP_PKEY_OP_SIGN) {
+@@ -646,6 +646,11 @@ int EVP_PKEY_sign(EVP_PKEY_CTX *ctx,
+     if (ctx->op.sig.algctx == NULL)
+         goto legacy;
+ 
++    if (ctx->op.sig.signature->sign == NULL) {
++        ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
++        return -2;
++    }
++
+     ret = ctx->op.sig.signature->sign(ctx->op.sig.algctx, sig, siglen,
+                                       (sig == NULL) ? 0 : *siglen, tbs, tbslen);
+ 
+@@ -678,8 +683,8 @@ int EVP_PKEY_verify(EVP_PKEY_CTX *ctx,
+     int ret;
+ 
+     if (ctx == NULL) {
+-        ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
+-        return -2;
++        ERR_raise(ERR_LIB_EVP, ERR_R_PASSED_NULL_PARAMETER);
++        return -1;
+     }
+ 
+     if (ctx->operation != EVP_PKEY_OP_VERIFY) {
+@@ -690,6 +695,11 @@ int EVP_PKEY_verify(EVP_PKEY_CTX *ctx,
+     if (ctx->op.sig.algctx == NULL)
+         goto legacy;
+ 
++    if (ctx->op.sig.signature->verify == NULL) {
++        ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
++        return -2;
++    }
++
+     ret = ctx->op.sig.signature->verify(ctx->op.sig.algctx, sig, siglen,
+                                         tbs, tbslen);
+ 
+@@ -721,8 +731,8 @@ int EVP_PKEY_verify_recover(EVP_PKEY_CTX *ctx,
+     int ret;
+ 
+     if (ctx == NULL) {
+-        ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
+-        return -2;
++        ERR_raise(ERR_LIB_EVP, ERR_R_PASSED_NULL_PARAMETER);
++        return -1;
+     }
+ 
+     if (ctx->operation != EVP_PKEY_OP_VERIFYRECOVER) {
+@@ -733,6 +743,11 @@ int EVP_PKEY_verify_recover(EVP_PKEY_CTX *ctx,
+     if (ctx->op.sig.algctx == NULL)
+         goto legacy;
+ 
++    if (ctx->op.sig.signature->verify_recover == NULL) {
++        ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
++        return -2;
++    }
++
+     ret = ctx->op.sig.signature->verify_recover(ctx->op.sig.algctx, rout,
+                                                 routlen,
+                                                 (rout == NULL ? 0 : *routlen),
+-- 
+2.39.5 (Apple Git-154)
+

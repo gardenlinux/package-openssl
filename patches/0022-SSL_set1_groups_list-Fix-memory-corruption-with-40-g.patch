@@ -1,0 +1,104 @@
+From 558eb2e63fe2c57196e5781e0142e5b3e8a8efef Mon Sep 17 00:00:00 2001
+From: Michael Baentsch <57787676+baentsch@users.noreply.github.com>
+Date: Mon, 19 Feb 2024 06:41:35 +0100
+Subject: [PATCH 022/228] SSL_set1_groups_list(): Fix memory corruption with 40
+ groups and more
+
+Fixes #23624
+
+The calculation of the size for gid_arr reallocation was wrong.
+A multiplication by gid_arr array item size was missing.
+
+Testcase is added.
+
+Reviewed-by: Nicola Tuveri <nic.tuv@gmail.com>
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+(Merged from https://github.com/openssl/openssl/pull/23659)
+---
+ ssl/t1_lib.c        |  3 ++-
+ test/sslapitest.c   | 15 ++++-----------
+ test/tls-provider.c |  7 +++++--
+ 3 files changed, 11 insertions(+), 14 deletions(-)
+
+diff --git a/ssl/t1_lib.c b/ssl/t1_lib.c
+index 8be00a4f34..d775ba56da 100644
+--- a/ssl/t1_lib.c
++++ b/ssl/t1_lib.c
+@@ -734,7 +734,8 @@ static int gid_cb(const char *elem, int len, void *arg)
+         return 0;
+     if (garg->gidcnt == garg->gidmax) {
+         uint16_t *tmp =
+-            OPENSSL_realloc(garg->gid_arr, garg->gidmax + GROUPLIST_INCREMENT);
++            OPENSSL_realloc(garg->gid_arr,
++                            (garg->gidmax + GROUPLIST_INCREMENT) * sizeof(*garg->gid_arr));
+         if (tmp == NULL)
+             return 0;
+         garg->gidmax += GROUPLIST_INCREMENT;
+diff --git a/test/sslapitest.c b/test/sslapitest.c
+index 0c62f62e01..23ee918b9b 100644
+--- a/test/sslapitest.c
++++ b/test/sslapitest.c
+@@ -9276,20 +9276,11 @@ static int test_pluggable_group(int idx)
+     OSSL_PROVIDER *tlsprov = OSSL_PROVIDER_load(libctx, "tls-provider");
+     /* Check that we are not impacted by a provider without any groups */
+     OSSL_PROVIDER *legacyprov = OSSL_PROVIDER_load(libctx, "legacy");
+-    const char *group_name = idx == 0 ? "xorgroup" : "xorkemgroup";
++    const char *group_name = idx == 0 ? "xorkemgroup" : "xorgroup";
+ 
+     if (!TEST_ptr(tlsprov))
+         goto end;
+ 
+-    if (legacyprov == NULL) {
+-        /*
+-         * In this case we assume we've been built with "no-legacy" and skip
+-         * this test (there is no OPENSSL_NO_LEGACY)
+-         */
+-        testresult = 1;
+-        goto end;
+-    }
+-
+     if (!TEST_true(create_ssl_ctx_pair(libctx, TLS_server_method(),
+                                        TLS_client_method(),
+                                        TLS1_3_VERSION,
+@@ -9299,7 +9290,9 @@ static int test_pluggable_group(int idx)
+                                              NULL, NULL)))
+         goto end;
+ 
+-    if (!TEST_true(SSL_set1_groups_list(serverssl, group_name))
++    /* ensure GROUPLIST_INCREMENT (=40) logic triggers: */
++    if (!TEST_true(SSL_set1_groups_list(serverssl, "xorgroup:xorkemgroup:dummy1:dummy2:dummy3:dummy4:dummy5:dummy6:dummy7:dummy8:dummy9:dummy10:dummy11:dummy12:dummy13:dummy14:dummy15:dummy16:dummy17:dummy18:dummy19:dummy20:dummy21:dummy22:dummy23:dummy24:dummy25:dummy26:dummy27:dummy28:dummy29:dummy30:dummy31:dummy32:dummy33:dummy34:dummy35:dummy36:dummy37:dummy38:dummy39:dummy40:dummy41:dummy42:dummy43"))
++    /* removing a single algorithm from the list makes the test pass */
+             || !TEST_true(SSL_set1_groups_list(clientssl, group_name)))
+         goto end;
+ 
+diff --git a/test/tls-provider.c b/test/tls-provider.c
+index adbe88da52..8dfc3bcc7d 100644
+--- a/test/tls-provider.c
++++ b/test/tls-provider.c
+@@ -210,6 +210,8 @@ static int tls_prov_get_capabilities(void *provctx, const char *capability,
+         }
+         dummygroup[0].data = dummy_group_names[i];
+         dummygroup[0].data_size = strlen(dummy_group_names[i]) + 1;
++        /* assign unique group IDs also to dummy groups for registration */
++        *((int *)(dummygroup[3].data)) = 65279 - NUM_DUMMY_GROUPS + i;
+         ret &= cb(dummygroup, arg);
+     }
+ 
+@@ -817,9 +819,10 @@ unsigned int randomize_tls_group_id(OSSL_LIB_CTX *libctx)
+         return 0;
+     /*
+      * Ensure group_id is within the IANA Reserved for private use range
+-     * (65024-65279)
++     * (65024-65279).
++     * Carve out NUM_DUMMY_GROUPS ids for properly registering those.
+      */
+-    group_id %= 65279 - 65024;
++    group_id %= 65279 - NUM_DUMMY_GROUPS - 65024;
+     group_id += 65024;
+ 
+     /* Ensure we did not already issue this group_id */
+-- 
+2.39.5 (Apple Git-154)
+

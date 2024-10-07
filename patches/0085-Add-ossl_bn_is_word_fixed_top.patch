@@ -1,0 +1,143 @@
+From 5dbb2a8ca2c1ba42dfb9445b5ea76adccbdb9744 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Thu, 25 Apr 2024 15:35:36 +0200
+Subject: [PATCH 085/228] Add ossl_bn_is_word_fixed_top()
+
+Also correct some BN_FLG_FIXED_TOP flag handling.
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+
+(cherry picked from commit 2d285fa873028f6cff9484a0cdf690fe05d7fb16)
+
+(Merged from https://github.com/openssl/openssl/pull/24317)
+---
+ crypto/bn/bn_lib.c               | 17 +++++++++++++++++
+ crypto/bn/bn_local.h             |  1 -
+ crypto/bn/bn_rand.c              |  2 +-
+ crypto/bn/bn_shift.c             |  6 +++---
+ include/crypto/bn.h              |  2 ++
+ include/internal/constant_time.h | 11 +++++++++++
+ 6 files changed, 34 insertions(+), 5 deletions(-)
+
+diff --git a/crypto/bn/bn_lib.c b/crypto/bn/bn_lib.c
+index d7a17560dc..3bd7adb39f 100644
+--- a/crypto/bn/bn_lib.c
++++ b/crypto/bn/bn_lib.c
+@@ -769,6 +769,7 @@ int ossl_bn_mask_bits_fixed_top(BIGNUM *a, int n)
+         a->top = w + 1;
+         a->d[w] &= ~(BN_MASK2 << b);
+     }
++    a->flags |= BN_FLG_FIXED_TOP;
+     return 1;
+ }
+ 
+@@ -956,6 +957,22 @@ int BN_is_word(const BIGNUM *a, const BN_ULONG w)
+     return BN_abs_is_word(a, w) && (!w || !a->neg);
+ }
+ 
++int ossl_bn_is_word_fixed_top(const BIGNUM *a, BN_ULONG w)
++{
++    int res, i;
++    const BN_ULONG *ap = a->d;
++
++    if (a->neg || a->top == 0)
++        return 0;
++
++    res = constant_time_select_int(constant_time_eq_bn(ap[0], w), 1, 0);
++
++    for (i = 1; i < a->top; i++)
++        res = constant_time_select_int(constant_time_is_zero_bn(ap[i]),
++                                       res, 0);
++    return res;
++}
++
+ int BN_is_odd(const BIGNUM *a)
+ {
+     return (a->top > 0) && (a->d[0] & 1);
+diff --git a/crypto/bn/bn_local.h b/crypto/bn/bn_local.h
+index d355d1fce3..50e9d26e21 100644
+--- a/crypto/bn/bn_local.h
++++ b/crypto/bn/bn_local.h
+@@ -676,6 +676,5 @@ static ossl_inline BIGNUM *bn_expand(BIGNUM *a, int bits)
+ 
+ int ossl_bn_check_prime(const BIGNUM *w, int checks, BN_CTX *ctx,
+                         int do_trial_division, BN_GENCB *cb);
+-int ossl_bn_mask_bits_fixed_top(BIGNUM *a, int n);
+ 
+ #endif
+diff --git a/crypto/bn/bn_rand.c b/crypto/bn/bn_rand.c
+index fb3d7057df..b0b3d3ffe2 100644
+--- a/crypto/bn/bn_rand.c
++++ b/crypto/bn/bn_rand.c
+@@ -322,7 +322,7 @@ int BN_generate_dsa_nonce(BIGNUM *out, const BIGNUM *range,
+             goto end;
+ 
+         /* Clear out the top bits and rejection filter into range */
+-        BN_set_flags(out, BN_FLG_CONSTTIME | BN_FLG_FIXED_TOP);
++        BN_set_flags(out, BN_FLG_CONSTTIME);
+         ossl_bn_mask_bits_fixed_top(out, BN_num_bits(range));
+ 
+         if (BN_ucmp(out, range) < 0) {
+diff --git a/crypto/bn/bn_shift.c b/crypto/bn/bn_shift.c
+index 8fcb04324e..a6976c7130 100644
+--- a/crypto/bn/bn_shift.c
++++ b/crypto/bn/bn_shift.c
+@@ -156,6 +156,9 @@ int BN_rshift(BIGNUM *r, const BIGNUM *a, int n)
+         return 0;
+     }
+ 
++    bn_check_top(r);
++    bn_check_top(a);
++
+     ret = bn_rshift_fixed_top(r, a, n);
+ 
+     bn_correct_top(r);
+@@ -177,9 +180,6 @@ int bn_rshift_fixed_top(BIGNUM *r, const BIGNUM *a, int n)
+     BN_ULONG *t, *f;
+     BN_ULONG l, m, mask;
+ 
+-    bn_check_top(r);
+-    bn_check_top(a);
+-
+     assert(n >= 0);
+ 
+     nw = n / BN_BITS2;
+diff --git a/include/crypto/bn.h b/include/crypto/bn.h
+index 00544d9d25..a080a3b462 100644
+--- a/include/crypto/bn.h
++++ b/include/crypto/bn.h
+@@ -87,6 +87,8 @@ int bn_lshift_fixed_top(BIGNUM *r, const BIGNUM *a, int n);
+ int bn_rshift_fixed_top(BIGNUM *r, const BIGNUM *a, int n);
+ int bn_div_fixed_top(BIGNUM *dv, BIGNUM *rem, const BIGNUM *m,
+                      const BIGNUM *d, BN_CTX *ctx);
++int ossl_bn_mask_bits_fixed_top(BIGNUM *a, int n);
++int ossl_bn_is_word_fixed_top(const BIGNUM *a, BN_ULONG w);
+ 
+ #define BN_PRIMETEST_COMPOSITE                    0
+ #define BN_PRIMETEST_COMPOSITE_WITH_FACTOR        1
+diff --git a/include/internal/constant_time.h b/include/internal/constant_time.h
+index e8244cd57b..f2572ded51 100644
+--- a/include/internal/constant_time.h
++++ b/include/internal/constant_time.h
+@@ -150,6 +150,17 @@ static ossl_inline BN_ULONG constant_time_lt_bn(BN_ULONG a, BN_ULONG b)
+ {
+     return constant_time_msb_bn(a ^ ((a ^ b) | ((a - b) ^ b)));
+ }
++
++static ossl_inline BN_ULONG constant_time_is_zero_bn(BN_ULONG a)
++{
++    return constant_time_msb_bn(~a & (a - 1));
++}
++
++static ossl_inline BN_ULONG constant_time_eq_bn(BN_ULONG a,
++                                                BN_ULONG b)
++{
++    return constant_time_is_zero_bn(a ^ b);
++}
+ #endif
+ 
+ static ossl_inline unsigned int constant_time_ge(unsigned int a,
+-- 
+2.39.5 (Apple Git-154)
+

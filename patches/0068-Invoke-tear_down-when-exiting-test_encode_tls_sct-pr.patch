@@ -1,0 +1,46 @@
+From c1d2d5113ef966fbbb7bb98d83d6215702d58d45 Mon Sep 17 00:00:00 2001
+From: shridhar kalavagunta <coolshrid@hotmail.com>
+Date: Sun, 21 Apr 2024 18:48:33 -0500
+Subject: [PATCH 068/228] Invoke tear_down when exiting test_encode_tls_sct()
+ prematurely
+
+Fixes #24121
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24222)
+
+(cherry picked from commit 264ff64b9443e60c7c93af0ced2b22fdf622d179)
+---
+ test/ct_test.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/test/ct_test.c b/test/ct_test.c
+index 26d5bc1084..7bf4e94029 100644
+--- a/test/ct_test.c
++++ b/test/ct_test.c
+@@ -450,13 +450,18 @@ static int test_encode_tls_sct(void)
+ 
+     fixture->sct_list = sk_SCT_new_null();
+     if (fixture->sct_list == NULL)
+-	    return 0;
++    {
++        tear_down(fixture);
++        return 0;
++    }
+ 
+     if (!TEST_ptr(sct = SCT_new_from_base64(SCT_VERSION_V1, log_id,
+                                             CT_LOG_ENTRY_TYPE_X509, timestamp,
+                                             extensions, signature)))
+-
++    {
++        tear_down(fixture);
+         return 0;
++    }
+ 
+     sk_SCT_push(fixture->sct_list, sct);
+     fixture->sct_dir = ct_dir;
+-- 
+2.39.5 (Apple Git-154)
+

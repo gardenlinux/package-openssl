@@ -1,0 +1,78 @@
+From e32ad41b48c28d82339de064b05d5e269e5aed97 Mon Sep 17 00:00:00 2001
+From: Matt Caswell <matt@openssl.org>
+Date: Tue, 5 Mar 2024 16:01:20 +0000
+Subject: [PATCH 053/228] Add a CHANGES.md/NEWS.md entry for the unbounded
+ memory growth bug
+
+Related to CVE-2024-2511
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24044)
+---
+ CHANGES.md | 19 +++++++++++++++++++
+ NEWS.md    |  4 +++-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/CHANGES.md b/CHANGES.md
+index 1da6ed2e78..ab59071606 100644
+--- a/CHANGES.md
++++ b/CHANGES.md
+@@ -24,6 +24,24 @@ OpenSSL 3.1
+ 
+ ### Changes between 3.1.5 and 3.1.6 [xx XXX xxxx]
+ 
++ * Fixed an issue where some non-default TLS server configurations can cause
++   unbounded memory growth when processing TLSv1.3 sessions. An attacker may
++   exploit certain server configurations to trigger unbounded memory growth that
++   would lead to a Denial of Service
++
++   This problem can occur in TLSv1.3 if the non-default SSL_OP_NO_TICKET option
++   is being used (but not if early_data is also configured and the default
++   anti-replay protection is in use). In this case, under certain conditions,
++   the session cache can get into an incorrect state and it will fail to flush
++   properly as it fills. The session cache will continue to grow in an unbounded
++   manner. A malicious client could deliberately create the scenario for this
++   failure to force a Denial of Service. It may also happen by accident in
++   normal operation.
++
++   ([CVE-2024-2511])
++
++   *Matt Caswell*
++
+  * New atexit configuration switch, which controls whether the OPENSSL_cleanup
+    is registered when libcrypto is unloaded. This can be used on platforms
+    where using atexit() from shared libraries causes crashes on exit.
+@@ -19956,6 +19974,7 @@ ndif
+ 
+ <!-- Links -->
+ 
++[CVE-2024-2511]: https://www.openssl.org/news/vulnerabilities.html#CVE-2024-2511
+ [CVE-2024-0727]: https://www.openssl.org/news/vulnerabilities.html#CVE-2024-0727
+ [CVE-2023-6237]: https://www.openssl.org/news/vulnerabilities.html#CVE-2023-6237
+ [CVE-2023-6129]: https://www.openssl.org/news/vulnerabilities.html#CVE-2023-6129
+diff --git a/NEWS.md b/NEWS.md
+index 7e0a0ace48..50f1cf5a6b 100644
+--- a/NEWS.md
++++ b/NEWS.md
+@@ -21,7 +21,8 @@ OpenSSL 3.1
+ 
+ ### Major changes between OpenSSL 3.1.5 and OpenSSL 3.1.6 [under development]
+ 
+-  * none
++  * Fixed unbounded memory growth with session handling in TLSv1.3
++    ([CVE-2024-2511])
+ 
+ ### Major changes between OpenSSL 3.1.4 and OpenSSL 3.1.5 [30 Jan 2024]
+ 
+@@ -1490,6 +1491,7 @@ OpenSSL 0.9.x
+ 
+ <!-- Links -->
+ 
++[CVE-2024-2511]: https://www.openssl.org/news/vulnerabilities.html#CVE-2024-2511
+ [CVE-2024-0727]: https://www.openssl.org/news/vulnerabilities.html#CVE-2024-0727
+ [CVE-2023-6237]: https://www.openssl.org/news/vulnerabilities.html#CVE-2023-6237
+ [CVE-2023-6129]: https://www.openssl.org/news/vulnerabilities.html#CVE-2023-6129
+-- 
+2.39.5 (Apple Git-154)
+

@@ -1,0 +1,41 @@
+From ae6a91cfedad8667543f7f0594dd9d0dd42e7196 Mon Sep 17 00:00:00 2001
+From: Andrew Dinh <andrewd@openssl.org>
+Date: Fri, 2 Aug 2024 20:58:13 +0700
+Subject: [PATCH 196/228] Update links in CONTRIBUTING.md
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Matt Caswell <matt@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/25073)
+
+(cherry picked from commit ad3d57d27141c09fe07ef39c49af5afe69c59383)
+---
+ CONTRIBUTING.md | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index fec6616e21..76ed5418d1 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -3,7 +3,7 @@ HOW TO CONTRIBUTE TO OpenSSL
+ 
+ Please visit our [Getting Started] page for other ideas about how to contribute.
+ 
+-  [Getting Started]: <https://www.openssl.org/community/getting-started.html>
++  [Getting Started]: <https://openssl-library.org/community/getting-started/index.html>
+ 
+ Development is done on GitHub in the [openssl/openssl] repository.
+ 
+@@ -77,8 +77,8 @@ guidelines:
+     Clean builds via GitHub Actions are required. They are started automatically
+     whenever a PR is created or updated by committers.
+ 
+-    [coding style]: https://www.openssl.org/policies/technical/coding-style.html
+-    [documentation policy]: https://openssl.org/policies/technical/documentation-policy.html
++    [coding style]: https://openssl-library.org/policies/technical/coding-style/
++    [documentation policy]: https://openssl-library.org/policies/technical/documentation-policy/
+ 
+  5. When at all possible, code contributions should include tests. These can
+     either be added to an existing test, or completely new.  Please see
+-- 
+2.39.5 (Apple Git-154)
+

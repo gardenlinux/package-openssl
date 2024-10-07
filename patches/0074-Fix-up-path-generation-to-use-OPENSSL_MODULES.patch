@@ -1,0 +1,68 @@
+From 163202f0b95cfc7e666e45cafc55a505f51f6153 Mon Sep 17 00:00:00 2001
+From: Neil Horman <nhorman@openssl.org>
+Date: Fri, 5 Apr 2024 09:06:10 -0400
+Subject: [PATCH 074/228] Fix up path generation to use OPENSSL_MODULES
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Richard Levitte <levitte@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+
+(cherry picked from commit 4e3c1e6206251c59855362d6d2edab4621c31dec)
+
+(Merged from https://github.com/openssl/openssl/pull/24198)
+---
+ crypto/provider_core.c  |  4 ++++
+ test/prov_config_test.c | 15 ++++++++++++++-
+ 2 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/crypto/provider_core.c b/crypto/provider_core.c
+index 07b63c45ba..9f8e73c9d0 100644
+--- a/crypto/provider_core.c
++++ b/crypto/provider_core.c
+@@ -560,6 +560,10 @@ OSSL_PROVIDER *ossl_provider_new(OSSL_LIB_CTX *libctx, const char *name,
+ 
+     /* provider_new() generates an error, so no need here */
+     prov = provider_new(name, template.init, template.parameters);
++
++    if (prov == NULL)
++        return NULL;
++
+     if (!ossl_provider_set_module_path(prov, template.path)) {
+         ossl_provider_free(prov);
+         return NULL;
+diff --git a/test/prov_config_test.c b/test/prov_config_test.c
+index 2fac741a3d..fee2dffdb2 100644
+--- a/test/prov_config_test.c
++++ b/test/prov_config_test.c
+@@ -72,14 +72,27 @@ static int test_recursive_config(void)
+     return testresult;
+ }
+ 
++#define P_TEST_PATH "/../test/p_test.so"
+ static int test_path_config(void)
+ {
+     OSSL_LIB_CTX *ctx = NULL;
+     OSSL_PROVIDER *prov;
+     int testresult = 0;
+     struct stat sbuf;
++    char *module_path = getenv("OPENSSL_MODULES");
++    char *full_path = NULL;
++    int rc;
+ 
+-    if (stat("../test/p_test.so", &sbuf) == -1)
++    full_path = OPENSSL_zalloc(strlen(module_path) + strlen(P_TEST_PATH) + 1);
++    if (!TEST_ptr(full_path))
++        return 0;
++
++    strcpy(full_path, module_path);
++    full_path = strcat(full_path, P_TEST_PATH);
++    TEST_info("full path is %s", full_path);
++    rc = stat(full_path, &sbuf);
++    OPENSSL_free(full_path);
++    if (rc == -1)
+         return TEST_skip("Skipping modulepath test as provider not present");
+ 
+     if (!TEST_ptr(pathedconfig))
+-- 
+2.39.5 (Apple Git-154)
+

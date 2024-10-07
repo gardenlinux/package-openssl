@@ -1,0 +1,54 @@
+From 0a3f1a2ba890271d94f550a893bb136beeb38b72 Mon Sep 17 00:00:00 2001
+From: sashan <anedvedicky@gmail.com>
+Date: Fri, 22 Mar 2024 15:19:53 +0100
+Subject: [PATCH 036/228] fix demos/sslecho/main.c so it builds on OpenBSD too
+
+trying to build `demos/sslecho/main.c` shipped by current openssl
+fails with error as follows:
+```
+cc -I../../include -g -Wall   -c -o main.o main.c
+main.c:35:24: error: variable has incomplete type 'struct sockaddr_in'
+    struct sockaddr_in addr;
+                       ^
+main.c:35:12: note: forward declaration of 'struct sockaddr_in'
+    struct sockaddr_in addr;
+           ^
+main.c:46:32: error: use of undeclared identifier 'INADDR_ANY'
+        addr.sin_addr.s_addr = INADDR_ANY;
+                               ^
+main.c:152:24: error: variable has incomplete type 'struct sockaddr_in'
+    struct sockaddr_in addr;
+                       ^
+main.c:152:12: note: forward declaration of 'struct sockaddr_in'
+    struct sockaddr_in addr;
+           ^
+3 errors generated.
+gmake: *** [<builtin>: main.o] Error 1
+```
+
+including `netinet/in.h` fixes the build
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23936)
+
+(cherry picked from commit 01eaf203856bfbb63051f8ecf56eae2d21132496)
+---
+ demos/sslecho/main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/demos/sslecho/main.c b/demos/sslecho/main.c
+index a70d2c4725..7beb1e9095 100644
+--- a/demos/sslecho/main.c
++++ b/demos/sslecho/main.c
+@@ -12,6 +12,7 @@
+ #include <string.h>
+ #include <sys/socket.h>
+ #include <arpa/inet.h>
++#include <netinet/in.h>
+ #include <openssl/ssl.h>
+ #include <openssl/err.h>
+ 
+-- 
+2.39.5 (Apple Git-154)
+

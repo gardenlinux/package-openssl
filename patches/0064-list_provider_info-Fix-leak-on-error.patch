@@ -1,0 +1,31 @@
+From acd1d266b99710e55602f947b10f749eb48f81e7 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Thu, 11 Apr 2024 17:49:53 +0200
+Subject: [PATCH 064/228] list_provider_info(): Fix leak on error
+
+Fixes #24110
+
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+(Merged from https://github.com/openssl/openssl/pull/24117)
+
+(cherry picked from commit 993c2407d04956ffdf9b32cf0a7e4938ace816dc)
+---
+ apps/list.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/apps/list.c b/apps/list.c
+index 0fcbcbb083..ad5f45742c 100644
+--- a/apps/list.c
++++ b/apps/list.c
+@@ -1230,6 +1230,7 @@ static void list_provider_info(void)
+     }
+ 
+     if (OSSL_PROVIDER_do_all(NULL, &collect_providers, providers) != 1) {
++        sk_OSSL_PROVIDER_free(providers);
+         BIO_printf(bio_err, "ERROR: Memory allocation\n");
+         return;
+     }
+-- 
+2.39.5 (Apple Git-154)
+

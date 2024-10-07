@@ -1,0 +1,48 @@
+From 05698f7691d4fcb1a31e1b94a1fad401893e3907 Mon Sep 17 00:00:00 2001
+From: naaysayer <note11781@gmail.com>
+Date: Sat, 2 Mar 2024 13:35:35 +0400
+Subject: [PATCH 093/228] apps/pkcs12: Not writing the private key file until
+ the import password is verified
+
+Fixes #904
+
+CLA: trivial
+
+Reviewed-by: Dmitry Belyavskiy <beldmit@gmail.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23729)
+
+(cherry picked from commit f5462572a1873482ce38646cbf00dfc483f02068)
+---
+ apps/pkcs12.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/apps/pkcs12.c b/apps/pkcs12.c
+index af4f9fce04..6156be72f7 100644
+--- a/apps/pkcs12.c
++++ b/apps/pkcs12.c
+@@ -712,9 +712,6 @@ int pkcs12_main(int argc, char **argv)
+     in = bio_open_default(infile, 'r', FORMAT_PKCS12);
+     if (in == NULL)
+         goto end;
+-    out = bio_open_owner(outfile, FORMAT_PEM, private);
+-    if (out == NULL)
+-        goto end;
+ 
+     p12 = PKCS12_init_ex(NID_pkcs7_data, app_get0_libctx(), app_get0_propq());
+     if (p12 == NULL) {
+@@ -814,6 +811,11 @@ int pkcs12_main(int argc, char **argv)
+ 
+  dump:
+     assert(private);
++
++    out = bio_open_owner(outfile, FORMAT_PEM, private);
++    if (out == NULL)
++        goto end;
++
+     if (!dump_certs_keys_p12(out, p12, cpass, -1, options, passout, enc)) {
+         BIO_printf(bio_err, "Error outputting keys and certificates\n");
+         ERR_print_errors(bio_err);
+-- 
+2.39.5 (Apple Git-154)
+

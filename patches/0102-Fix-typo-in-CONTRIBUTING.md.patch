@@ -1,0 +1,32 @@
+From 4129b171735f734d16d350f57a7c7e97191b393e Mon Sep 17 00:00:00 2001
+From: James Muir <muir.james.a@gmail.com>
+Date: Wed, 15 May 2024 22:07:58 -0400
+Subject: [PATCH 102/228] Fix typo in CONTRIBUTING.md
+
+CLA: trivial
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Tim Hudson <tjh@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24413)
+
+(cherry picked from commit 45f5d51b72a262bf85c4461fbded91485ce6b9da)
+---
+ CONTRIBUTING.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index 0066e7e8ad..fec6616e21 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -9,7 +9,7 @@ Development is done on GitHub in the [openssl/openssl] repository.
+ 
+   [openssl/openssl]: <https://github.com/openssl/openssl>
+ 
+-To request new a feature, ask a question, or report a bug,
++To request a new feature, ask a question, or report a bug,
+ please open an [issue on GitHub](https://github.com/openssl/openssl/issues).
+ 
+ To submit a patch or implement a new feature, please open a
+-- 
+2.39.5 (Apple Git-154)
+

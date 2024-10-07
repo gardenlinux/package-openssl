@@ -1,0 +1,1808 @@
+From f361ec693bf9efbc56e2a84dbf47268941791aed Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Tue, 3 Sep 2024 14:55:43 +0200
+Subject: [PATCH 226/228] Copyright year updates
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Release: yes
+---
+ apps/cms.c                                                      | 2 +-
+ apps/dgst.c                                                     | 2 +-
+ apps/lib/opt.c                                                  | 2 +-
+ apps/smime.c                                                    | 2 +-
+ crypto/aes/asm/aesp8-ppc.pl                                     | 2 +-
+ crypto/asn1/a_d2i_fp.c                                          | 2 +-
+ crypto/asn1/a_mbstr.c                                           | 2 +-
+ crypto/asn1/a_strex.c                                           | 2 +-
+ crypto/asn1/a_verify.c                                          | 2 +-
+ crypto/asn1/tasn_fre.c                                          | 2 +-
+ crypto/bio/bf_readbuff.c                                        | 2 +-
+ crypto/bio/bio_addr.c                                           | 2 +-
+ crypto/conf/conf_def.c                                          | 2 +-
+ crypto/conf/conf_sap.c                                          | 2 +-
+ crypto/engine/eng_table.c                                       | 2 +-
+ crypto/evp/ctrl_params_translate.c                              | 2 +-
+ crypto/evp/digest.c                                             | 2 +-
+ crypto/evp/names.c                                              | 2 +-
+ crypto/pkcs12/p12_crt.c                                         | 2 +-
+ crypto/pkcs7/pk7_doit.c                                         | 2 +-
+ crypto/property/property.c                                      | 2 +-
+ crypto/rand/randfile.c                                          | 2 +-
+ crypto/rsa/rsa_oaep.c                                           | 2 +-
+ crypto/x509/v3_utl.c                                            | 2 +-
+ crypto/x509/x_name.c                                            | 2 +-
+ doc/man1/openssl-enc.pod.in                                     | 2 +-
+ doc/man1/openssl-s_client.pod.in                                | 2 +-
+ doc/man1/openssl-s_server.pod.in                                | 2 +-
+ doc/man1/openssl-verification-options.pod                       | 2 +-
+ doc/man3/ASN1_INTEGER_new.pod                                   | 2 +-
+ doc/man3/ASYNC_WAIT_CTX_new.pod                                 | 2 +-
+ doc/man3/BIO_ADDR.pod                                           | 2 +-
+ doc/man3/BIO_ADDRINFO.pod                                       | 2 +-
+ doc/man3/BIO_f_base64.pod                                       | 2 +-
+ doc/man3/BIO_meth_new.pod                                       | 2 +-
+ doc/man3/BN_add.pod                                             | 2 +-
+ doc/man3/BN_generate_prime.pod                                  | 2 +-
+ doc/man3/BN_set_bit.pod                                         | 2 +-
+ doc/man3/BUF_MEM_new.pod                                        | 2 +-
+ doc/man3/CRYPTO_THREAD_run_once.pod                             | 2 +-
+ doc/man3/CTLOG_STORE_new.pod                                    | 2 +-
+ doc/man3/CTLOG_new.pod                                          | 2 +-
+ doc/man3/CT_POLICY_EVAL_CTX_new.pod                             | 2 +-
+ doc/man3/DH_meth_new.pod                                        | 2 +-
+ doc/man3/DSA_SIG_new.pod                                        | 2 +-
+ doc/man3/DSA_meth_new.pod                                       | 2 +-
+ doc/man3/ECDSA_SIG_new.pod                                      | 2 +-
+ doc/man3/ENGINE_add.pod                                         | 2 +-
+ doc/man3/EVP_ASYM_CIPHER_free.pod                               | 2 +-
+ doc/man3/EVP_CIPHER_meth_new.pod                                | 2 +-
+ doc/man3/EVP_EncodeInit.pod                                     | 2 +-
+ doc/man3/EVP_KEM_free.pod                                       | 2 +-
+ doc/man3/EVP_KEYEXCH_free.pod                                   | 2 +-
+ doc/man3/EVP_KEYMGMT.pod                                        | 2 +-
+ doc/man3/EVP_MD_meth_new.pod                                    | 2 +-
+ doc/man3/EVP_PKEY_ASN1_METHOD.pod                               | 2 +-
+ doc/man3/EVP_PKEY_meth_new.pod                                  | 2 +-
+ doc/man3/EVP_RAND.pod                                           | 2 +-
+ doc/man3/EVP_SIGNATURE.pod                                      | 2 +-
+ doc/man3/HMAC.pod                                               | 2 +-
+ doc/man3/MD5.pod                                                | 2 +-
+ doc/man3/NCONF_new_ex.pod                                       | 2 +-
+ doc/man3/OCSP_REQUEST_new.pod                                   | 2 +-
+ doc/man3/OCSP_cert_to_id.pod                                    | 2 +-
+ doc/man3/OCSP_response_status.pod                               | 2 +-
+ doc/man3/OPENSSL_LH_COMPFUNC.pod                                | 2 +-
+ doc/man3/OPENSSL_init_crypto.pod                                | 2 +-
+ doc/man3/OPENSSL_malloc.pod                                     | 2 +-
+ doc/man3/OPENSSL_secure_malloc.pod                              | 2 +-
+ doc/man3/OSSL_CMP_CTX_new.pod                                   | 2 +-
+ doc/man3/OSSL_CMP_SRV_CTX_new.pod                               | 2 +-
+ doc/man3/OSSL_DECODER.pod                                       | 2 +-
+ doc/man3/OSSL_DECODER_CTX.pod                                   | 2 +-
+ doc/man3/OSSL_DECODER_CTX_new_for_pkey.pod                      | 2 +-
+ doc/man3/OSSL_ENCODER.pod                                       | 2 +-
+ doc/man3/OSSL_ENCODER_CTX.pod                                   | 2 +-
+ doc/man3/OSSL_HTTP_REQ_CTX.pod                                  | 2 +-
+ doc/man3/OSSL_LIB_CTX.pod                                       | 2 +-
+ doc/man3/OSSL_PARAM_BLD.pod                                     | 2 +-
+ doc/man3/OSSL_PARAM_dup.pod                                     | 2 +-
+ doc/man3/OSSL_SELF_TEST_new.pod                                 | 2 +-
+ doc/man3/OSSL_STORE_INFO.pod                                    | 2 +-
+ doc/man3/OSSL_STORE_LOADER.pod                                  | 2 +-
+ doc/man3/OSSL_STORE_SEARCH.pod                                  | 2 +-
+ doc/man3/PEM_read_bio_PrivateKey.pod                            | 2 +-
+ doc/man3/RAND_set_DRBG_type.pod                                 | 2 +-
+ doc/man3/RSA_meth_new.pod                                       | 2 +-
+ doc/man3/SCT_new.pod                                            | 2 +-
+ doc/man3/SSL_CTX_set_alpn_select_cb.pod                         | 2 +-
+ doc/man3/SSL_CTX_set_cipher_list.pod                            | 2 +-
+ doc/man3/SSL_CTX_set_tlsext_ticket_key_cb.pod                   | 2 +-
+ doc/man3/TS_RESP_CTX_new.pod                                    | 2 +-
+ doc/man3/X509V3_get_d2i.pod                                     | 2 +-
+ doc/man3/X509_LOOKUP.pod                                        | 2 +-
+ doc/man3/X509_LOOKUP_meth_new.pod                               | 2 +-
+ doc/man3/X509_STORE_new.pod                                     | 2 +-
+ doc/man3/X509_new.pod                                           | 2 +-
+ doc/man3/d2i_X509.pod                                           | 2 +-
+ doc/man7/EVP_KEYEXCH-DH.pod                                     | 2 +-
+ doc/man7/EVP_PKEY-DH.pod                                        | 2 +-
+ doc/man7/ossl_store.pod                                         | 2 +-
+ fuzz/bignum.c                                                   | 2 +-
+ include/crypto/aes_platform.h                                   | 2 +-
+ include/openssl/tls1.h                                          | 2 +-
+ providers/fips/self_test_kats.c                                 | 2 +-
+ .../implementations/ciphers/cipher_aes_gcm_hw_vaes_avx512.inc   | 2 +-
+ providers/implementations/ciphers/cipher_sm4_gcm_hw.c           | 2 +-
+ providers/implementations/encode_decode/decode_der2key.c        | 2 +-
+ providers/implementations/include/prov/ciphercommon_gcm.h       | 2 +-
+ providers/implementations/kdfs/kbkdf.c                          | 2 +-
+ providers/implementations/signature/rsa_sig.c                   | 2 +-
+ ssl/bio_ssl.c                                                   | 2 +-
+ ssl/statem/extensions.c                                         | 2 +-
+ ssl/statem/extensions_clnt.c                                    | 2 +-
+ ssl/statem/extensions_srvr.c                                    | 2 +-
+ ssl/statem/statem_lib.c                                         | 2 +-
+ test/crltest.c                                                  | 2 +-
+ test/endecode_test.c                                            | 2 +-
+ test/helpers/handshake.c                                        | 2 +-
+ test/hexstr_test.c                                              | 2 +-
+ test/provider_fallback_test.c                                   | 2 +-
+ test/provider_internal_test.c                                   | 2 +-
+ test/provider_status_test.c                                     | 2 +-
+ test/provider_test.c                                            | 2 +-
+ test/recipes/03-test_fipsinstall.t                              | 2 +-
+ test/recipes/04-test_conf.t                                     | 2 +-
+ test/recipes/25-test_eai_data.t                                 | 2 +-
+ test/recipes/30-test_evp_data/evppkey_dsa.txt                   | 2 +-
+ test/recipes/30-test_evp_data/evppkey_ecdsa.txt                 | 2 +-
+ test/recipes/30-test_evp_data/evppkey_rsa_common.txt            | 2 +-
+ test/ssl-tests/08-npn.cnf.in                                    | 2 +-
+ test/ssl-tests/09-alpn.cnf.in                                   | 2 +-
+ util/check-format-test-negatives.c                              | 2 +-
+ util/check-format.pl                                            | 2 +-
+ util/perl/OpenSSL/Test/Utils.pm                                 | 2 +-
+ util/perl/TLSProxy/Message.pm                                   | 2 +-
+ util/perl/TLSProxy/Proxy.pm                                     | 2 +-
+ 137 files changed, 137 insertions(+), 137 deletions(-)
+
+diff --git a/apps/cms.c b/apps/cms.c
+index 05239cc22b..abb9f196a7 100644
+--- a/apps/cms.c
++++ b/apps/cms.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2008-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2008-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/apps/dgst.c b/apps/dgst.c
+index d15ad65ef8..51383bec26 100644
+--- a/apps/dgst.c
++++ b/apps/dgst.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/apps/lib/opt.c b/apps/lib/opt.c
+index 224d2157c6..88db9ad694 100644
+--- a/apps/lib/opt.c
++++ b/apps/lib/opt.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2015-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2015-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/apps/smime.c b/apps/smime.c
+index cac6eab108..651294e46d 100644
+--- a/apps/smime.c
++++ b/apps/smime.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1999-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1999-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/aes/asm/aesp8-ppc.pl b/crypto/aes/asm/aesp8-ppc.pl
+index 38b9405a28..f7f78d04b0 100755
+--- a/crypto/aes/asm/aesp8-ppc.pl
++++ b/crypto/aes/asm/aesp8-ppc.pl
+@@ -1,5 +1,5 @@
+ #! /usr/bin/env perl
+-# Copyright 2014-2020 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2014-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/asn1/a_d2i_fp.c b/crypto/asn1/a_d2i_fp.c
+index 833dc104dd..bd549215b4 100644
+--- a/crypto/asn1/a_d2i_fp.c
++++ b/crypto/asn1/a_d2i_fp.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/asn1/a_mbstr.c b/crypto/asn1/a_mbstr.c
+index 817413c9bf..bca1458ad6 100644
+--- a/crypto/asn1/a_mbstr.c
++++ b/crypto/asn1/a_mbstr.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1999-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1999-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/asn1/a_strex.c b/crypto/asn1/a_strex.c
+index f61612737a..a6049f7dd2 100644
+--- a/crypto/asn1/a_strex.c
++++ b/crypto/asn1/a_strex.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2000-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/asn1/a_verify.c b/crypto/asn1/a_verify.c
+index c74b37e697..66809bd6d2 100644
+--- a/crypto/asn1/a_verify.c
++++ b/crypto/asn1/a_verify.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/asn1/tasn_fre.c b/crypto/asn1/tasn_fre.c
+index 9035bc1b5c..f8068832ab 100644
+--- a/crypto/asn1/tasn_fre.c
++++ b/crypto/asn1/tasn_fre.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2000-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/bio/bf_readbuff.c b/crypto/bio/bf_readbuff.c
+index 62490b9a2b..2409c9db97 100644
+--- a/crypto/bio/bf_readbuff.c
++++ b/crypto/bio/bf_readbuff.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2021-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/bio/bio_addr.c b/crypto/bio/bio_addr.c
+index e25c7f5d21..77cb439574 100644
+--- a/crypto/bio/bio_addr.c
++++ b/crypto/bio/bio_addr.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2016-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/conf/conf_def.c b/crypto/conf/conf_def.c
+index 56870317a2..345265f4ab 100644
+--- a/crypto/conf/conf_def.c
++++ b/crypto/conf/conf_def.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/conf/conf_sap.c b/crypto/conf/conf_sap.c
+index bfe3a5f6f4..106434dcbf 100644
+--- a/crypto/conf/conf_sap.c
++++ b/crypto/conf/conf_sap.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2002-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2002-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/engine/eng_table.c b/crypto/engine/eng_table.c
+index cb43e2d967..6280965cc0 100644
+--- a/crypto/engine/eng_table.c
++++ b/crypto/engine/eng_table.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2001-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2001-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/evp/ctrl_params_translate.c b/crypto/evp/ctrl_params_translate.c
+index e79943d925..6c34070203 100644
+--- a/crypto/evp/ctrl_params_translate.c
++++ b/crypto/evp/ctrl_params_translate.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2021-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2021-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/evp/digest.c b/crypto/evp/digest.c
+index 9994bdbd50..d1bc488fc5 100644
+--- a/crypto/evp/digest.c
++++ b/crypto/evp/digest.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/evp/names.c b/crypto/evp/names.c
+index 66d136fca0..7ff850f997 100644
+--- a/crypto/evp/names.c
++++ b/crypto/evp/names.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/pkcs12/p12_crt.c b/crypto/pkcs12/p12_crt.c
+index 6a7e97125f..1a48e5c611 100644
+--- a/crypto/pkcs12/p12_crt.c
++++ b/crypto/pkcs12/p12_crt.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1999-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1999-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/pkcs7/pk7_doit.c b/crypto/pkcs7/pk7_doit.c
+index 0d56e923de..d7791e5c4f 100644
+--- a/crypto/pkcs7/pk7_doit.c
++++ b/crypto/pkcs7/pk7_doit.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/property/property.c b/crypto/property/property.c
+index 52e341b712..79dff2bb62 100644
+--- a/crypto/property/property.c
++++ b/crypto/property/property.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2019-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+  * Copyright (c) 2019, Oracle and/or its affiliates.  All rights reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+diff --git a/crypto/rand/randfile.c b/crypto/rand/randfile.c
+index 98b811c5ef..50280aac46 100644
+--- a/crypto/rand/randfile.c
++++ b/crypto/rand/randfile.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/rsa/rsa_oaep.c b/crypto/rsa/rsa_oaep.c
+index 730765fe03..ffe24edcb6 100644
+--- a/crypto/rsa/rsa_oaep.c
++++ b/crypto/rsa/rsa_oaep.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1999-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1999-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/x509/v3_utl.c b/crypto/x509/v3_utl.c
+index 080f127543..075362d39e 100644
+--- a/crypto/x509/v3_utl.c
++++ b/crypto/x509/v3_utl.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1999-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1999-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/x509/x_name.c b/crypto/x509/x_name.c
+index 5d3a4f9200..eded80246d 100644
+--- a/crypto/x509/x_name.c
++++ b/crypto/x509/x_name.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man1/openssl-enc.pod.in b/doc/man1/openssl-enc.pod.in
+index f4551d3685..a47e783e2d 100644
+--- a/doc/man1/openssl-enc.pod.in
++++ b/doc/man1/openssl-enc.pod.in
+@@ -458,7 +458,7 @@ The B<-ciphers> and B<-engine> options were deprecated in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2023 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man1/openssl-s_client.pod.in b/doc/man1/openssl-s_client.pod.in
+index c1c6a88772..bd6171aa26 100644
+--- a/doc/man1/openssl-s_client.pod.in
++++ b/doc/man1/openssl-s_client.pod.in
+@@ -914,7 +914,7 @@ The B<-engine> option was deprecated in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man1/openssl-s_server.pod.in b/doc/man1/openssl-s_server.pod.in
+index d99aead641..99a252a822 100644
+--- a/doc/man1/openssl-s_server.pod.in
++++ b/doc/man1/openssl-s_server.pod.in
+@@ -933,7 +933,7 @@ option were deprecated in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man1/openssl-verification-options.pod b/doc/man1/openssl-verification-options.pod
+index 44c2983b55..bf9ed9c1a6 100644
+--- a/doc/man1/openssl-verification-options.pod
++++ b/doc/man1/openssl-verification-options.pod
+@@ -686,7 +686,7 @@ The checks enabled by B<-x509_strict> have been extended in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/ASN1_INTEGER_new.pod b/doc/man3/ASN1_INTEGER_new.pod
+index fb9f3255d8..869ac754f4 100644
+--- a/doc/man3/ASN1_INTEGER_new.pod
++++ b/doc/man3/ASN1_INTEGER_new.pod
+@@ -35,7 +35,7 @@ L<ERR_get_error(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/ASYNC_WAIT_CTX_new.pod b/doc/man3/ASYNC_WAIT_CTX_new.pod
+index 5293c0af5e..d85c51e555 100644
+--- a/doc/man3/ASYNC_WAIT_CTX_new.pod
++++ b/doc/man3/ASYNC_WAIT_CTX_new.pod
+@@ -219,7 +219,7 @@ were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2023 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/BIO_ADDR.pod b/doc/man3/BIO_ADDR.pod
+index 66dfd1f8d1..12ec84d15c 100644
+--- a/doc/man3/BIO_ADDR.pod
++++ b/doc/man3/BIO_ADDR.pod
+@@ -116,7 +116,7 @@ L<BIO_connect(3)>, L<BIO_s_connect(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/BIO_ADDRINFO.pod b/doc/man3/BIO_ADDRINFO.pod
+index d42a8340ba..71a14ff4f0 100644
+--- a/doc/man3/BIO_ADDRINFO.pod
++++ b/doc/man3/BIO_ADDRINFO.pod
+@@ -103,7 +103,7 @@ The BIO_lookup_ex() function was added in OpenSSL 1.1.1.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/BIO_f_base64.pod b/doc/man3/BIO_f_base64.pod
+index 7d10df933c..c951d49261 100644
+--- a/doc/man3/BIO_f_base64.pod
++++ b/doc/man3/BIO_f_base64.pod
+@@ -95,7 +95,7 @@ to reliably determine EOF (for example a MIME boundary).
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/BIO_meth_new.pod b/doc/man3/BIO_meth_new.pod
+index 23b96587b5..d626277c03 100644
+--- a/doc/man3/BIO_meth_new.pod
++++ b/doc/man3/BIO_meth_new.pod
+@@ -157,7 +157,7 @@ The functions described here were added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/BN_add.pod b/doc/man3/BN_add.pod
+index 4d9cb87224..46966d9963 100644
+--- a/doc/man3/BN_add.pod
++++ b/doc/man3/BN_add.pod
+@@ -135,7 +135,7 @@ L<BN_add_word(3)>, L<BN_set_bit(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/BN_generate_prime.pod b/doc/man3/BN_generate_prime.pod
+index 51306410e6..accc8a749f 100644
+--- a/doc/man3/BN_generate_prime.pod
++++ b/doc/man3/BN_generate_prime.pod
+@@ -246,7 +246,7 @@ BN_check_prime() was added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/BN_set_bit.pod b/doc/man3/BN_set_bit.pod
+index e4d66791e8..ddc27d0c40 100644
+--- a/doc/man3/BN_set_bit.pod
++++ b/doc/man3/BN_set_bit.pod
+@@ -62,7 +62,7 @@ L<BN_num_bytes(3)>, L<BN_add(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/BUF_MEM_new.pod b/doc/man3/BUF_MEM_new.pod
+index 33ca4dfcc9..79de43a1df 100644
+--- a/doc/man3/BUF_MEM_new.pod
++++ b/doc/man3/BUF_MEM_new.pod
+@@ -66,7 +66,7 @@ The BUF_MEM_new_ex() function was added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2018 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/CRYPTO_THREAD_run_once.pod b/doc/man3/CRYPTO_THREAD_run_once.pod
+index 9fc44e84fb..420ff7278b 100644
+--- a/doc/man3/CRYPTO_THREAD_run_once.pod
++++ b/doc/man3/CRYPTO_THREAD_run_once.pod
+@@ -187,7 +187,7 @@ L<crypto(7)>, L<openssl-threads(7)>.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/CTLOG_STORE_new.pod b/doc/man3/CTLOG_STORE_new.pod
+index 2f1596be42..361eda57b1 100644
+--- a/doc/man3/CTLOG_STORE_new.pod
++++ b/doc/man3/CTLOG_STORE_new.pod
+@@ -78,7 +78,7 @@ added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/CTLOG_new.pod b/doc/man3/CTLOG_new.pod
+index b72c1a4249..7a78a6c58d 100644
+--- a/doc/man3/CTLOG_new.pod
++++ b/doc/man3/CTLOG_new.pod
+@@ -80,7 +80,7 @@ were added in OpenSSL 3.0. All other functions were added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/CT_POLICY_EVAL_CTX_new.pod b/doc/man3/CT_POLICY_EVAL_CTX_new.pod
+index 45ba91bba0..3b79980c43 100644
+--- a/doc/man3/CT_POLICY_EVAL_CTX_new.pod
++++ b/doc/man3/CT_POLICY_EVAL_CTX_new.pod
+@@ -131,7 +131,7 @@ functions were added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/DH_meth_new.pod b/doc/man3/DH_meth_new.pod
+index 977ae01241..d5ba5eac56 100644
+--- a/doc/man3/DH_meth_new.pod
++++ b/doc/man3/DH_meth_new.pod
+@@ -166,7 +166,7 @@ The functions described here were added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/DSA_SIG_new.pod b/doc/man3/DSA_SIG_new.pod
+index 7e909f6d67..158da2d7dd 100644
+--- a/doc/man3/DSA_SIG_new.pod
++++ b/doc/man3/DSA_SIG_new.pod
+@@ -49,7 +49,7 @@ L<ERR_get_error(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2016 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/DSA_meth_new.pod b/doc/man3/DSA_meth_new.pod
+index 7abaa9c6ba..534561c610 100644
+--- a/doc/man3/DSA_meth_new.pod
++++ b/doc/man3/DSA_meth_new.pod
+@@ -214,7 +214,7 @@ The functions described here were added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/ECDSA_SIG_new.pod b/doc/man3/ECDSA_SIG_new.pod
+index 2eecd4ed43..e56ec959ed 100644
+--- a/doc/man3/ECDSA_SIG_new.pod
++++ b/doc/man3/ECDSA_SIG_new.pod
+@@ -137,7 +137,7 @@ L<ECDSA_sign(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2004-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2004-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/ENGINE_add.pod b/doc/man3/ENGINE_add.pod
+index c587f83642..24c83c5764 100644
+--- a/doc/man3/ENGINE_add.pod
++++ b/doc/man3/ENGINE_add.pod
+@@ -666,7 +666,7 @@ and should not be used.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2002-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2002-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_ASYM_CIPHER_free.pod b/doc/man3/EVP_ASYM_CIPHER_free.pod
+index 49446f5b36..162ad7ed76 100644
+--- a/doc/man3/EVP_ASYM_CIPHER_free.pod
++++ b/doc/man3/EVP_ASYM_CIPHER_free.pod
+@@ -102,7 +102,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2019-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_CIPHER_meth_new.pod b/doc/man3/EVP_CIPHER_meth_new.pod
+index 6cf95289c0..8638cd3009 100644
+--- a/doc/man3/EVP_CIPHER_meth_new.pod
++++ b/doc/man3/EVP_CIPHER_meth_new.pod
+@@ -250,7 +250,7 @@ counted in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_EncodeInit.pod b/doc/man3/EVP_EncodeInit.pod
+index 2d6e4e8cbf..03c6f4e605 100644
+--- a/doc/man3/EVP_EncodeInit.pod
++++ b/doc/man3/EVP_EncodeInit.pod
+@@ -151,7 +151,7 @@ L<evp(7)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_KEM_free.pod b/doc/man3/EVP_KEM_free.pod
+index c7a42d4690..b0ef604757 100644
+--- a/doc/man3/EVP_KEM_free.pod
++++ b/doc/man3/EVP_KEM_free.pod
+@@ -96,7 +96,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_KEYEXCH_free.pod b/doc/man3/EVP_KEYEXCH_free.pod
+index 7e5c7bc126..e08f44e60c 100644
+--- a/doc/man3/EVP_KEYEXCH_free.pod
++++ b/doc/man3/EVP_KEYEXCH_free.pod
+@@ -101,7 +101,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2019-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_KEYMGMT.pod b/doc/man3/EVP_KEYMGMT.pod
+index a801ae28e9..4c0c3b776c 100644
+--- a/doc/man3/EVP_KEYMGMT.pod
++++ b/doc/man3/EVP_KEYMGMT.pod
+@@ -141,7 +141,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2019-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_MD_meth_new.pod b/doc/man3/EVP_MD_meth_new.pod
+index 9ddc0001ab..3497973323 100644
+--- a/doc/man3/EVP_MD_meth_new.pod
++++ b/doc/man3/EVP_MD_meth_new.pod
+@@ -195,7 +195,7 @@ counted in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2015-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2015-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_PKEY_ASN1_METHOD.pod b/doc/man3/EVP_PKEY_ASN1_METHOD.pod
+index 637fd48010..41f058fe54 100644
+--- a/doc/man3/EVP_PKEY_ASN1_METHOD.pod
++++ b/doc/man3/EVP_PKEY_ASN1_METHOD.pod
+@@ -439,7 +439,7 @@ parameter is now constified.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2017-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2017-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_PKEY_meth_new.pod b/doc/man3/EVP_PKEY_meth_new.pod
+index 45f868d04d..1b0adb2913 100644
+--- a/doc/man3/EVP_PKEY_meth_new.pod
++++ b/doc/man3/EVP_PKEY_meth_new.pod
+@@ -456,7 +456,7 @@ has changed in OpenSSL 3.0 so its I<src> parameter is now constified.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2017-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2017-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_RAND.pod b/doc/man3/EVP_RAND.pod
+index a833e0295f..415863d4f4 100644
+--- a/doc/man3/EVP_RAND.pod
++++ b/doc/man3/EVP_RAND.pod
+@@ -409,7 +409,7 @@ This functionality was added to OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020-2023 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/EVP_SIGNATURE.pod b/doc/man3/EVP_SIGNATURE.pod
+index 9a1bc31a40..cf476d1453 100644
+--- a/doc/man3/EVP_SIGNATURE.pod
++++ b/doc/man3/EVP_SIGNATURE.pod
+@@ -106,7 +106,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2019-2023 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/HMAC.pod b/doc/man3/HMAC.pod
+index e9e6b69337..ebe69d2db9 100644
+--- a/doc/man3/HMAC.pod
++++ b/doc/man3/HMAC.pod
+@@ -163,7 +163,7 @@ OpenSSL before version 1.0.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/MD5.pod b/doc/man3/MD5.pod
+index 6d9bd690ca..99bf821160 100644
+--- a/doc/man3/MD5.pod
++++ b/doc/man3/MD5.pod
+@@ -104,7 +104,7 @@ All of these functions were deprecated in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2023 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/NCONF_new_ex.pod b/doc/man3/NCONF_new_ex.pod
+index 394dbd82d4..d088ab2fed 100644
+--- a/doc/man3/NCONF_new_ex.pod
++++ b/doc/man3/NCONF_new_ex.pod
+@@ -74,7 +74,7 @@ in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OCSP_REQUEST_new.pod b/doc/man3/OCSP_REQUEST_new.pod
+index 65c3a1cc98..3f171e8229 100644
+--- a/doc/man3/OCSP_REQUEST_new.pod
++++ b/doc/man3/OCSP_REQUEST_new.pod
+@@ -109,7 +109,7 @@ L<OCSP_sendreq_new(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2015-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2015-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OCSP_cert_to_id.pod b/doc/man3/OCSP_cert_to_id.pod
+index abf07db109..e0fbdfa9ea 100644
+--- a/doc/man3/OCSP_cert_to_id.pod
++++ b/doc/man3/OCSP_cert_to_id.pod
+@@ -80,7 +80,7 @@ L<OCSP_sendreq_new(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2015-2016 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2015-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OCSP_response_status.pod b/doc/man3/OCSP_response_status.pod
+index a7402540b2..0902ae8a31 100644
+--- a/doc/man3/OCSP_response_status.pod
++++ b/doc/man3/OCSP_response_status.pod
+@@ -124,7 +124,7 @@ The OCSP_basic_sign_ctx() function was added in OpenSSL 1.1.1.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2015-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2015-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OPENSSL_LH_COMPFUNC.pod b/doc/man3/OPENSSL_LH_COMPFUNC.pod
+index 87b1b6a58c..29e3a1087b 100644
+--- a/doc/man3/OPENSSL_LH_COMPFUNC.pod
++++ b/doc/man3/OPENSSL_LH_COMPFUNC.pod
+@@ -314,7 +314,7 @@ was deprecated.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OPENSSL_init_crypto.pod b/doc/man3/OPENSSL_init_crypto.pod
+index 12f3c6864f..1363693c77 100644
+--- a/doc/man3/OPENSSL_init_crypto.pod
++++ b/doc/man3/OPENSSL_init_crypto.pod
+@@ -290,7 +290,7 @@ and OPENSSL_INIT_free() functions were added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OPENSSL_malloc.pod b/doc/man3/OPENSSL_malloc.pod
+index 4f29210195..20441e76ac 100644
+--- a/doc/man3/OPENSSL_malloc.pod
++++ b/doc/man3/OPENSSL_malloc.pod
+@@ -199,7 +199,7 @@ clang's memory and leak sanitizer.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OPENSSL_secure_malloc.pod b/doc/man3/OPENSSL_secure_malloc.pod
+index cd18753d6f..1bddd77370 100644
+--- a/doc/man3/OPENSSL_secure_malloc.pod
++++ b/doc/man3/OPENSSL_secure_malloc.pod
+@@ -135,7 +135,7 @@ a B<size_t> in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2015-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2015-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_CMP_CTX_new.pod b/doc/man3/OSSL_CMP_CTX_new.pod
+index 614fbf8203..9b4054fe5d 100644
+--- a/doc/man3/OSSL_CMP_CTX_new.pod
++++ b/doc/man3/OSSL_CMP_CTX_new.pod
+@@ -797,7 +797,7 @@ OSSL_CMP_CTX_reset_geninfo_ITAVs() was added in OpenSSL 3.0.8.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2007-2023 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2007-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_CMP_SRV_CTX_new.pod b/doc/man3/OSSL_CMP_SRV_CTX_new.pod
+index 89749615eb..12b1bfa88a 100644
+--- a/doc/man3/OSSL_CMP_SRV_CTX_new.pod
++++ b/doc/man3/OSSL_CMP_SRV_CTX_new.pod
+@@ -159,7 +159,7 @@ The OpenSSL CMP support was added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2007-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2007-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_DECODER.pod b/doc/man3/OSSL_DECODER.pod
+index 25f5e50dce..633aa07f8f 100644
+--- a/doc/man3/OSSL_DECODER.pod
++++ b/doc/man3/OSSL_DECODER.pod
+@@ -181,7 +181,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_DECODER_CTX.pod b/doc/man3/OSSL_DECODER_CTX.pod
+index de7c22b61e..bace3ee0cf 100644
+--- a/doc/man3/OSSL_DECODER_CTX.pod
++++ b/doc/man3/OSSL_DECODER_CTX.pod
+@@ -250,7 +250,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_DECODER_CTX_new_for_pkey.pod b/doc/man3/OSSL_DECODER_CTX_new_for_pkey.pod
+index 80f1d72cf1..e55212ad55 100644
+--- a/doc/man3/OSSL_DECODER_CTX_new_for_pkey.pod
++++ b/doc/man3/OSSL_DECODER_CTX_new_for_pkey.pod
+@@ -135,7 +135,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_ENCODER.pod b/doc/man3/OSSL_ENCODER.pod
+index e5e1598808..bbf64b0b47 100644
+--- a/doc/man3/OSSL_ENCODER.pod
++++ b/doc/man3/OSSL_ENCODER.pod
+@@ -135,7 +135,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2019-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_ENCODER_CTX.pod b/doc/man3/OSSL_ENCODER_CTX.pod
+index 75dcb83af7..e9248c356a 100644
+--- a/doc/man3/OSSL_ENCODER_CTX.pod
++++ b/doc/man3/OSSL_ENCODER_CTX.pod
+@@ -212,7 +212,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2019-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_HTTP_REQ_CTX.pod b/doc/man3/OSSL_HTTP_REQ_CTX.pod
+index 5da7fd0b26..299e920d5f 100644
+--- a/doc/man3/OSSL_HTTP_REQ_CTX.pod
++++ b/doc/man3/OSSL_HTTP_REQ_CTX.pod
+@@ -269,7 +269,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2015-2023 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2015-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_LIB_CTX.pod b/doc/man3/OSSL_LIB_CTX.pod
+index fc205b33da..ad203299e9 100644
+--- a/doc/man3/OSSL_LIB_CTX.pod
++++ b/doc/man3/OSSL_LIB_CTX.pod
+@@ -126,7 +126,7 @@ All of the functions described on this page were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2019-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_PARAM_BLD.pod b/doc/man3/OSSL_PARAM_BLD.pod
+index 63e8eccb8c..8598ed0626 100644
+--- a/doc/man3/OSSL_PARAM_BLD.pod
++++ b/doc/man3/OSSL_PARAM_BLD.pod
+@@ -194,7 +194,7 @@ The functions described here were all added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2019-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_PARAM_dup.pod b/doc/man3/OSSL_PARAM_dup.pod
+index 22fb06ff98..c8d109a227 100644
+--- a/doc/man3/OSSL_PARAM_dup.pod
++++ b/doc/man3/OSSL_PARAM_dup.pod
+@@ -50,7 +50,7 @@ The functions were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2021-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2021-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_SELF_TEST_new.pod b/doc/man3/OSSL_SELF_TEST_new.pod
+index dbacf9556a..c46becd1ad 100644
+--- a/doc/man3/OSSL_SELF_TEST_new.pod
++++ b/doc/man3/OSSL_SELF_TEST_new.pod
+@@ -166,7 +166,7 @@ The functions described here were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020-2023 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_STORE_INFO.pod b/doc/man3/OSSL_STORE_INFO.pod
+index 546ec54c70..b8332855d4 100644
+--- a/doc/man3/OSSL_STORE_INFO.pod
++++ b/doc/man3/OSSL_STORE_INFO.pod
+@@ -222,7 +222,7 @@ The OSSL_STORE_INFO_PUBKEY object type was added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_STORE_LOADER.pod b/doc/man3/OSSL_STORE_LOADER.pod
+index 89c60f1ef1..b4fcc7efe9 100644
+--- a/doc/man3/OSSL_STORE_LOADER.pod
++++ b/doc/man3/OSSL_STORE_LOADER.pod
+@@ -385,7 +385,7 @@ were added in OpenSSL 1.1.1, and became deprecated in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/OSSL_STORE_SEARCH.pod b/doc/man3/OSSL_STORE_SEARCH.pod
+index 021ed0c8ba..bd512890c6 100644
+--- a/doc/man3/OSSL_STORE_SEARCH.pod
++++ b/doc/man3/OSSL_STORE_SEARCH.pod
+@@ -184,7 +184,7 @@ were added in OpenSSL 1.1.1.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2018-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2018-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/PEM_read_bio_PrivateKey.pod b/doc/man3/PEM_read_bio_PrivateKey.pod
+index fa1a3466e3..f1635b8980 100644
+--- a/doc/man3/PEM_read_bio_PrivateKey.pod
++++ b/doc/man3/PEM_read_bio_PrivateKey.pod
+@@ -576,7 +576,7 @@ PEM_write_bio_DHparams() and PEM_write_DHparams() were deprecated in 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2001-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2001-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/RAND_set_DRBG_type.pod b/doc/man3/RAND_set_DRBG_type.pod
+index f9bdbf780b..423ebfad65 100644
+--- a/doc/man3/RAND_set_DRBG_type.pod
++++ b/doc/man3/RAND_set_DRBG_type.pod
+@@ -54,7 +54,7 @@ These functions were added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2021-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/RSA_meth_new.pod b/doc/man3/RSA_meth_new.pod
+index b5cfd43b6e..40f9bc4e82 100644
+--- a/doc/man3/RSA_meth_new.pod
++++ b/doc/man3/RSA_meth_new.pod
+@@ -260,7 +260,7 @@ Other functions described here were added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/SCT_new.pod b/doc/man3/SCT_new.pod
+index ecaa25e1d2..a20affd38a 100644
+--- a/doc/man3/SCT_new.pod
++++ b/doc/man3/SCT_new.pod
+@@ -216,7 +216,7 @@ These functions were added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2017 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/SSL_CTX_set_alpn_select_cb.pod b/doc/man3/SSL_CTX_set_alpn_select_cb.pod
+index 433fe994f7..2997a99557 100644
+--- a/doc/man3/SSL_CTX_set_alpn_select_cb.pod
++++ b/doc/man3/SSL_CTX_set_alpn_select_cb.pod
+@@ -197,7 +197,7 @@ L<SSL_CTX_set_tlsext_servername_arg(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/SSL_CTX_set_cipher_list.pod b/doc/man3/SSL_CTX_set_cipher_list.pod
+index 795ec2b1ef..08d7693f42 100644
+--- a/doc/man3/SSL_CTX_set_cipher_list.pod
++++ b/doc/man3/SSL_CTX_set_cipher_list.pod
+@@ -119,7 +119,7 @@ OSSL_default_cipher_list() and OSSL_default_ciphersites() are new in 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2000-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/SSL_CTX_set_tlsext_ticket_key_cb.pod b/doc/man3/SSL_CTX_set_tlsext_ticket_key_cb.pod
+index 69cb110c31..e4871590f7 100644
+--- a/doc/man3/SSL_CTX_set_tlsext_ticket_key_cb.pod
++++ b/doc/man3/SSL_CTX_set_tlsext_ticket_key_cb.pod
+@@ -241,7 +241,7 @@ OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2014-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2014-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/TS_RESP_CTX_new.pod b/doc/man3/TS_RESP_CTX_new.pod
+index 3b5bfc65ba..01fd23a10e 100644
+--- a/doc/man3/TS_RESP_CTX_new.pod
++++ b/doc/man3/TS_RESP_CTX_new.pod
+@@ -40,7 +40,7 @@ The function TS_RESP_CTX_new_ex() was added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2021-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/X509V3_get_d2i.pod b/doc/man3/X509V3_get_d2i.pod
+index dc00090b84..88294ff710 100644
+--- a/doc/man3/X509V3_get_d2i.pod
++++ b/doc/man3/X509V3_get_d2i.pod
+@@ -237,7 +237,7 @@ L<X509_verify_cert(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2015-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2015-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/X509_LOOKUP.pod b/doc/man3/X509_LOOKUP.pod
+index d086d1b35c..8f0240de2d 100644
+--- a/doc/man3/X509_LOOKUP.pod
++++ b/doc/man3/X509_LOOKUP.pod
+@@ -229,7 +229,7 @@ added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/X509_LOOKUP_meth_new.pod b/doc/man3/X509_LOOKUP_meth_new.pod
+index baaccd5220..ef2c3cdd50 100644
+--- a/doc/man3/X509_LOOKUP_meth_new.pod
++++ b/doc/man3/X509_LOOKUP_meth_new.pod
+@@ -187,7 +187,7 @@ The functions described here were added in OpenSSL 1.1.0i.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2018-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2018-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/X509_STORE_new.pod b/doc/man3/X509_STORE_new.pod
+index 63c37e9530..5b3dadb243 100644
+--- a/doc/man3/X509_STORE_new.pod
++++ b/doc/man3/X509_STORE_new.pod
+@@ -50,7 +50,7 @@ functions were added in OpenSSL 1.1.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/X509_new.pod b/doc/man3/X509_new.pod
+index 0e19a76fb1..4b52972554 100644
+--- a/doc/man3/X509_new.pod
++++ b/doc/man3/X509_new.pod
+@@ -87,7 +87,7 @@ The function X509_new_ex() was added in OpenSSL 3.0.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2002-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2002-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man3/d2i_X509.pod b/doc/man3/d2i_X509.pod
+index 1086f7aa76..c4b589dd89 100644
+--- a/doc/man3/d2i_X509.pod
++++ b/doc/man3/d2i_X509.pod
+@@ -617,7 +617,7 @@ efficiency reasons.
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 1998-2023 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 1998-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man7/EVP_KEYEXCH-DH.pod b/doc/man7/EVP_KEYEXCH-DH.pod
+index 04ac08bce2..eaec67775d 100644
+--- a/doc/man7/EVP_KEYEXCH-DH.pod
++++ b/doc/man7/EVP_KEYEXCH-DH.pod
+@@ -127,7 +127,7 @@ L<OSSL_PROVIDER-FIPS(7)>,
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man7/EVP_PKEY-DH.pod b/doc/man7/EVP_PKEY-DH.pod
+index cf4d9c09b9..1232730c33 100644
+--- a/doc/man7/EVP_PKEY-DH.pod
++++ b/doc/man7/EVP_PKEY-DH.pod
+@@ -329,7 +329,7 @@ L<OSSL_PROVIDER-FIPS(7)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2020-2022 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/doc/man7/ossl_store.pod b/doc/man7/ossl_store.pod
+index 81908def36..d6fdae8f22 100644
+--- a/doc/man7/ossl_store.pod
++++ b/doc/man7/ossl_store.pod
+@@ -82,7 +82,7 @@ L<OSSL_STORE_SEARCH(3)>
+ 
+ =head1 COPYRIGHT
+ 
+-Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
++Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ 
+ Licensed under the Apache License 2.0 (the "License").  You may not use
+ this file except in compliance with the License.  You can obtain a copy
+diff --git a/fuzz/bignum.c b/fuzz/bignum.c
+index 783e915977..08da6fb197 100644
+--- a/fuzz/bignum.c
++++ b/fuzz/bignum.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2016 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+diff --git a/include/crypto/aes_platform.h b/include/crypto/aes_platform.h
+index eed030d2ad..03b79e62a3 100644
+--- a/include/crypto/aes_platform.h
++++ b/include/crypto/aes_platform.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2019-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/include/openssl/tls1.h b/include/openssl/tls1.h
+index e3d49eddbe..03f43744b1 100644
+--- a/include/openssl/tls1.h
++++ b/include/openssl/tls1.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  * Copyright (c) 2002, Oracle and/or its affiliates. All rights reserved
+  * Copyright 2005 Nokia. All rights reserved.
+  *
+diff --git a/providers/fips/self_test_kats.c b/providers/fips/self_test_kats.c
+index 8baa8cc6b1..856b367e45 100644
+--- a/providers/fips/self_test_kats.c
++++ b/providers/fips/self_test_kats.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2019-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/providers/implementations/ciphers/cipher_aes_gcm_hw_vaes_avx512.inc b/providers/implementations/ciphers/cipher_aes_gcm_hw_vaes_avx512.inc
+index c892c0754e..38c7f8bdec 100644
+--- a/providers/implementations/ciphers/cipher_aes_gcm_hw_vaes_avx512.inc
++++ b/providers/implementations/ciphers/cipher_aes_gcm_hw_vaes_avx512.inc
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2021-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2021-2024 The OpenSSL Project Authors. All Rights Reserved.
+  * Copyright (c) 2021, Intel Corporation. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+diff --git a/providers/implementations/ciphers/cipher_sm4_gcm_hw.c b/providers/implementations/ciphers/cipher_sm4_gcm_hw.c
+index 453c6ad0b8..0291eb28ef 100644
+--- a/providers/implementations/ciphers/cipher_sm4_gcm_hw.c
++++ b/providers/implementations/ciphers/cipher_sm4_gcm_hw.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2021-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2021-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/providers/implementations/encode_decode/decode_der2key.c b/providers/implementations/encode_decode/decode_der2key.c
+index 28d95ab446..178c632bb1 100644
+--- a/providers/implementations/encode_decode/decode_der2key.c
++++ b/providers/implementations/encode_decode/decode_der2key.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2020-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/providers/implementations/include/prov/ciphercommon_gcm.h b/providers/implementations/include/prov/ciphercommon_gcm.h
+index b482af78d2..1660c7366a 100644
+--- a/providers/implementations/include/prov/ciphercommon_gcm.h
++++ b/providers/implementations/include/prov/ciphercommon_gcm.h
+@@ -1,6 +1,6 @@
+ 
+ /*
+- * Copyright 2019-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/providers/implementations/kdfs/kbkdf.c b/providers/implementations/kdfs/kbkdf.c
+index b99541d5b6..2ef49a4a1a 100644
+--- a/providers/implementations/kdfs/kbkdf.c
++++ b/providers/implementations/kdfs/kbkdf.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2019-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+  * Copyright 2019 Red Hat, Inc.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+diff --git a/providers/implementations/signature/rsa_sig.c b/providers/implementations/signature/rsa_sig.c
+index d90b64128b..3b0b87222e 100644
+--- a/providers/implementations/signature/rsa_sig.c
++++ b/providers/implementations/signature/rsa_sig.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2019-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/ssl/bio_ssl.c b/ssl/bio_ssl.c
+index 675255248b..be3159b32a 100644
+--- a/ssl/bio_ssl.c
++++ b/ssl/bio_ssl.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/ssl/statem/extensions.c b/ssl/statem/extensions.c
+index ed1513fdaa..2ff809bc0f 100644
+--- a/ssl/statem/extensions.c
++++ b/ssl/statem/extensions.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2016-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/ssl/statem/extensions_clnt.c b/ssl/statem/extensions_clnt.c
+index b21ccf9273..ced88f77ba 100644
+--- a/ssl/statem/extensions_clnt.c
++++ b/ssl/statem/extensions_clnt.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2016-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/ssl/statem/extensions_srvr.c b/ssl/statem/extensions_srvr.c
+index 2da880450f..bffcc64df7 100644
+--- a/ssl/statem/extensions_srvr.c
++++ b/ssl/statem/extensions_srvr.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2016-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/ssl/statem/statem_lib.c b/ssl/statem/statem_lib.c
+index b5ca9d2f71..c412a77904 100644
+--- a/ssl/statem/statem_lib.c
++++ b/ssl/statem/statem_lib.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 1995-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 1995-2024 The OpenSSL Project Authors. All Rights Reserved.
+  * Copyright (c) 2002, Oracle and/or its affiliates. All rights reserved
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+diff --git a/test/crltest.c b/test/crltest.c
+index d659e96cc8..c96561c69b 100644
+--- a/test/crltest.c
++++ b/test/crltest.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2015-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2015-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/endecode_test.c b/test/endecode_test.c
+index bd28870a1b..1bf99556f9 100644
+--- a/test/endecode_test.c
++++ b/test/endecode_test.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2020-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/helpers/handshake.c b/test/helpers/handshake.c
+index 26e5a9238d..48c4b880d7 100644
+--- a/test/helpers/handshake.c
++++ b/test/helpers/handshake.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2016-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/hexstr_test.c b/test/hexstr_test.c
+index 89d6d97139..566615ed6d 100644
+--- a/test/hexstr_test.c
++++ b/test/hexstr_test.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2020-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+diff --git a/test/provider_fallback_test.c b/test/provider_fallback_test.c
+index f5c1ec52c6..26ba9ea1dc 100644
+--- a/test/provider_fallback_test.c
++++ b/test/provider_fallback_test.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2020-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/provider_internal_test.c b/test/provider_internal_test.c
+index cbbcb7799e..e42af73b17 100644
+--- a/test/provider_internal_test.c
++++ b/test/provider_internal_test.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2019-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/provider_status_test.c b/test/provider_status_test.c
+index 362ae3803a..9fcd2c2b14 100644
+--- a/test/provider_status_test.c
++++ b/test/provider_status_test.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2020-2021 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/provider_test.c b/test/provider_test.c
+index 0cdbc9346f..762c2ee16e 100644
+--- a/test/provider_test.c
++++ b/test/provider_test.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2019-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/recipes/03-test_fipsinstall.t b/test/recipes/03-test_fipsinstall.t
+index b8e4e4d431..56a33d7643 100644
+--- a/test/recipes/03-test_fipsinstall.t
++++ b/test/recipes/03-test_fipsinstall.t
+@@ -1,5 +1,5 @@
+ #! /usr/bin/env perl
+-# Copyright 2019-2023 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/recipes/04-test_conf.t b/test/recipes/04-test_conf.t
+index dd469bffac..574859e90e 100644
+--- a/test/recipes/04-test_conf.t
++++ b/test/recipes/04-test_conf.t
+@@ -1,5 +1,5 @@
+ #! /usr/bin/env perl
+-# Copyright 2017-2021 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2017-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/recipes/25-test_eai_data.t b/test/recipes/25-test_eai_data.t
+index e18735d89a..63548d0602 100644
+--- a/test/recipes/25-test_eai_data.t
++++ b/test/recipes/25-test_eai_data.t
+@@ -1,5 +1,5 @@
+ #! /usr/bin/env perl
+-# Copyright 2019-2021 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/recipes/30-test_evp_data/evppkey_dsa.txt b/test/recipes/30-test_evp_data/evppkey_dsa.txt
+index 65fee031be..39f9a01343 100644
+--- a/test/recipes/30-test_evp_data/evppkey_dsa.txt
++++ b/test/recipes/30-test_evp_data/evppkey_dsa.txt
+@@ -1,5 +1,5 @@
+ #
+-# Copyright 2001-2023 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2001-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/recipes/30-test_evp_data/evppkey_ecdsa.txt b/test/recipes/30-test_evp_data/evppkey_ecdsa.txt
+index 6043ade3bb..1f9ce93cd1 100644
+--- a/test/recipes/30-test_evp_data/evppkey_ecdsa.txt
++++ b/test/recipes/30-test_evp_data/evppkey_ecdsa.txt
+@@ -1,5 +1,5 @@
+ #
+-# Copyright 2001-2022 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2001-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/recipes/30-test_evp_data/evppkey_rsa_common.txt b/test/recipes/30-test_evp_data/evppkey_rsa_common.txt
+index 3341ccc035..5f3b396a67 100644
+--- a/test/recipes/30-test_evp_data/evppkey_rsa_common.txt
++++ b/test/recipes/30-test_evp_data/evppkey_rsa_common.txt
+@@ -1,5 +1,5 @@
+ #
+-# Copyright 2001-2022 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2001-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/ssl-tests/08-npn.cnf.in b/test/ssl-tests/08-npn.cnf.in
+index 1dc2704bdb..0caed2100e 100644
+--- a/test/ssl-tests/08-npn.cnf.in
++++ b/test/ssl-tests/08-npn.cnf.in
+@@ -1,5 +1,5 @@
+ # -*- mode: perl; -*-
+-# Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/test/ssl-tests/09-alpn.cnf.in b/test/ssl-tests/09-alpn.cnf.in
+index 322b7096a6..73e9cbabb0 100644
+--- a/test/ssl-tests/09-alpn.cnf.in
++++ b/test/ssl-tests/09-alpn.cnf.in
+@@ -1,5 +1,5 @@
+ # -*- mode: perl; -*-
+-# Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/util/check-format-test-negatives.c b/util/check-format-test-negatives.c
+index 06a11a766f..f6b1bfb319 100644
+--- a/util/check-format-test-negatives.c
++++ b/util/check-format-test-negatives.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2007-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2007-2024 The OpenSSL Project Authors. All Rights Reserved.
+  * Copyright Siemens AG 2015-2022
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+diff --git a/util/check-format.pl b/util/check-format.pl
+index 04dde14c9d..ef2c1920e7 100755
+--- a/util/check-format.pl
++++ b/util/check-format.pl
+@@ -1,6 +1,6 @@
+ #! /usr/bin/env perl
+ #
+-# Copyright 2020-2023 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2020-2024 The OpenSSL Project Authors. All Rights Reserved.
+ # Copyright Siemens AG 2019-2022
+ #
+ # Licensed under the Apache License 2.0 (the "License").
+diff --git a/util/perl/OpenSSL/Test/Utils.pm b/util/perl/OpenSSL/Test/Utils.pm
+index 90469cd6fe..34eafc4659 100644
+--- a/util/perl/OpenSSL/Test/Utils.pm
++++ b/util/perl/OpenSSL/Test/Utils.pm
+@@ -1,4 +1,4 @@
+-# Copyright 2016-2019 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/util/perl/TLSProxy/Message.pm b/util/perl/TLSProxy/Message.pm
+index eb350de431..193aa2554f 100644
+--- a/util/perl/TLSProxy/Message.pm
++++ b/util/perl/TLSProxy/Message.pm
+@@ -1,4 +1,4 @@
+-# Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+diff --git a/util/perl/TLSProxy/Proxy.pm b/util/perl/TLSProxy/Proxy.pm
+index b707722b6b..7ad7c939ad 100644
+--- a/util/perl/TLSProxy/Proxy.pm
++++ b/util/perl/TLSProxy/Proxy.pm
+@@ -1,4 +1,4 @@
+-# Copyright 2016-2018 The OpenSSL Project Authors. All Rights Reserved.
++# Copyright 2016-2024 The OpenSSL Project Authors. All Rights Reserved.
+ #
+ # Licensed under the Apache License 2.0 (the "License").  You may not use
+ # this file except in compliance with the License.  You can obtain a copy
+-- 
+2.39.5 (Apple Git-154)
+

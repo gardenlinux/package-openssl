@@ -1,0 +1,31 @@
+From 0c5c284466628fd0142c413232eb405860192922 Mon Sep 17 00:00:00 2001
+From: Marcel Gosmann <thafiredragonofdeath@gmail.com>
+Date: Wed, 14 Feb 2024 11:35:47 +0100
+Subject: [PATCH 015/228] Fixed Visual Studio 2008 compiler errors
+
+CLA: trivial
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23586)
+
+(cherry picked from commit c3e8d67885c0c4295cfd1df35a41bf1f3fa9dc37)
+---
+ crypto/property/property_parse.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/crypto/property/property_parse.c b/crypto/property/property_parse.c
+index f94d0d3d41..545cdf551c 100644
+--- a/crypto/property/property_parse.c
++++ b/crypto/property/property_parse.c
+@@ -14,6 +14,7 @@
+ #include <openssl/err.h>
+ #include "internal/propertyerr.h"
+ #include "internal/property.h"
++#include "internal/numbers.h"
+ #include "crypto/ctype.h"
+ #include "internal/nelem.h"
+ #include "property_local.h"
+-- 
+2.39.5 (Apple Git-154)
+

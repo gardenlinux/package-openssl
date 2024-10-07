@@ -1,0 +1,83 @@
+From 79613698144bce9223819e7b76e8307a1bd62ed3 Mon Sep 17 00:00:00 2001
+From: Pauli <ppzgs1@gmail.com>
+Date: Thu, 8 Aug 2024 10:55:15 +1000
+Subject: [PATCH 204/228] test: add FIPS provider version checks for 3.4
+ compatibility
+
+Tests that are changed by #25020 mandate updates to older test suite data to
+pass because the FIPS provider's behaviour changes in 3.4.
+
+Reviewed-by: Shane Lontis <shane.lontis@oracle.com>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+(Merged from https://github.com/openssl/openssl/pull/25133)
+
+(cherry picked from commit 0793071efaa7f61828b555128587db48c5d24962)
+---
+ test/recipes/30-test_evp_data/evppkey_dsa.txt        | 4 ++++
+ test/recipes/30-test_evp_data/evppkey_ecdsa.txt      | 1 +
+ test/recipes/30-test_evp_data/evppkey_rsa_common.txt | 1 +
+ 3 files changed, 6 insertions(+)
+
+diff --git a/test/recipes/30-test_evp_data/evppkey_dsa.txt b/test/recipes/30-test_evp_data/evppkey_dsa.txt
+index debd62bca8..65fee031be 100644
+--- a/test/recipes/30-test_evp_data/evppkey_dsa.txt
++++ b/test/recipes/30-test_evp_data/evppkey_dsa.txt
+@@ -270,6 +270,7 @@ Title = FIPS Tests (using different key sizes and digests)
+ 
+ # Test sign with a 2048 bit key with N == 160 is not allowed in fips mode
+ Availablein = fips
++FIPSversion = <3.4.0
+ DigestSign = SHA256
+ Key = DSA-2048-160
+ Input = "Hello"
+@@ -324,6 +325,7 @@ Title = Fips Negative Tests (using different key sizes and digests)
+ 
+ # Test sign with a 1024 bit key is not allowed in fips mode
+ Availablein = fips
++FIPSversion = <3.4.0
+ DigestSign = SHA256
+ Securitycheck = 1
+ Key = DSA-1024-FIPS186-2
+@@ -340,6 +342,7 @@ Result = DIGESTSIGNINIT_ERROR
+ 
+ # Test sign with a 3072 bit key with N == 224 is not allowed in fips mode
+ Availablein = fips
++FIPSversion = <3.4.0
+ DigestSign = SHA256
+ Securitycheck = 1
+ Key = DSA-3072-224
+@@ -348,6 +351,7 @@ Result = DIGESTSIGNINIT_ERROR
+ 
+ # Test sign with a 4096 bit key is not allowed in fips mode
+ Availablein = fips
++FIPSversion = <3.4.0
+ DigestSign = SHA256
+ Securitycheck = 1
+ Key = DSA-4096-256
+diff --git a/test/recipes/30-test_evp_data/evppkey_ecdsa.txt b/test/recipes/30-test_evp_data/evppkey_ecdsa.txt
+index ec3c032aba..6043ade3bb 100644
+--- a/test/recipes/30-test_evp_data/evppkey_ecdsa.txt
++++ b/test/recipes/30-test_evp_data/evppkey_ecdsa.txt
+@@ -216,6 +216,7 @@ Result = DIGESTSIGNINIT_ERROR
+ 
+ # Test that SHA1 is not allowed in fips mode for signing
+ Availablein = fips
++FIPSversion = <3.4.0
+ Sign = P-256
+ Securitycheck = 1
+ Ctrl = digest:SHA1
+diff --git a/test/recipes/30-test_evp_data/evppkey_rsa_common.txt b/test/recipes/30-test_evp_data/evppkey_rsa_common.txt
+index 8680797b90..3341ccc035 100644
+--- a/test/recipes/30-test_evp_data/evppkey_rsa_common.txt
++++ b/test/recipes/30-test_evp_data/evppkey_rsa_common.txt
+@@ -1344,6 +1344,7 @@ Output = 80382819f51b197c42f9fc02a85198683d918059afc013ae155992442563dd289700829
+ 
+ # Signing with SHA1 is not allowed in fips mode
+ Availablein = fips
++FIPSversion = <3.4.0
+ DigestSign = SHA1
+ Securitycheck = 1
+ Key = RSA-2048
+-- 
+2.39.5 (Apple Git-154)
+

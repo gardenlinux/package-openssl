@@ -1,0 +1,73 @@
+From 16b6b6ee2d78d0490fd39c4b41c521486ef5f7c7 Mon Sep 17 00:00:00 2001
+From: Richard Levitte <levitte@openssl.org>
+Date: Thu, 27 Jun 2024 08:30:28 +0200
+Subject: [PATCH 154/228] OpenSSL::Test: Avoid running IPv6 related tests if
+ IPv6 was explicitly disabled
+
+It's possible to disable IPv6  explicitly when configuring OpenSSL.  In that
+case, IPv6 related tests should be skipped.
+
+This is solved by having OpenSSL::Test::Utils::have_IPv6() check configuration
+first, before trying to determine if the machine supports IPv6.
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24748)
+
+(cherry picked from commit 5a9c90b1e59b2c368876229862fbff29f2bcf006)
+---
+ util/perl/OpenSSL/Test/Utils.pm | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/util/perl/OpenSSL/Test/Utils.pm b/util/perl/OpenSSL/Test/Utils.pm
+index dcff6a5c99..90469cd6fe 100644
+--- a/util/perl/OpenSSL/Test/Utils.pm
++++ b/util/perl/OpenSSL/Test/Utils.pm
+@@ -72,6 +72,8 @@ Returns an item from the %config hash in \$TOP/configdata.pm.
+ =item B<have_IPv6>
+ 
+ Return true if IPv4 / IPv6 is possible to use on the current system.
++Additionally, B<have_IPv6> also checks how OpenSSL was configured,
++i.e. if IPv6 was explicitly disabled with -DOPENSSL_USE_IPv6=0.
+ 
+ =back
+ 
+@@ -80,6 +82,7 @@ Return true if IPv4 / IPv6 is possible to use on the current system.
+ our %available_protocols;
+ our %disabled;
+ our %config;
++our %target;
+ my $configdata_loaded = 0;
+ 
+ sub load_configdata {
+@@ -91,6 +94,7 @@ sub load_configdata {
+ 	   %available_protocols = %configdata::available_protocols;
+ 	   %disabled = %configdata::disabled;
+ 	   %config = %configdata::config;
++	   %target = %configdata::target;
+     };
+     $configdata_loaded = 1;
+ }
+@@ -221,6 +225,18 @@ sub have_IPv4 {
+ }
+ 
+ sub have_IPv6 {
++    if ($have_IPv6 < 0) {
++        load_configdata() unless $configdata_loaded;
++        # If OpenSSL is configured with IPv6 explicitly disabled, no IPv6
++        # related tests should be performed.  In other words, pretend IPv6
++        # isn't present.
++        $have_IPv6 = 0
++            if grep { $_ eq 'OPENSSL_USE_IPV6=0' } @{$config{CPPDEFINES}};
++        # Similarly, if a config target has explicitly disabled IPv6, no
++        # IPv6 related tests should be performed.
++        $have_IPv6 = 0
++            if grep { $_ eq 'OPENSSL_USE_IPV6=0' } @{$target{defines}};
++    }
+     if ($have_IPv6 < 0) {
+         $have_IPv6 = check_IP("::1");
+     }
+-- 
+2.39.5 (Apple Git-154)
+

@@ -1,0 +1,42 @@
+From 5707984505e4b05d75d3e03a21096f4569d4e6f9 Mon Sep 17 00:00:00 2001
+From: Huiyue Xu <xuhuiyue@huawei.com>
+Date: Thu, 9 Nov 2023 10:54:02 +0800
+Subject: [PATCH 081/228] Add linux-arm64ilp32-clang target
+
+While clang 15 config target by '--target', not cannot support
+'-mabi=ilp32', so add the linux-arm64ilp32-clang target.
+
+Signed-off-by: Huiyue Xu <xuhuiyue@huawei.com>
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/22666)
+
+(cherry picked from commit 69bd5e4fff8ac9bf4dc3ed6fd87b5a5858edbb01)
+---
+ Configurations/10-main.conf | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/Configurations/10-main.conf b/Configurations/10-main.conf
+index 0baa0a440b..d029a8b2fe 100644
+--- a/Configurations/10-main.conf
++++ b/Configurations/10-main.conf
+@@ -784,7 +784,14 @@ my %targets = (
+         asm_arch         => 'aarch64',
+         perlasm_scheme   => "linux64",
+     },
+-
++    "linux-arm64ilp32-clang" => {  # clang config abi by --target
++        inherit_from     => [ "linux-generic32" ],
++        CC               => "clang",
++        CXX              => "clang++",
++        bn_ops           => "SIXTY_FOUR_BIT RC4_CHAR",
++        asm_arch         => 'aarch64',
++        perlasm_scheme   => "linux64",
++    },
+     "linux-mips32" => {
+         # Configure script adds minimally required -march for assembly
+         # support, if no -march was specified at command line.
+-- 
+2.39.5 (Apple Git-154)
+

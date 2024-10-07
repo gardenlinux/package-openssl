@@ -1,0 +1,32 @@
+From 6d676ed969a6492ef076cf1f1330c9bee9c55223 Mon Sep 17 00:00:00 2001
+From: erbsland-dev <github@erbsland.dev>
+Date: Mon, 15 Jul 2024 12:16:09 +0200
+Subject: [PATCH 180/228] Fix line continuation check in config parser
+
+Fixes #8038: Previously, line continuation logic did not account for the 'again' flag, which could cause incorrect removal of a backslash character in the middle of a line. This fix ensures that line continuation is correctly handled only when 'again' is false, thus improving the reliability of the configuration parser.
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24890)
+
+(cherry picked from commit f54e4bc51b78c10dc99a61c087861ee2c11d7a41)
+---
+ crypto/conf/conf_def.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/crypto/conf/conf_def.c b/crypto/conf/conf_def.c
+index 26686a0ec3..56870317a2 100644
+--- a/crypto/conf/conf_def.c
++++ b/crypto/conf/conf_def.c
+@@ -332,7 +332,7 @@ static int def_load_bio(CONF *conf, BIO *in, long *line)
+ 
+         v = NULL;
+         /* check for line continuation */
+-        if (bufnum >= 1) {
++        if (!again && bufnum >= 1) {
+             /*
+              * If we have bytes and the last char '\\' and second last char
+              * is not '\\'
+-- 
+2.39.5 (Apple Git-154)
+

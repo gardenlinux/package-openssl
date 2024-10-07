@@ -1,0 +1,81 @@
+From 8bb52deda81f96baf83413613e79d37c4151b2a5 Mon Sep 17 00:00:00 2001
+From: dgbkn <anandrambkn@gmail.com>
+Date: Fri, 15 Mar 2024 10:03:14 +0530
+Subject: [PATCH 046/228] Backported .gitignore changes from master
+
+CLA: trivial
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23847)
+
+(cherry picked from commit c79e37a2cd9b51041265d48409a71e79f2224043)
+---
+ .gitignore | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/.gitignore b/.gitignore
+index ae3b0ac580..5a61fcd1a0 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -6,13 +6,20 @@
+ /Makefile
+ /MINFO
+ /TABLE
+-/*.pc
+ /rehash.time
+ /inc.*
+ /makefile.*
+ /out.*
+ /tmp.*
+ /configdata.pm
++/builddata.pm
++/installdata.pm
++
++# Exporters
++/*.pc
++/OpenSSLConfig*.cmake
++/exporters/*.pc
++/exporters/OpenSSLConfig*.cmake
+ 
+ # Links under apps
+ /apps/CA.pl
+@@ -48,6 +55,11 @@
+ /include/openssl/x509.h
+ /include/openssl/x509v3.h
+ /include/openssl/x509_vfy.h
++# /include/openssl/core_names.h
++/include/internal/param_names.h
++
++# Auto generated parameter name files
++/crypto/params_idx.c
+ 
+ # Auto generated doc files
+ doc/man1/openssl-*.pod
+@@ -127,6 +139,7 @@ providers/common/include/prov/der_sm2.h
+ /tools/c_rehash.pl
+ /util/shlib_wrap.sh
+ /util/wrap.pl
++/util/quicserver
+ /tags
+ /TAGS
+ *.map
+@@ -231,6 +244,7 @@ Makefile.save
+ *.bak
+ cscope.*
+ *.d
++!.ctags.d
+ *.d.tmp
+ pod2htmd.tmp
+ MAKE0[0-9][0-9][0-9].@@@
+@@ -238,3 +252,7 @@ MAKE0[0-9][0-9][0-9].@@@
+ # Windows manifest files
+ *.manifest
+ doc-nits
++
++# LSP (Language Server Protocol) support
++.cache/
++compile_commands.json
+-- 
+2.39.5 (Apple Git-154)
+

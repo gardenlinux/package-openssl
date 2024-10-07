@@ -1,0 +1,59 @@
+From c91d55d4c54cc15df8458df33e33a3e7067b0d65 Mon Sep 17 00:00:00 2001
+From: Tom Cosgrove <tom.cosgrove@arm.com>
+Date: Mon, 26 Feb 2024 17:14:48 +0000
+Subject: [PATCH 057/228] Fix "Error finalizing cipher loop" when running
+ openssl speed -evp -decrypt
+
+When using CCM, openssl speed uses the loop function EVP_Update_loop_ccm() which
+sets a (fake) tag when decrypting. When using -aead (which benchmarks a different
+sequence than normal, to be comparable to TLS operation), the loop function
+EVP_Update_loop_aead() is used, which also sets a tag when decrypting.
+
+However, when using defaults, the loop function EVP_Update_loop() is used, which
+does not set a tag on decryption, leading to "Error finalizing cipher loop".
+
+To fix this, set a fake tag value if we're doing decryption on an AEAD cipher in
+EVP_Update_loop(). We don't check the return value: this shouldn't really be able
+to fail, and if it does, the following EVP_DecryptUpdate() is almost certain to
+fail, so that can catch it.
+
+The decryption is certain to fail (well, almost certain, but with a very low
+probability of success), but this is no worse than at present. This minimal
+change means that future benchmarking data should be comparable to previous
+benchmarking data.
+
+(This is benchmarking code: don't write real apps like this!)
+
+Fixes #23657
+
+Change-Id: Id581cf30503c1eb766464e315b1f33914040dcf7
+
+Reviewed-by: Paul Yang <kaishen.yy@antfin.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23757)
+
+(cherry picked from commit b3be6cc89e4dcfafe8f8be97e9519c26af2d19f5)
+---
+ apps/speed.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/apps/speed.c b/apps/speed.c
+index 90c210db32..34e8491252 100644
+--- a/apps/speed.c
++++ b/apps/speed.c
+@@ -746,8 +746,12 @@ static int EVP_Update_loop(void *args)
+     unsigned char *buf = tempargs->buf;
+     EVP_CIPHER_CTX *ctx = tempargs->ctx;
+     int outl, count, rc;
++    unsigned char faketag[16] = { 0xcc };
+ 
+     if (decrypt) {
++        if (EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(ctx)) & EVP_CIPH_FLAG_AEAD_CIPHER) {
++            (void)EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, sizeof(faketag), faketag);
++        }
+         for (count = 0; COND(c[D_EVP][testnum]); count++) {
+             rc = EVP_DecryptUpdate(ctx, buf, &outl, buf, lengths[testnum]);
+             if (rc != 1) {
+-- 
+2.39.5 (Apple Git-154)
+

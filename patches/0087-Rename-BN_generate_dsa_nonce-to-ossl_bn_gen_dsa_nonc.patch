@@ -1,0 +1,162 @@
+From fdc3efc371be43d5092bb19823e084f54541cbe3 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Mon, 29 Apr 2024 17:56:01 +0200
+Subject: [PATCH 087/228] Rename BN_generate_dsa_nonce() to
+ ossl_bn_gen_dsa_nonce_fixed_top()
+
+And create a new BN_generate_dsa_nonce() that corrects the BIGNUM top.
+We do this to avoid leaking fixed top numbers via the public API.
+
+Also add a slight optimization in ossl_bn_gen_dsa_nonce_fixed_top()
+and make it LE/BE agnostic.
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+
+(cherry picked from commit 9c85f6cd2d6debe5ef6ef475ff4bf17e0985f7a2)
+
+(Merged from https://github.com/openssl/openssl/pull/24317)
+---
+ crypto/bn/bn_rand.c    | 41 +++++++++++++++++++++++++++++++----------
+ crypto/dsa/dsa_ossl.c  |  5 +++--
+ crypto/ec/ecdsa_ossl.c |  4 ++--
+ include/crypto/bn.h    |  4 ++++
+ 4 files changed, 40 insertions(+), 14 deletions(-)
+
+diff --git a/crypto/bn/bn_rand.c b/crypto/bn/bn_rand.c
+index a362e33131..420909e094 100644
+--- a/crypto/bn/bn_rand.c
++++ b/crypto/bn/bn_rand.c
+@@ -282,16 +282,17 @@ int ossl_bn_priv_rand_range_fixed_top(BIGNUM *r, const BIGNUM *range,
+ }
+ 
+ /*
+- * BN_generate_dsa_nonce generates a random number 0 <= out < range. Unlike
+- * BN_rand_range, it also includes the contents of |priv| and |message| in
+- * the generation so that an RNG failure isn't fatal as long as |priv|
++ * ossl_bn_gen_dsa_nonce_fixed_top generates a random number 0 <= out < range.
++ * Unlike BN_rand_range, it also includes the contents of |priv| and |message|
++ * in the generation so that an RNG failure isn't fatal as long as |priv|
+  * remains secret. This is intended for use in DSA and ECDSA where an RNG
+  * weakness leads directly to private key exposure unless this function is
+  * used.
+  */
+-int BN_generate_dsa_nonce(BIGNUM *out, const BIGNUM *range,
+-                          const BIGNUM *priv, const unsigned char *message,
+-                          size_t message_len, BN_CTX *ctx)
++int ossl_bn_gen_dsa_nonce_fixed_top(BIGNUM *out, const BIGNUM *range,
++                                    const BIGNUM *priv,
++                                    const unsigned char *message,
++                                    size_t message_len, BN_CTX *ctx)
+ {
+     EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+     /*
+@@ -317,6 +318,8 @@ int BN_generate_dsa_nonce(BIGNUM *out, const BIGNUM *range,
+     k_bytes = OPENSSL_malloc(num_k_bytes);
+     if (k_bytes == NULL)
+         goto end;
++    /* Ensure top byte is set to avoid non-constant time in bin2bn */
++    k_bytes[0] = 0xff;
+ 
+     /* We copy |priv| into a local buffer to avoid exposing its length. */
+     if (BN_bn2binpad(priv, private_bytes, sizeof(private_bytes)) < 0) {
+@@ -335,13 +338,15 @@ int BN_generate_dsa_nonce(BIGNUM *out, const BIGNUM *range,
+         goto end;
+     }
+     for (n = 0; n < max_n; n++) {
+-        for (done = 0; done < num_k_bytes;) {
++        unsigned char i = 0;
++
++        for (done = 1; done < num_k_bytes;) {
+             if (RAND_priv_bytes_ex(libctx, random_bytes, sizeof(random_bytes),
+                                    0) <= 0)
+                 goto end;
+ 
+             if (!EVP_DigestInit_ex(mdctx, md, NULL)
+-                    || !EVP_DigestUpdate(mdctx, &done, sizeof(done))
++                    || !EVP_DigestUpdate(mdctx, &i, sizeof(i))
+                     || !EVP_DigestUpdate(mdctx, private_bytes,
+                                          sizeof(private_bytes))
+                     || !EVP_DigestUpdate(mdctx, message, message_len)
+@@ -355,10 +360,9 @@ int BN_generate_dsa_nonce(BIGNUM *out, const BIGNUM *range,
+                 todo = SHA512_DIGEST_LENGTH;
+             memcpy(k_bytes + done, digest, todo);
+             done += todo;
++            ++i;
+         }
+ 
+-        /* Ensure top byte is set to avoid non-constant time in bin2bn */
+-        k_bytes[0] = 0x80;
+         if (!BN_bin2bn(k_bytes, num_k_bytes, out))
+             goto end;
+ 
+@@ -383,3 +387,20 @@ int BN_generate_dsa_nonce(BIGNUM *out, const BIGNUM *range,
+     OPENSSL_cleanse(private_bytes, sizeof(private_bytes));
+     return ret;
+ }
++
++int BN_generate_dsa_nonce(BIGNUM *out, const BIGNUM *range,
++                          const BIGNUM *priv, const unsigned char *message,
++                          size_t message_len, BN_CTX *ctx)
++{
++    int ret;
++
++    ret = ossl_bn_gen_dsa_nonce_fixed_top(out, range, priv, message,
++                                          message_len, ctx);
++    /*
++     * This call makes the BN_generate_dsa_nonce non-const-time, thus we
++     * do not use it internally. But fixed_top BNs currently cannot be returned
++     * from public API calls.
++     */
++    bn_correct_top(out);
++    return ret;
++}
+diff --git a/crypto/dsa/dsa_ossl.c b/crypto/dsa/dsa_ossl.c
+index 619b91c795..01f3b068e4 100644
+--- a/crypto/dsa/dsa_ossl.c
++++ b/crypto/dsa/dsa_ossl.c
+@@ -262,8 +262,9 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
+              * We calculate k from SHA512(private_key + H(message) + random).
+              * This protects the private key from a weak PRNG.
+              */
+-            if (!BN_generate_dsa_nonce(k, dsa->params.q, dsa->priv_key, dgst,
+-                                       dlen, ctx))
++            if (!ossl_bn_gen_dsa_nonce_fixed_top(k, dsa->params.q,
++                                                 dsa->priv_key, dgst,
++                                                 dlen, ctx))
+                 goto err;
+         } else if (!ossl_bn_priv_rand_range_fixed_top(k, dsa->params.q, 0, ctx))
+             goto err;
+diff --git a/crypto/ec/ecdsa_ossl.c b/crypto/ec/ecdsa_ossl.c
+index 1d3ed66623..5d51ff9079 100644
+--- a/crypto/ec/ecdsa_ossl.c
++++ b/crypto/ec/ecdsa_ossl.c
+@@ -145,8 +145,8 @@ static int ecdsa_sign_setup(EC_KEY *eckey, BN_CTX *ctx_in,
+         /* get random k */
+         do {
+             if (dgst != NULL) {
+-                if (!BN_generate_dsa_nonce(k, order, priv_key,
+-                                           dgst, dlen, ctx)) {
++                if (!ossl_bn_gen_dsa_nonce_fixed_top(k, order, priv_key,
++                                                     dgst, dlen, ctx)) {
+                     ERR_raise(ERR_LIB_EC, EC_R_RANDOM_NUMBER_GENERATION_FAILED);
+                     goto err;
+                 }
+diff --git a/include/crypto/bn.h b/include/crypto/bn.h
+index 94a624f064..3180b993ab 100644
+--- a/include/crypto/bn.h
++++ b/include/crypto/bn.h
+@@ -91,6 +91,10 @@ int ossl_bn_mask_bits_fixed_top(BIGNUM *a, int n);
+ int ossl_bn_is_word_fixed_top(const BIGNUM *a, BN_ULONG w);
+ int ossl_bn_priv_rand_range_fixed_top(BIGNUM *r, const BIGNUM *range,
+                                       unsigned int strength, BN_CTX *ctx);
++int ossl_bn_gen_dsa_nonce_fixed_top(BIGNUM *out, const BIGNUM *range,
++                                    const BIGNUM *priv,
++                                    const unsigned char *message,
++                                    size_t message_len, BN_CTX *ctx);
+ 
+ #define BN_PRIMETEST_COMPOSITE                    0
+ #define BN_PRIMETEST_COMPOSITE_WITH_FACTOR        1
+-- 
+2.39.5 (Apple Git-154)
+

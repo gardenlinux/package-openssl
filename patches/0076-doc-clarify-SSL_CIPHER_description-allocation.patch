@@ -1,0 +1,46 @@
+From 364b67017440d22c526cb84c8f1701e403e65e69 Mon Sep 17 00:00:00 2001
+From: Daniel McCarney <daniel@binaryparadox.net>
+Date: Thu, 21 Mar 2024 15:41:11 -0400
+Subject: [PATCH 076/228] doc: clarify SSL_CIPHER_description allocation
+
+Previously the documentation for `SSL_CIPHER_description` said:
+> If buf is provided, it must be at least 128 bytes, otherwise a buffer
+> will be allocated using OPENSSL_malloc().
+
+In reality, `OPENSSL_malloc` is only invoked if the provided `buf`
+argument is `NULL`. If the `buf` arg is not `NULL`, but smaller than
+128 bytes, the function returns `NULL` without attempting to allocate
+a new buffer for the description.
+
+This commit adjusts the documentation to better describe the implemented
+behaviour.
+
+CLA: trivial
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23921)
+
+(cherry picked from commit 6a4a714045415be6720f4165c4d70a0ff229a26a)
+---
+ doc/man3/SSL_CIPHER_get_name.pod | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/doc/man3/SSL_CIPHER_get_name.pod b/doc/man3/SSL_CIPHER_get_name.pod
+index e22a85a063..c3109279a7 100644
+--- a/doc/man3/SSL_CIPHER_get_name.pod
++++ b/doc/man3/SSL_CIPHER_get_name.pod
+@@ -109,7 +109,7 @@ cipher B<c>.
+ 
+ SSL_CIPHER_description() returns a textual description of the cipher used
+ into the buffer B<buf> of length B<len> provided.  If B<buf> is provided, it
+-must be at least 128 bytes, otherwise a buffer will be allocated using
++must be at least 128 bytes. If B<buf> is NULL it will be allocated using
+ OPENSSL_malloc().  If the provided buffer is too small, or the allocation fails,
+ B<NULL> is returned.
+ 
+-- 
+2.39.5 (Apple Git-154)
+

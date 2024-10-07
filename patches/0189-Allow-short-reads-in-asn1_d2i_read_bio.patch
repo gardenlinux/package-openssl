@@ -1,0 +1,31 @@
+From 4f4a0acd962a825b90a86e538ada0166b6d71cb7 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Tue, 24 Oct 2023 09:27:23 +0200
+Subject: [PATCH 189/228] Allow short reads in asn1_d2i_read_bio()
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+(Merged from https://github.com/openssl/openssl/pull/22486)
+
+(cherry picked from commit 202ef97edc8e5561a6f4db28919d5ed73d411cc7)
+---
+ crypto/asn1/a_d2i_fp.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/crypto/asn1/a_d2i_fp.c b/crypto/asn1/a_d2i_fp.c
+index e8602053f9..833dc104dd 100644
+--- a/crypto/asn1/a_d2i_fp.c
++++ b/crypto/asn1/a_d2i_fp.c
+@@ -148,6 +148,9 @@ int asn1_d2i_read_bio(BIO *in, BUF_MEM **pb)
+                     goto err;
+                 }
+                 len += i;
++                if ((size_t)i < want)
++                    continue;
++
+             }
+         }
+         /* else data already loaded */
+-- 
+2.39.5 (Apple Git-154)
+

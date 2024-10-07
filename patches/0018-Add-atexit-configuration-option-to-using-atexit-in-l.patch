@@ -1,0 +1,141 @@
+From 906c67828956ad15200bc6e61d086b9fa73dc328 Mon Sep 17 00:00:00 2001
+From: "Randall S. Becker" <randall.becker@nexbridge.ca>
+Date: Thu, 25 Jan 2024 22:11:27 +0000
+Subject: [PATCH 018/228] Add atexit configuration option to using atexit() in
+ libcrypto at build-time.
+
+This fixes an issue with a mix of atexit() usage in DLL and statically linked
+libcrypto that came out in the test suite on NonStop, which has slightly
+different DLL unload processing semantics compared to Linux. The change
+allows a build configuration to select whether to register OPENSSL_cleanup()
+with atexit() or not, so avoid situations where atexit() registration causes
+SIGSEGV.
+
+INSTALL.md and CHANGES.md have been modified to include and describe this
+option.
+
+Signed-off-by: Randall S. Becker <randall.becker@nexbridge.ca>
+Signed-off-by: Tomas Mraz <tomas@openssl.org>
+
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Dmitry Belyavskiy <beldmit@gmail.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23642)
+
+(cherry picked from commit 0e1989d4c7435809b60f614c23ba8c9a7c0373e8)
+---
+ CHANGES.md                           |  6 +++++-
+ Configure                            |  1 +
+ INSTALL.md                           |  7 +++++++
+ NOTES-NONSTOP.md                     |  5 ++++-
+ crypto/init.c                        | 12 +++++++-----
+ test/recipes/90-test_shlibload.t     |  1 +
+ 7 files changed, 26 insertions(+), 7 deletions(-)
+
+diff --git a/CHANGES.md b/CHANGES.md
+index 86ba3586a8..1da6ed2e78 100644
+--- a/CHANGES.md
++++ b/CHANGES.md
+@@ -24,7 +24,11 @@ OpenSSL 3.1
+ 
+ ### Changes between 3.1.5 and 3.1.6 [xx XXX xxxx]
+ 
+- * none yet
++ * New atexit configuration switch, which controls whether the OPENSSL_cleanup
++   is registered when libcrypto is unloaded. This can be used on platforms
++   where using atexit() from shared libraries causes crashes on exit.
++
++   *Randall S. Becker*
+ 
+ ### Changes between 3.1.4 and 3.1.5 [30 Jan 2024]
+ 
+diff --git a/Configure b/Configure
+index fc044854dd..2df0b97915 100755
+--- a/Configure
++++ b/Configure
+@@ -405,6 +405,7 @@ my @disablables = (
+     "asan",
+     "asm",
+     "async",
++    "atexit",
+     "autoalginit",
+     "autoerrinit",
+     "autoload-config",
+diff --git a/INSTALL.md b/INSTALL.md
+index d8d7da9fe0..d0ca3f91f3 100644
+--- a/INSTALL.md
++++ b/INSTALL.md
+@@ -547,6 +547,13 @@ be used even with this option.
+ 
+ Do not build support for async operations.
+ 
++### no-atexit
++
++Do not use `atexit()` in libcrypto builds.
++
++`atexit()` has varied semantics between platforms and can cause SIGSEGV in some
++circumstances. This options disables the atexit registration of OPENSSL_cleanup.
++
+ ### no-autoalginit
+ 
+ Don't automatically load all supported ciphers and digests.
+diff --git a/NOTES-NONSTOP.md b/NOTES-NONSTOP.md
+index 68438b9988..ab13de7d3a 100644
+--- a/NOTES-NONSTOP.md
++++ b/NOTES-NONSTOP.md
+@@ -56,7 +56,10 @@ relating to `atexit()` processing when a shared library is unloaded and when
+ the program terminates. This limitation applies to all OpenSSL shared library
+ components.
+ 
+-A resolution to this situation is under investigation.
++It is possible to configure the build with `no-atexit` to avoid the SIGSEGV.
++Preferably, you can explicitly call `OPENSSL_cleanup()` from your application.
++It is not mandatory as it just deallocates various global data structures
++OpenSSL allocated.
+ 
+ About Prefix and OpenSSLDir
+ ---------------------------
+diff --git a/crypto/init.c b/crypto/init.c
+index 983d76e457..7819c4459c 100644
+--- a/crypto/init.c
++++ b/crypto/init.c
+@@ -97,17 +97,19 @@ static int win32atexit(void)
+ 
+ DEFINE_RUN_ONCE_STATIC(ossl_init_register_atexit)
+ {
+-#ifdef OPENSSL_INIT_DEBUG
++#ifndef OPENSSL_NO_ATEXIT
++# ifdef OPENSSL_INIT_DEBUG
+     fprintf(stderr, "OPENSSL_INIT: ossl_init_register_atexit()\n");
+-#endif
+-#ifndef OPENSSL_SYS_UEFI
+-# if defined(_WIN32) && !defined(__BORLANDC__)
++# endif
++# ifndef OPENSSL_SYS_UEFI
++#  if defined(_WIN32) && !defined(__BORLANDC__)
+     /* We use _onexit() in preference because it gets called on DLL unload */
+     if (_onexit(win32atexit) == NULL)
+         return 0;
+-# else
++#  else
+     if (atexit(OPENSSL_cleanup) != 0)
+         return 0;
++#  endif
+ # endif
+ #endif
+ 
+diff --git a/test/recipes/90-test_shlibload.t b/test/recipes/90-test_shlibload.t
+index 8f691dee38..af6bae20af 100644
+--- a/test/recipes/90-test_shlibload.t
++++ b/test/recipes/90-test_shlibload.t
+@@ -23,6 +23,7 @@ plan skip_all => "Test is disabled on AIX" if config('target') =~ m|^aix|;
+ plan skip_all => "Test is disabled on NonStop" if config('target') =~ m|^nonstop|;
+ plan skip_all => "Test only supported in a dso build" if disabled("dso");
+ plan skip_all => "Test is disabled in an address sanitizer build" unless disabled("asan");
++plan skip_all => "Test is disabled if no-atexit is specified" if disabled("atexit");
+ 
+ plan tests => 10;
+ 
+-- 
+2.39.5 (Apple Git-154)
+

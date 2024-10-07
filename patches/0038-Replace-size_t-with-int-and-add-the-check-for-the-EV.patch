@@ -1,0 +1,50 @@
+From 0117a020132f30b366feb48978791cc21569e471 Mon Sep 17 00:00:00 2001
+From: Jiasheng Jiang <jiasheng@purdue.edu>
+Date: Thu, 21 Mar 2024 20:22:01 +0000
+Subject: [PATCH 038/228] Replace size_t with int and add the check for the
+ EVP_MD_get_size()
+
+Replace the type of "digest_size" with int to avoid implicit conversion when it is assigned by EVP_MD_get_size().
+Moreover, add the check for the "digest_size".
+
+Fixes: 29ce1066bc ("Update the demos/README file because it is really old. New demos should provide best practice for API use. Add demonstration for computing a SHA3-512 digest - digest/EVP_MD_demo")
+Signed-off-by: Jiasheng Jiang <jiasheng@purdue.edu>
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Kurt Roeckx <kurt@roeckx.be>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23924)
+
+(cherry picked from commit 87e747000fef07c9ec43877bc5e9f2ca34f76a3b)
+---
+ demos/digest/BIO_f_md.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/demos/digest/BIO_f_md.c b/demos/digest/BIO_f_md.c
+index 27a733b654..f9abb56766 100644
+--- a/demos/digest/BIO_f_md.c
++++ b/demos/digest/BIO_f_md.c
+@@ -42,7 +42,7 @@ int main(int argc, char * argv[])
+     BIO *bio_digest = NULL, *reading = NULL;
+     EVP_MD *md = NULL;
+     unsigned char buffer[512];
+-    size_t digest_size;
++    int digest_size;
+     char *digest_value = NULL;
+     int j;
+ 
+@@ -68,6 +68,11 @@ int main(int argc, char * argv[])
+         goto cleanup;
+     }
+     digest_size = EVP_MD_get_size(md);
++    if (digest_size <= 0) {
++        fprintf(stderr, "EVP_MD_get_size returned invalid size.\n");
++        goto cleanup;
++    }
++
+     digest_value = OPENSSL_malloc(digest_size);
+     if (digest_value == NULL) {
+         fprintf(stderr, "Can't allocate %lu bytes for the digest value.\n", (unsigned long)digest_size);
+-- 
+2.39.5 (Apple Git-154)
+

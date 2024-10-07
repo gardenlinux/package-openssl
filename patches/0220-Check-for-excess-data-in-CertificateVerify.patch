@@ -1,0 +1,38 @@
+From 2afff3222ee4b6b85575ef0e18e976087f261e47 Mon Sep 17 00:00:00 2001
+From: Viktor Dukhovni <openssl-users@dukhovni.org>
+Date: Wed, 28 Aug 2024 20:36:09 +1000
+Subject: [PATCH 220/228] Check for excess data in CertificateVerify
+
+As reported by Alicja Kario, we ignored excess bytes after the
+signature payload in TLS CertificateVerify Messages.  These
+should not be present.
+
+Fixes: #25298
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/25302)
+
+(cherry picked from commit b4e4bf29ba3c67662c60ceed9afa2dd301e93273)
+---
+ ssl/statem/statem_lib.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/ssl/statem/statem_lib.c b/ssl/statem/statem_lib.c
+index 25055df15c..b5ca9d2f71 100644
+--- a/ssl/statem/statem_lib.c
++++ b/ssl/statem/statem_lib.c
+@@ -474,6 +474,10 @@ MSG_PROCESS_RETURN tls_process_cert_verify(SSL *s, PACKET *pkt)
+         SSLfatal(s, SSL_AD_DECODE_ERROR, SSL_R_LENGTH_MISMATCH);
+         goto err;
+     }
++    if (PACKET_remaining(pkt) != 0) {
++        SSLfatal(s, SSL_AD_DECODE_ERROR, SSL_R_LENGTH_MISMATCH);
++        goto err;
++    }
+ 
+     if (!get_cert_verify_tbs_data(s, tls13tbs, &hdata, &hdatalen)) {
+         /* SSLfatal() already called */
+-- 
+2.39.5 (Apple Git-154)
+

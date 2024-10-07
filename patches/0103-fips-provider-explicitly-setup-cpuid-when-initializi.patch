@@ -1,0 +1,50 @@
+From 88dec6e12d09d8b577e3d70dd124950b4c46dd2a Mon Sep 17 00:00:00 2001
+From: Hongren Zheng <i@zenithal.me>
+Date: Thu, 16 May 2024 16:41:25 +0800
+Subject: [PATCH 103/228] fips provider: explicitly setup cpuid when
+ initializing
+
+Fixes: #23979
+
+Previously fips module relied on OPENSSL_cpuid_setup
+being used as constructor by the linker to correctly
+setup the capability vector, either via .section .init
+(for x86_64) or via __attribute__((constructor)).
+
+This would make ld.so call OPENSSL_cpuid_setup before
+the init function for fips module. However, this early
+constructing behavior has several disadvantages:
+
+1. Not all platform/toolchain supports such behavior
+
+2. Initialisation sequence is not well defined, and
+some function might not be initialized when cpuid_setup
+is called
+
+3. Implicit path is hard to maintain and debug
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24419)
+
+(cherry picked from commit a192b2439c0207ce1b04ba6137329b68f9e23680)
+---
+ providers/fips/fipsprov.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/providers/fips/fipsprov.c b/providers/fips/fipsprov.c
+index bf22e907bc..3ef73cb7db 100644
+--- a/providers/fips/fipsprov.c
++++ b/providers/fips/fipsprov.c
+@@ -689,6 +689,8 @@ int OSSL_provider_init_int(const OSSL_CORE_HANDLE *handle,
+         }
+     }
+ 
++    OPENSSL_cpuid_setup();
++
+     /*  Create a context. */
+     if ((*provctx = ossl_prov_ctx_new()) == NULL
+             || (libctx = OSSL_LIB_CTX_new()) == NULL)
+-- 
+2.39.5 (Apple Git-154)
+

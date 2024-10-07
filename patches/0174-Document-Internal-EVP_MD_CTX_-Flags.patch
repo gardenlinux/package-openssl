@@ -1,0 +1,42 @@
+From e3693875e2b8c03cdad7d0a1418705e07de1fbe9 Mon Sep 17 00:00:00 2001
+From: erbsland-dev <github@erbsland.dev>
+Date: Thu, 11 Jul 2024 14:02:53 +0200
+Subject: [PATCH 174/228] Document Internal EVP_MD_CTX_ Flags
+
+Add documentation for the internal flags `EVP_MD_CTX_FLAG_CLEANED` and
+`EVP_MD_CTX_FLAG_REUSE`, explicitly stating that these flags are for
+internal use only and must not be used in user code.
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Dmitry Belyavskiy <beldmit@gmail.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24829)
+
+(cherry picked from commit b74646b627ade4ff801914d45a7733af2ebf4b5f)
+---
+ doc/man3/EVP_DigestInit.pod | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/doc/man3/EVP_DigestInit.pod b/doc/man3/EVP_DigestInit.pod
+index 92eda2aefd..da19124c66 100644
+--- a/doc/man3/EVP_DigestInit.pod
++++ b/doc/man3/EVP_DigestInit.pod
+@@ -538,9 +538,13 @@ can be used the manipulate and test these B<EVP_MD_CTX> flags:
+ 
+ This flag instructs the digest to optimize for one update only, if possible.
+ 
+-=for comment EVP_MD_CTX_FLAG_CLEANED is internal, don't mention it
++=item EVP_MD_CTX_FLAG_CLEANED
+ 
+-=for comment EVP_MD_CTX_FLAG_REUSE is internal, don't mention it
++This flag is for internal use only and I<must not> be used in user code.
++
++=item EVP_MD_CTX_FLAG_REUSE
++
++This flag is for internal use only and I<must not> be used in user code.
+ 
+ =for comment We currently avoid documenting flags that are only bit holder:
+ EVP_MD_CTX_FLAG_NON_FIPS_ALLOW, EVP_MD_CTX_FLAGS_PAD_*
+-- 
+2.39.5 (Apple Git-154)
+

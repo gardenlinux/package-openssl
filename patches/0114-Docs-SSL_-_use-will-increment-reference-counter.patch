@@ -1,0 +1,38 @@
+From 0324602e8ae25cc4698164b583ee54208e65695c Mon Sep 17 00:00:00 2001
+From: Ruslan Baratov <x@ruslo.dev>
+Date: Wed, 29 May 2024 08:36:53 +0800
+Subject: [PATCH 114/228] [Docs] SSL_*_use will increment reference counter
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24520)
+
+(cherry picked from commit 0c73d65eeae9086c37149f4a512946040c8c2af3)
+---
+ doc/man3/SSL_CTX_use_certificate.pod | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/doc/man3/SSL_CTX_use_certificate.pod b/doc/man3/SSL_CTX_use_certificate.pod
+index ca1827dada..f34b973d6f 100644
+--- a/doc/man3/SSL_CTX_use_certificate.pod
++++ b/doc/man3/SSL_CTX_use_certificate.pod
+@@ -68,7 +68,7 @@ SSL_use_certificate() loads B<x> into B<ssl>. The rest of the
+ certificates needed to form the complete certificate chain can be
+ specified using the
+ L<SSL_CTX_add_extra_chain_cert(3)>
+-function.
++function. On success the reference counter of the B<x> is incremented.
+ 
+ SSL_CTX_use_certificate_ASN1() loads the ASN1 encoded certificate from
+ the memory location B<d> (with length B<len>) into B<ctx>,
+@@ -97,6 +97,7 @@ to the certificate an error is returned. To change a [certificate/private-key]
+ pair, the new certificate needs to be set first with SSL_use_certificate() or
+ SSL_CTX_use_certificate() before setting the private key with
+ SSL_CTX_use_PrivateKey() or SSL_use_PrivateKey().
++On success the reference counter of the B<pkey>/B<rsa> is incremented.
+ 
+ SSL_CTX_use_cert_and_key() and SSL_use_cert_and_key() assign the X.509
+ certificate B<x>, private key B<key>, and certificate B<chain> onto the
+-- 
+2.39.5 (Apple Git-154)
+

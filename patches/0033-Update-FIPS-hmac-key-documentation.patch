@@ -1,0 +1,35 @@
+From 41c4c279b09fc9cec860bb00e65da7c8e090aca1 Mon Sep 17 00:00:00 2001
+From: Matt Hauck <matt@thehaucks.xyz>
+Date: Thu, 14 Mar 2024 18:25:11 -0700
+Subject: [PATCH 033/228] Update FIPS hmac key documentation
+
+The documentation is slightly incorrect about the FIPS hmac key.
+
+CLA: trivial
+
+Reviewed-by: Shane Lontis <shane.lontis@oracle.com>
+Reviewed-by: Tim Hudson <tjh@openssl.org>
+Reviewed-by: Matt Caswell <matt@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23846)
+
+(cherry picked from commit 53ef123f48d402aff7c27f8ec15191cb1cde4105)
+---
+ INSTALL.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/INSTALL.md b/INSTALL.md
+index 95842c4641..cd2bfe4031 100644
+--- a/INSTALL.md
++++ b/INSTALL.md
+@@ -481,7 +481,7 @@ Setting the FIPS HMAC key
+ 
+ As part of its self-test validation, the FIPS module must verify itself
+ by performing a SHA-256 HMAC computation on itself. The default key is
+-the SHA256 value of "the holy handgrenade of antioch" and is sufficient
++the SHA256 value of "holy hand grenade of antioch" and is sufficient
+ for meeting the FIPS requirements.
+ 
+ To change the key to a different value, use this flag. The value should
+-- 
+2.39.5 (Apple Git-154)
+

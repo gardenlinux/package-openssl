@@ -1,0 +1,38 @@
+From a4829e5338600f40fd2927ee6fd05c4cf6d5665c Mon Sep 17 00:00:00 2001
+From: Bernd Ritter <ritter@b1-systems.de>
+Date: Sat, 17 Feb 2024 19:15:14 +0100
+Subject: [PATCH 016/228] Correct the defined name of the parameter "micalg" in
+ the documentation
+
+The EVP_DigestInit(3) manual page contains wrong name for the define
+macro for the OSSL_DIGEST_PARAM_MICALG param.
+
+Fixes #23580
+
+CLA: trivial
+
+Reviewed-by: Paul Yang <kaishen.yy@antfin.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23615)
+
+(cherry picked from commit 5e5c256bbad572cf8d8d9ef9127722ca028d2704)
+---
+ doc/man3/EVP_DigestInit.pod | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/doc/man3/EVP_DigestInit.pod b/doc/man3/EVP_DigestInit.pod
+index 11eef096c0..05ca072390 100644
+--- a/doc/man3/EVP_DigestInit.pod
++++ b/doc/man3/EVP_DigestInit.pod
+@@ -490,7 +490,7 @@ EVP_MD_CTX_get_params() can be used with the following OSSL_PARAM keys:
+ 
+ =over 4
+ 
+-=item "micalg" (B<OSSL_PARAM_DIGEST_KEY_MICALG>) <UTF8 string>.
++=item "micalg" (B<OSSL_DIGEST_PARAM_MICALG>) <UTF8 string>.
+ 
+ Gets the digest Message Integrity Check algorithm string. This is used when
+ creating S/MIME multipart/signed messages, as specified in RFC 3851.
+-- 
+2.39.5 (Apple Git-154)
+

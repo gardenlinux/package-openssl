@@ -1,0 +1,904 @@
+From 758bb9745611124399c931558fef665e185eefb1 Mon Sep 17 00:00:00 2001
+From: Vita Batrla <vitezslav.batrla@oracle.com>
+Date: Tue, 25 Jun 2024 11:58:49 +0200
+Subject: [PATCH 150/228] docs: document that *_free(NULL) does nothing
+
+Explicitly documents that *_free(NULL) does nothing.
+Fixes two cases where that wasn't true.
+Fixes #24675.
+
+Reviewed-by: Richard Levitte <levitte@openssl.org>
+Reviewed-by: Tim Hudson <tjh@openssl.org>
+Reviewed-by: Sasa Nedvedicky <sashan@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24735)
+
+(cherry picked from commit 981d129a5609ee2e031367c34c67a9f61a5bfd66)
+---
+ crypto/conf/conf_lib.c              | 2 +-
+ crypto/context.c                    | 4 ++--
+ doc/man3/ASN1_INTEGER_new.pod       | 1 +
+ doc/man3/ASYNC_WAIT_CTX_new.pod     | 3 +++
+ doc/man3/BIO_ADDR.pod               | 1 +
+ doc/man3/BIO_ADDRINFO.pod           | 2 +-
+ doc/man3/BIO_meth_new.pod           | 2 +-
+ doc/man3/BN_generate_prime.pod      | 3 ++-
+ doc/man3/BUF_MEM_new.pod            | 1 +
+ doc/man3/CRYPTO_THREAD_run_once.pod | 1 +
+ doc/man3/CTLOG_STORE_new.pod        | 2 +-
+ doc/man3/CTLOG_new.pod              | 2 +-
+ doc/man3/CT_POLICY_EVAL_CTX_new.pod | 3 ++-
+ doc/man3/DH_meth_new.pod            | 2 +-
+ doc/man3/DSA_SIG_new.pod            | 1 +
+ doc/man3/DSA_meth_new.pod           | 2 +-
+ doc/man3/ECDSA_SIG_new.pod          | 1 +
+ doc/man3/ENGINE_add.pod             | 3 ++-
+ doc/man3/EVP_ASYM_CIPHER_free.pod   | 2 +-
+ doc/man3/EVP_CIPHER_meth_new.pod    | 1 +
+ doc/man3/EVP_DigestInit.pod         | 2 ++
+ doc/man3/EVP_EncodeInit.pod         | 2 +-
+ doc/man3/EVP_EncryptInit.pod        | 7 ++++---
+ doc/man3/EVP_KEM_free.pod           | 1 +
+ doc/man3/EVP_KEYEXCH_free.pod       | 2 +-
+ doc/man3/EVP_KEYMGMT.pod            | 1 +
+ doc/man3/EVP_MD_meth_new.pod        | 1 +
+ doc/man3/EVP_PKEY_ASN1_METHOD.pod   | 2 +-
+ doc/man3/EVP_PKEY_meth_new.pod      | 2 +-
+ doc/man3/EVP_SIGNATURE.pod          | 2 +-
+ doc/man3/HMAC.pod                   | 2 +-
+ doc/man3/NCONF_new_ex.pod           | 2 +-
+ doc/man3/OCSP_REQUEST_new.pod       | 1 +
+ doc/man3/OCSP_cert_to_id.pod        | 1 +
+ doc/man3/OCSP_response_status.pod   | 1 +
+ doc/man3/OPENSSL_LH_COMPFUNC.pod    | 2 +-
+ doc/man3/OPENSSL_init_crypto.pod    | 1 +
+ doc/man3/OPENSSL_malloc.pod         | 3 ++-
+ doc/man3/OPENSSL_secure_malloc.pod  | 6 ++++--
+ doc/man3/OSSL_CMP_CTX_new.pod       | 1 +
+ doc/man3/OSSL_CMP_SRV_CTX_new.pod   | 1 +
+ doc/man3/OSSL_DECODER.pod           | 1 +
+ doc/man3/OSSL_DECODER_CTX.pod       | 1 +
+ doc/man3/OSSL_ENCODER.pod           | 1 +
+ doc/man3/OSSL_ENCODER_CTX.pod       | 1 +
+ doc/man3/OSSL_HTTP_REQ_CTX.pod      | 1 +
+ doc/man3/OSSL_LIB_CTX.pod           | 2 +-
+ doc/man3/OSSL_PARAM_BLD.pod         | 1 +
+ doc/man3/OSSL_PARAM_dup.pod         | 1 +
+ doc/man3/OSSL_SELF_TEST_new.pod     | 1 +
+ doc/man3/OSSL_STORE_INFO.pod        | 1 +
+ doc/man3/OSSL_STORE_LOADER.pod      | 2 ++
+ doc/man3/OSSL_STORE_SEARCH.pod      | 1 +
+ doc/man3/RSA_meth_new.pod           | 2 +-
+ doc/man3/SCT_new.pod                | 6 ++++++
+ doc/man3/TS_RESP_CTX_new.pod        | 1 +
+ doc/man3/X509_LOOKUP.pod            | 1 +
+ doc/man3/X509_LOOKUP_meth_new.pod   | 1 +
+ doc/man3/X509_STORE_new.pod         | 1 +
+ doc/man3/X509_dup.pod               | 2 +-
+ doc/man3/X509_new.pod               | 5 +++--
+ 61 files changed, 83 insertions(+), 32 deletions(-)
+
+diff --git a/crypto/conf/conf_lib.c b/crypto/conf/conf_lib.c
+index 45c50387ac..57bdeccac7 100644
+--- a/crypto/conf/conf_lib.c
++++ b/crypto/conf/conf_lib.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2000-2022 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2000-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+diff --git a/crypto/context.c b/crypto/context.c
+index e294ea1512..7a81db388b 100644
+--- a/crypto/context.c
++++ b/crypto/context.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2019-2023 The OpenSSL Project Authors. All Rights Reserved.
++ * Copyright 2019-2024 The OpenSSL Project Authors. All Rights Reserved.
+  *
+  * Licensed under the Apache License 2.0 (the "License").  You may not use
+  * this file except in compliance with the License.  You can obtain a copy
+@@ -439,7 +439,7 @@ int OSSL_LIB_CTX_load_config(OSSL_LIB_CTX *ctx, const char *config_file)
+ 
+ void OSSL_LIB_CTX_free(OSSL_LIB_CTX *ctx)
+ {
+-    if (ossl_lib_ctx_is_default(ctx))
++    if (ctx == NULL || ossl_lib_ctx_is_default(ctx))
+         return;
+ 
+ #ifndef FIPS_MODULE
+diff --git a/doc/man3/ASN1_INTEGER_new.pod b/doc/man3/ASN1_INTEGER_new.pod
+index 4722f880c0..fb9f3255d8 100644
+--- a/doc/man3/ASN1_INTEGER_new.pod
++++ b/doc/man3/ASN1_INTEGER_new.pod
+@@ -18,6 +18,7 @@ ASN1_INTEGER_new, ASN1_INTEGER_free - ASN1_INTEGER allocation functions
+ ASN1_INTEGER_new() returns an allocated B<ASN1_INTEGER> structure.
+ 
+ ASN1_INTEGER_free() frees up a single B<ASN1_INTEGER> object.
++If the argument is NULL, nothing is done.
+ 
+ B<ASN1_INTEGER> structure representing the ASN.1 INTEGER type
+ 
+diff --git a/doc/man3/ASYNC_WAIT_CTX_new.pod b/doc/man3/ASYNC_WAIT_CTX_new.pod
+index 7621a8b3a1..5293c0af5e 100644
+--- a/doc/man3/ASYNC_WAIT_CTX_new.pod
++++ b/doc/man3/ASYNC_WAIT_CTX_new.pod
+@@ -178,6 +178,9 @@ operation, normally it is detected by a polling function or an interrupt, as the
+ user code set a callback by calling ASYNC_WAIT_CTX_set_callback() previously,
+ then the registered callback will be called.
+ 
++ASYNC_WAIT_CTX_free() frees up a single B<ASYNC_WAIT_CTX> object.
++If the argument is NULL, nothing is done.
++
+ =head1 RETURN VALUES
+ 
+ ASYNC_WAIT_CTX_new() returns a pointer to the newly allocated B<ASYNC_WAIT_CTX>
+diff --git a/doc/man3/BIO_ADDR.pod b/doc/man3/BIO_ADDR.pod
+index 5ab88622ce..66dfd1f8d1 100644
+--- a/doc/man3/BIO_ADDR.pod
++++ b/doc/man3/BIO_ADDR.pod
+@@ -38,6 +38,7 @@ with routines that will fill it with information, such as
+ BIO_accept_ex().
+ 
+ BIO_ADDR_free() frees a B<BIO_ADDR> created with BIO_ADDR_new().
++If the argument is NULL, nothing is done.
+ 
+ BIO_ADDR_clear() clears any data held within the provided B<BIO_ADDR> and sets
+ it back to an uninitialised state.
+diff --git a/doc/man3/BIO_ADDRINFO.pod b/doc/man3/BIO_ADDRINFO.pod
+index 626052e7f8..d42a8340ba 100644
+--- a/doc/man3/BIO_ADDRINFO.pod
++++ b/doc/man3/BIO_ADDRINFO.pod
+@@ -78,7 +78,7 @@ BIO_ADDRINFO_next() returns the next B<BIO_ADDRINFO> in the chain
+ from the given one.
+ 
+ BIO_ADDRINFO_free() frees the chain of B<BIO_ADDRINFO> starting
+-with the given one.
++with the given one. If the argument is NULL, nothing is done.
+ 
+ =head1 RETURN VALUES
+ 
+diff --git a/doc/man3/BIO_meth_new.pod b/doc/man3/BIO_meth_new.pod
+index 86301b9718..23b96587b5 100644
+--- a/doc/man3/BIO_meth_new.pod
++++ b/doc/man3/BIO_meth_new.pod
+@@ -76,7 +76,7 @@ additionally have the "descriptor" bit set (B<BIO_TYPE_DESCRIPTOR>). See the
+ L<BIO_find_type(3)> page for more information.
+ 
+ BIO_meth_free() destroys a B<BIO_METHOD> structure and frees up any memory
+-associated with it.
++associated with it. If the argument is NULL, nothing is done.
+ 
+ BIO_meth_get_write_ex() and BIO_meth_set_write_ex() get and set the function
+ used for writing arbitrary length data to the BIO respectively. This function
+diff --git a/doc/man3/BN_generate_prime.pod b/doc/man3/BN_generate_prime.pod
+index b536bcb3b7..51306410e6 100644
+--- a/doc/man3/BN_generate_prime.pod
++++ b/doc/man3/BN_generate_prime.pod
+@@ -167,7 +167,8 @@ programs should prefer the "new" style, whilst the "old" style is provided
+ for backwards compatibility purposes.
+ 
+ A B<BN_GENCB> structure should be created through a call to BN_GENCB_new(),
+-and freed through a call to BN_GENCB_free().
++and freed through a call to BN_GENCB_free(). If the argument is NULL,
++nothing is done.
+ 
+ For "new" style callbacks a BN_GENCB structure should be initialised with a
+ call to BN_GENCB_set(), where B<gencb> is a B<BN_GENCB *>, B<callback> is of
+diff --git a/doc/man3/BUF_MEM_new.pod b/doc/man3/BUF_MEM_new.pod
+index 262e18f31b..33ca4dfcc9 100644
+--- a/doc/man3/BUF_MEM_new.pod
++++ b/doc/man3/BUF_MEM_new.pod
+@@ -34,6 +34,7 @@ should be allocated on the secure heap; see L<CRYPTO_secure_malloc(3)>.
+ 
+ BUF_MEM_free() frees up an already existing buffer. The data is zeroed
+ before freeing up in case the buffer contains sensitive data.
++If the argument is NULL, nothing is done.
+ 
+ BUF_MEM_grow() changes the size of an already existing buffer to
+ B<len>. Any data already in the buffer is preserved if it increases in
+diff --git a/doc/man3/CRYPTO_THREAD_run_once.pod b/doc/man3/CRYPTO_THREAD_run_once.pod
+index a51679b97e..adb1259f23 100644
+--- a/doc/man3/CRYPTO_THREAD_run_once.pod
++++ b/doc/man3/CRYPTO_THREAD_run_once.pod
+@@ -69,6 +69,7 @@ CRYPTO_THREAD_unlock() unlocks the previously locked I<lock>.
+ =item *
+ 
+ CRYPTO_THREAD_lock_free() frees the provided I<lock>.
++If the argument is NULL, nothing is done.
+ 
+ =item *
+ 
+diff --git a/doc/man3/CTLOG_STORE_new.pod b/doc/man3/CTLOG_STORE_new.pod
+index 801b1447e1..2f1596be42 100644
+--- a/doc/man3/CTLOG_STORE_new.pod
++++ b/doc/man3/CTLOG_STORE_new.pod
+@@ -52,7 +52,7 @@ The expected format of the file is:
+ 
+ Once a CTLOG_STORE is no longer required, it should be passed to
+ CTLOG_STORE_free(). This will delete all of the CTLOGs stored within, along
+-with the CTLOG_STORE itself.
++with the CTLOG_STORE itself. If the argument is NULL, nothing is done.
+ 
+ =head1 NOTES
+ 
+diff --git a/doc/man3/CTLOG_new.pod b/doc/man3/CTLOG_new.pod
+index 30b8068249..b72c1a4249 100644
+--- a/doc/man3/CTLOG_new.pod
++++ b/doc/man3/CTLOG_new.pod
+@@ -50,7 +50,7 @@ property query string are used.
+ Regardless of whether CTLOG_new() or CTLOG_new_from_base64() is used, it is the
+ caller's responsibility to pass the CTLOG to CTLOG_free() once it is no longer
+ needed. This will delete it and, if created by CTLOG_new(), the EVP_PKEY that
+-was passed to it.
++was passed to it. If the argument to CTLOG_free() is NULL, nothing is done.
+ 
+ CTLOG_get0_name() returns the name of the log, as provided when the CTLOG was
+ created. Ownership of the string remains with the CTLOG.
+diff --git a/doc/man3/CT_POLICY_EVAL_CTX_new.pod b/doc/man3/CT_POLICY_EVAL_CTX_new.pod
+index bba6778d2d..45ba91bba0 100644
+--- a/doc/man3/CT_POLICY_EVAL_CTX_new.pod
++++ b/doc/man3/CT_POLICY_EVAL_CTX_new.pod
+@@ -105,7 +105,8 @@ The time should be in milliseconds since the Unix Epoch.
+ Each setter has a matching getter for accessing the current value.
+ 
+ When no longer required, the B<CT_POLICY_EVAL_CTX> should be passed to
+-CT_POLICY_EVAL_CTX_free() to delete it.
++CT_POLICY_EVAL_CTX_free() to delete it. If the argument to
++CT_POLICY_EVAL_CTX_free() is NULL, nothing is done.
+ 
+ =head1 NOTES
+ 
+diff --git a/doc/man3/DH_meth_new.pod b/doc/man3/DH_meth_new.pod
+index 43827f55ef..977ae01241 100644
+--- a/doc/man3/DH_meth_new.pod
++++ b/doc/man3/DH_meth_new.pod
+@@ -81,7 +81,7 @@ parameter. This might be useful for creating a new B<DH_METHOD> based on an
+ existing one, but with some differences.
+ 
+ DH_meth_free() destroys a B<DH_METHOD> structure and frees up any memory
+-associated with it.
++associated with it. If the argument is NULL, nothing is done.
+ 
+ DH_meth_get0_name() will return a pointer to the name of this DH_METHOD. This
+ is a pointer to the internal name string and so should not be freed by the
+diff --git a/doc/man3/DSA_SIG_new.pod b/doc/man3/DSA_SIG_new.pod
+index 1f532d3000..7e909f6d67 100644
+--- a/doc/man3/DSA_SIG_new.pod
++++ b/doc/man3/DSA_SIG_new.pod
+@@ -20,6 +20,7 @@ DSA_SIG_new() allocates an empty B<DSA_SIG> structure.
+ 
+ DSA_SIG_free() frees the B<DSA_SIG> structure and its components. The
+ values are erased before the memory is returned to the system.
++If the argument is NULL, nothing is done.
+ 
+ DSA_SIG_get0() returns internal pointers to the B<r> and B<s> values contained
+ in B<sig>.
+diff --git a/doc/man3/DSA_meth_new.pod b/doc/man3/DSA_meth_new.pod
+index c00747cfc4..7abaa9c6ba 100644
+--- a/doc/man3/DSA_meth_new.pod
++++ b/doc/man3/DSA_meth_new.pod
+@@ -110,7 +110,7 @@ parameter. This might be useful for creating a new B<DSA_METHOD> based on an
+ existing one, but with some differences.
+ 
+ DSA_meth_free() destroys a B<DSA_METHOD> structure and frees up any memory
+-associated with it.
++associated with it. If the argument is NULL, nothing is done.
+ 
+ DSA_meth_get0_name() will return a pointer to the name of this DSA_METHOD. This
+ is a pointer to the internal name string and so should not be freed by the
+diff --git a/doc/man3/ECDSA_SIG_new.pod b/doc/man3/ECDSA_SIG_new.pod
+index 3266c43b55..2eecd4ed43 100644
+--- a/doc/man3/ECDSA_SIG_new.pod
++++ b/doc/man3/ECDSA_SIG_new.pod
+@@ -31,6 +31,7 @@ ECDSA_SIG_new() allocates an empty B<ECDSA_SIG> structure.
+ Note: before OpenSSL 1.1.0, the I<r> and I<s> components were initialised.
+ 
+ ECDSA_SIG_free() frees the B<ECDSA_SIG> structure I<sig>.
++If the argument is NULL, nothing is done.
+ 
+ ECDSA_SIG_get0() returns internal pointers the I<r> and I<s> values contained
+ in I<sig> and stores them in I<*pr> and I<*ps>, respectively.
+diff --git a/doc/man3/ENGINE_add.pod b/doc/man3/ENGINE_add.pod
+index 55e5d76fcd..c587f83642 100644
+--- a/doc/man3/ENGINE_add.pod
++++ b/doc/man3/ENGINE_add.pod
+@@ -227,7 +227,8 @@ references such as; ENGINE_by_id(), ENGINE_get_first(), ENGINE_get_last(),
+ ENGINE_get_next(), ENGINE_get_prev(). All structural references should be
+ released by a corresponding to call to the ENGINE_free() function - the
+ ENGINE object itself will only actually be cleaned up and deallocated when
+-the last structural reference is released.
++the last structural reference is released. If the argument to ENGINE_free()
++is NULL, nothing is done.
+ 
+ It should also be noted that many ENGINE API function calls that accept a
+ structural reference will internally obtain another reference - typically
+diff --git a/doc/man3/EVP_ASYM_CIPHER_free.pod b/doc/man3/EVP_ASYM_CIPHER_free.pod
+index 0f9ac610b3..49446f5b36 100644
+--- a/doc/man3/EVP_ASYM_CIPHER_free.pod
++++ b/doc/man3/EVP_ASYM_CIPHER_free.pod
+@@ -45,7 +45,7 @@ The returned value must eventually be freed with EVP_ASYM_CIPHER_free().
+ EVP_ASYM_CIPHER_free() decrements the reference count for the B<EVP_ASYM_CIPHER>
+ structure. Typically this structure will have been obtained from an earlier call
+ to EVP_ASYM_CIPHER_fetch(). If the reference count drops to 0 then the
+-structure is freed.
++structure is freed. If the argument is NULL, nothing is done.
+ 
+ EVP_ASYM_CIPHER_up_ref() increments the reference count for an
+ B<EVP_ASYM_CIPHER> structure.
+diff --git a/doc/man3/EVP_CIPHER_meth_new.pod b/doc/man3/EVP_CIPHER_meth_new.pod
+index 8b862d9d99..6cf95289c0 100644
+--- a/doc/man3/EVP_CIPHER_meth_new.pod
++++ b/doc/man3/EVP_CIPHER_meth_new.pod
+@@ -80,6 +80,7 @@ EVP_CIPHER_meth_new() creates a new B<EVP_CIPHER> structure.
+ EVP_CIPHER_meth_dup() creates a copy of B<cipher>.
+ 
+ EVP_CIPHER_meth_free() destroys a B<EVP_CIPHER> structure.
++If the argument is NULL, nothing is done.
+ 
+ EVP_CIPHER_meth_set_iv_length() sets the length of the IV.
+ This is only needed when the implemented cipher mode requires it.
+diff --git a/doc/man3/EVP_DigestInit.pod b/doc/man3/EVP_DigestInit.pod
+index f15040fabd..92eda2aefd 100644
+--- a/doc/man3/EVP_DigestInit.pod
++++ b/doc/man3/EVP_DigestInit.pod
+@@ -158,6 +158,7 @@ Increments the reference count for an B<EVP_MD> structure.
+ 
+ Decrements the reference count for the fetched B<EVP_MD> structure.
+ If the reference count drops to 0 then the structure is freed.
++If the argument is NULL, nothing is done.
+ 
+ =item EVP_MD_CTX_new()
+ 
+@@ -171,6 +172,7 @@ existing context.
+ =item EVP_MD_CTX_free()
+ 
+ Cleans up digest context I<ctx> and frees up the space allocated to it.
++If the argument is NULL, nothing is done.
+ 
+ =item EVP_MD_CTX_ctrl()
+ 
+diff --git a/doc/man3/EVP_EncodeInit.pod b/doc/man3/EVP_EncodeInit.pod
+index 2b9e02e02d..2d6e4e8cbf 100644
+--- a/doc/man3/EVP_EncodeInit.pod
++++ b/doc/man3/EVP_EncodeInit.pod
+@@ -41,7 +41,7 @@ EVP_ENCODE_CTX_new() allocates, initializes and returns a context to be used for
+ the encode/decode functions.
+ 
+ EVP_ENCODE_CTX_free() cleans up an encode/decode context B<ctx> and frees up the
+-space allocated to it.
++space allocated to it. If the argument is NULL, nothing is done.
+ 
+ Encoding of binary data is performed in blocks of 48 input bytes (or less for
+ the final block). For each 48 byte input block encoded 64 bytes of base 64 data
+diff --git a/doc/man3/EVP_EncryptInit.pod b/doc/man3/EVP_EncryptInit.pod
+index 574dedb035..d888fd57a5 100644
+--- a/doc/man3/EVP_EncryptInit.pod
++++ b/doc/man3/EVP_EncryptInit.pod
+@@ -272,6 +272,7 @@ Increments the reference count for an B<EVP_CIPHER> structure.
+ 
+ Decrements the reference count for the fetched B<EVP_CIPHER> structure.
+ If the reference count drops to 0 then the structure is freed.
++If the argument is NULL, nothing is done.
+ 
+ =item EVP_CIPHER_CTX_new()
+ 
+@@ -280,9 +281,9 @@ Allocates and returns a cipher context.
+ =item EVP_CIPHER_CTX_free()
+ 
+ Clears all information from a cipher context and frees any allocated memory
+-associated with it, including I<ctx> itself. This function should be called after
+-all operations using a cipher are complete so sensitive information does not
+-remain in memory.
++associated with it, including I<ctx> itself. This function should be called
++after all operations using a cipher are complete so sensitive information does
++not remain in memory. If the argument is NULL, nothing is done.
+ 
+ =item EVP_CIPHER_CTX_dup()
+ 
+diff --git a/doc/man3/EVP_KEM_free.pod b/doc/man3/EVP_KEM_free.pod
+index 1b63900363..c7a42d4690 100644
+--- a/doc/man3/EVP_KEM_free.pod
++++ b/doc/man3/EVP_KEM_free.pod
+@@ -41,6 +41,7 @@ The returned value must eventually be freed with EVP_KEM_free().
+ EVP_KEM_free() decrements the reference count for the B<EVP_KEM> structure.
+ Typically this structure will have been obtained from an earlier call to
+ EVP_KEM_fetch(). If the reference count drops to 0 then the structure is freed.
++If the argument is NULL, nothing is done.
+ 
+ EVP_KEM_up_ref() increments the reference count for an B<EVP_KEM> structure.
+ 
+diff --git a/doc/man3/EVP_KEYEXCH_free.pod b/doc/man3/EVP_KEYEXCH_free.pod
+index 6378178d18..7e5c7bc126 100644
+--- a/doc/man3/EVP_KEYEXCH_free.pod
++++ b/doc/man3/EVP_KEYEXCH_free.pod
+@@ -41,7 +41,7 @@ The returned value must eventually be freed with EVP_KEYEXCH_free().
+ EVP_KEYEXCH_free() decrements the reference count for the B<EVP_KEYEXCH>
+ structure. Typically this structure will have been obtained from an earlier call
+ to EVP_KEYEXCH_fetch(). If the reference count drops to 0 then the
+-structure is freed.
++structure is freed. If the argument is NULL, nothing is done.
+ 
+ EVP_KEYEXCH_up_ref() increments the reference count for an B<EVP_KEYEXCH>
+ structure.
+diff --git a/doc/man3/EVP_KEYMGMT.pod b/doc/man3/EVP_KEYMGMT.pod
+index da03286a99..a801ae28e9 100644
+--- a/doc/man3/EVP_KEYMGMT.pod
++++ b/doc/man3/EVP_KEYMGMT.pod
+@@ -62,6 +62,7 @@ B<EVP_KEYMGMT> I<keymgmt>.
+ 
+ EVP_KEYMGMT_free() decrements the reference count for the given
+ B<EVP_KEYMGMT> I<keymgmt>, and when the count reaches zero, frees it.
++If the argument is NULL, nothing is done.
+ 
+ EVP_KEYMGMT_get0_provider() returns the provider that has this particular
+ implementation.
+diff --git a/doc/man3/EVP_MD_meth_new.pod b/doc/man3/EVP_MD_meth_new.pod
+index a553c378f3..9ddc0001ab 100644
+--- a/doc/man3/EVP_MD_meth_new.pod
++++ b/doc/man3/EVP_MD_meth_new.pod
+@@ -74,6 +74,7 @@ EVP_MD_meth_dup() creates a copy of B<md>.
+ 
+ EVP_MD_meth_free() decrements the reference count for the B<EVP_MD> structure.
+ If the reference count drops to 0 then the structure is freed.
++If the argument is NULL, nothing is done.
+ 
+ EVP_MD_meth_set_input_blocksize() sets the internal input block size
+ for the method B<md> to B<blocksize> bytes.
+diff --git a/doc/man3/EVP_PKEY_ASN1_METHOD.pod b/doc/man3/EVP_PKEY_ASN1_METHOD.pod
+index cc50d363da..637fd48010 100644
+--- a/doc/man3/EVP_PKEY_ASN1_METHOD.pod
++++ b/doc/man3/EVP_PKEY_ASN1_METHOD.pod
+@@ -393,7 +393,7 @@ This function is not thread safe, it's recommended to only use this
+ when initializing the application.
+ 
+ EVP_PKEY_asn1_free() frees an existing B<EVP_PKEY_ASN1_METHOD> pointed
+-by B<ameth>.
++by B<ameth>. If the argument is NULL, nothing is done.
+ 
+ EVP_PKEY_asn1_add0() adds B<ameth> to the user defined stack of
+ methods unless another B<EVP_PKEY_ASN1_METHOD> with the same NID is
+diff --git a/doc/man3/EVP_PKEY_meth_new.pod b/doc/man3/EVP_PKEY_meth_new.pod
+index db0b09f855..45f868d04d 100644
+--- a/doc/man3/EVP_PKEY_meth_new.pod
++++ b/doc/man3/EVP_PKEY_meth_new.pod
+@@ -407,7 +407,7 @@ of an B<EVP_PKEY_METHOD> is always called by the EVP framework while doing a
+ digest signing operation by calling L<EVP_DigestSignFinal(3)>.
+ 
+ EVP_PKEY_meth_free() frees an existing B<EVP_PKEY_METHOD> pointed by
+-B<pmeth>.
++B<pmeth>. If the argument is NULL, nothing is done.
+ 
+ EVP_PKEY_meth_copy() copies an B<EVP_PKEY_METHOD> object from B<src>
+ to B<dst>.
+diff --git a/doc/man3/EVP_SIGNATURE.pod b/doc/man3/EVP_SIGNATURE.pod
+index 1f534ef338..9a1bc31a40 100644
+--- a/doc/man3/EVP_SIGNATURE.pod
++++ b/doc/man3/EVP_SIGNATURE.pod
+@@ -49,7 +49,7 @@ The returned value must eventually be freed with EVP_SIGNATURE_free().
+ EVP_SIGNATURE_free() decrements the reference count for the B<EVP_SIGNATURE>
+ structure. Typically this structure will have been obtained from an earlier call
+ to EVP_SIGNATURE_fetch(). If the reference count drops to 0 then the
+-structure is freed.
++structure is freed. If the argument is NULL, nothing is done.
+ 
+ EVP_SIGNATURE_up_ref() increments the reference count for an B<EVP_SIGNATURE>
+ structure.
+diff --git a/doc/man3/HMAC.pod b/doc/man3/HMAC.pod
+index 5e3e4a6a96..e9e6b69337 100644
+--- a/doc/man3/HMAC.pod
++++ b/doc/man3/HMAC.pod
+@@ -87,7 +87,7 @@ created with HMAC_CTX_new().
+ 
+ HMAC_CTX_free() erases the key and other data from the B<HMAC_CTX>,
+ releases any associated resources and finally frees the B<HMAC_CTX>
+-itself.
++itself. If the argument is NULL, nothing is done.
+ 
+ The following functions may be used if the message is not completely
+ stored in memory:
+diff --git a/doc/man3/NCONF_new_ex.pod b/doc/man3/NCONF_new_ex.pod
+index 6861fb198c..394dbd82d4 100644
+--- a/doc/man3/NCONF_new_ex.pod
++++ b/doc/man3/NCONF_new_ex.pod
+@@ -35,7 +35,7 @@ I<meth> is set to NULL then the default value of NCONF_default() is used.
+ NCONF_new() is similar to NCONF_new_ex() but sets the I<libctx> to NULL.
+ 
+ NCONF_free() frees the data associated with I<conf> and then frees the I<conf>
+-object.
++object. If the argument is NULL, nothing is done.
+ 
+ NCONF_load() parses the file named I<filename> and adds the values found to
+ I<conf>. If an error occurs I<file> and I<eline> list the file and line that
+diff --git a/doc/man3/OCSP_REQUEST_new.pod b/doc/man3/OCSP_REQUEST_new.pod
+index 867087d96b..65c3a1cc98 100644
+--- a/doc/man3/OCSP_REQUEST_new.pod
++++ b/doc/man3/OCSP_REQUEST_new.pod
+@@ -29,6 +29,7 @@ OCSP_request_onereq_get0 - OCSP request functions
+ OCSP_REQUEST_new() allocates and returns an empty B<OCSP_REQUEST> structure.
+ 
+ OCSP_REQUEST_free() frees up the request structure B<req>.
++If the argument is NULL, nothing is done.
+ 
+ OCSP_request_add0_id() adds certificate ID B<cid> to B<req>. It returns
+ the B<OCSP_ONEREQ> structure added so an application can add additional
+diff --git a/doc/man3/OCSP_cert_to_id.pod b/doc/man3/OCSP_cert_to_id.pod
+index 298527f6bb..abf07db109 100644
+--- a/doc/man3/OCSP_cert_to_id.pod
++++ b/doc/man3/OCSP_cert_to_id.pod
+@@ -38,6 +38,7 @@ issuer name B<issuerName>, issuer key hash B<issuerKey> and serial number
+ B<serialNumber>.
+ 
+ OCSP_CERTID_free() frees up B<id>.
++If the argument is NULL, nothing is done.
+ 
+ OCSP_id_cmp() compares B<OCSP_CERTID> B<a> and B<b>.
+ 
+diff --git a/doc/man3/OCSP_response_status.pod b/doc/man3/OCSP_response_status.pod
+index 7ff74923a5..a7402540b2 100644
+--- a/doc/man3/OCSP_response_status.pod
++++ b/doc/man3/OCSP_response_status.pod
+@@ -46,6 +46,7 @@ OCSP_response_create() creates and returns an I<OCSP_RESPONSE> structure for
+ I<status> and optionally including basic response I<bs>.
+ 
+ OCSP_RESPONSE_free() frees up OCSP response I<resp>.
++If the argument is NULL, nothing is done.
+ 
+ OCSP_RESPID_set_by_name() sets the name of the OCSP_RESPID to be the same as the
+ subject name in the supplied X509 certificate I<cert> for the OCSP responder.
+diff --git a/doc/man3/OPENSSL_LH_COMPFUNC.pod b/doc/man3/OPENSSL_LH_COMPFUNC.pod
+index 1ec2aa4b53..87b1b6a58c 100644
+--- a/doc/man3/OPENSSL_LH_COMPFUNC.pod
++++ b/doc/man3/OPENSSL_LH_COMPFUNC.pod
+@@ -135,7 +135,7 @@ Then a hash table of B<I<TYPE>> objects can be created using this:
+ B<lh_I<TYPE>_free>() frees the B<LHASH_OF>(B<I<TYPE>>) structure
+ I<table>. Allocated hash table entries will not be freed; consider
+ using B<lh_I<TYPE>_doall>() to deallocate any remaining entries in the
+-hash table (see below).
++hash table (see below). If the argument is NULL, nothing is done.
+ 
+ B<lh_I<TYPE>_flush>() empties the B<LHASH_OF>(B<I<TYPE>>) structure I<table>. New
+ entries can be added to the flushed table.  Allocated hash table entries
+diff --git a/doc/man3/OPENSSL_init_crypto.pod b/doc/man3/OPENSSL_init_crypto.pod
+index c3e72d2744..12f3c6864f 100644
+--- a/doc/man3/OPENSSL_init_crypto.pod
++++ b/doc/man3/OPENSSL_init_crypto.pod
+@@ -249,6 +249,7 @@ If the B<CONF_MFLAGS_IGNORE_RETURN_CODES> flag is not included, any errors in
+ the configuration file will cause an error return from B<OPENSSL_init_crypto>
+ or indirectly L<OPENSSL_init_ssl(3)>.
+ The object can be released with OPENSSL_INIT_free() when done.
++If the argument to OPENSSL_INIT_free() is NULL, nothing is done.
+ 
+ =head1 NOTES
+ 
+diff --git a/doc/man3/OPENSSL_malloc.pod b/doc/man3/OPENSSL_malloc.pod
+index 76751012bd..4f29210195 100644
+--- a/doc/man3/OPENSSL_malloc.pod
++++ b/doc/man3/OPENSSL_malloc.pod
+@@ -99,7 +99,8 @@ OPENSSL_zalloc() calls memset() to zero the memory before returning.
+ OPENSSL_clear_realloc() and OPENSSL_clear_free() should be used
+ when the buffer at B<addr> holds sensitive information.
+ The old buffer is filled with zero's by calling OPENSSL_cleanse()
+-before ultimately calling OPENSSL_free().
++before ultimately calling OPENSSL_free(). If the argument to OPENSSL_free() is
++NULL, nothing is done.
+ 
+ OPENSSL_cleanse() fills B<ptr> of size B<len> with a string of 0's.
+ Use OPENSSL_cleanse() with care if the memory is a mapping of a file.
+diff --git a/doc/man3/OPENSSL_secure_malloc.pod b/doc/man3/OPENSSL_secure_malloc.pod
+index c5d4bb2dbb..cd18753d6f 100644
+--- a/doc/man3/OPENSSL_secure_malloc.pod
++++ b/doc/man3/OPENSSL_secure_malloc.pod
+@@ -82,13 +82,15 @@ If CRYPTO_secure_malloc_init() is not called, this is equivalent to
+ calling OPENSSL_free().
+ It exists for consistency with OPENSSL_secure_malloc() , and
+ is a macro that expands to CRYPTO_secure_free() and adds the C<__FILE__>
+-and C<__LINE__> parameters..
++and C<__LINE__> parameters..  If the argument to OPENSSL_secure_free()
++is NULL, nothing is done.
+ 
+ OPENSSL_secure_clear_free() is similar to OPENSSL_secure_free() except
+ that it has an additional C<num> parameter which is used to clear
+ the memory if it was not allocated from the secure heap.
+ If CRYPTO_secure_malloc_init() is not called, this is equivalent to
+-calling OPENSSL_clear_free().
++calling OPENSSL_clear_free(). If the argument to OPENSSL_secure_clear_free()
++is NULL, nothing is done.
+ 
+ OPENSSL_secure_actual_size() tells the actual size allocated to the
+ pointer; implementations may allocate more space than initially
+diff --git a/doc/man3/OSSL_CMP_CTX_new.pod b/doc/man3/OSSL_CMP_CTX_new.pod
+index ce7db8f2f0..614fbf8203 100644
+--- a/doc/man3/OSSL_CMP_CTX_new.pod
++++ b/doc/man3/OSSL_CMP_CTX_new.pod
+@@ -176,6 +176,7 @@ the message timeout is set to 120 seconds,
+ and the proof-of-possession method is set to OSSL_CRMF_POPO_SIGNATURE.
+ 
+ OSSL_CMP_CTX_free() deallocates an OSSL_CMP_CTX structure.
++If the argument is NULL, nothing is done.
+ 
+ OSSL_CMP_CTX_reinit() prepares the given I<ctx> for a further transaction by
+ clearing the internal CMP transaction (aka session) status, PKIStatusInfo,
+diff --git a/doc/man3/OSSL_CMP_SRV_CTX_new.pod b/doc/man3/OSSL_CMP_SRV_CTX_new.pod
+index d7f1a2e4db..89749615eb 100644
+--- a/doc/man3/OSSL_CMP_SRV_CTX_new.pod
++++ b/doc/man3/OSSL_CMP_SRV_CTX_new.pod
+@@ -104,6 +104,7 @@ associated with the library context I<libctx> and property query string
+ I<propq>, both of which may be NULL to select the defaults.
+ 
+ OSSL_CMP_SRV_CTX_free() deletes the given I<srv_ctx>.
++If the argument is NULL, nothing is done.
+ 
+ OSSL_CMP_SRV_CTX_init() sets in the given I<srv_ctx> a custom server context
+ pointer as well as callback functions performing the specific processing of CMP
+diff --git a/doc/man3/OSSL_DECODER.pod b/doc/man3/OSSL_DECODER.pod
+index c58ebf462c..25f5e50dce 100644
+--- a/doc/man3/OSSL_DECODER.pod
++++ b/doc/man3/OSSL_DECODER.pod
+@@ -61,6 +61,7 @@ I<decoder>.
+ 
+ OSSL_DECODER_free() decrements the reference count for the given
+ I<decoder>, and when the count reaches zero, frees it.
++If the argument is NULL, nothing is done.
+ 
+ OSSL_DECODER_get0_provider() returns the provider of the given
+ I<decoder>.
+diff --git a/doc/man3/OSSL_DECODER_CTX.pod b/doc/man3/OSSL_DECODER_CTX.pod
+index 3ffd794cf0..de7c22b61e 100644
+--- a/doc/man3/OSSL_DECODER_CTX.pod
++++ b/doc/man3/OSSL_DECODER_CTX.pod
+@@ -126,6 +126,7 @@ decoders that have been added to the I<ctx> so far.  Parameters that an
+ implementation doesn't recognise should be ignored by it.
+ 
+ OSSL_DECODER_CTX_free() frees the given context I<ctx>.
++If the argument is NULL, nothing is done.
+ 
+ OSSL_DECODER_CTX_add_decoder() populates the B<OSSL_DECODER_CTX> I<ctx> with
+ a decoder, to be used to attempt to decode some encoded input.
+diff --git a/doc/man3/OSSL_ENCODER.pod b/doc/man3/OSSL_ENCODER.pod
+index d727154728..e5e1598808 100644
+--- a/doc/man3/OSSL_ENCODER.pod
++++ b/doc/man3/OSSL_ENCODER.pod
+@@ -61,6 +61,7 @@ I<encoder>.
+ 
+ OSSL_ENCODER_free() decrements the reference count for the given
+ I<encoder>, and when the count reaches zero, frees it.
++If the argument is NULL, nothing is done.
+ 
+ OSSL_ENCODER_get0_provider() returns the provider of the given
+ I<encoder>.
+diff --git a/doc/man3/OSSL_ENCODER_CTX.pod b/doc/man3/OSSL_ENCODER_CTX.pod
+index b4b5f61e13..75dcb83af7 100644
+--- a/doc/man3/OSSL_ENCODER_CTX.pod
++++ b/doc/man3/OSSL_ENCODER_CTX.pod
+@@ -102,6 +102,7 @@ with an L<OSSL_PARAM(3)> array I<params>.  Parameters that the
+ implementation doesn't recognise should be ignored.
+ 
+ OSSL_ENCODER_CTX_free() frees the given context I<ctx>.
++If the argument is NULL, nothing is done.
+ 
+ OSSL_ENCODER_CTX_add_encoder() populates the B<OSSL_ENCODER_CTX>
+ I<ctx> with a encoder, to be used to encode an input object.
+diff --git a/doc/man3/OSSL_HTTP_REQ_CTX.pod b/doc/man3/OSSL_HTTP_REQ_CTX.pod
+index e86516469d..5da7fd0b26 100644
+--- a/doc/man3/OSSL_HTTP_REQ_CTX.pod
++++ b/doc/man3/OSSL_HTTP_REQ_CTX.pod
+@@ -71,6 +71,7 @@ which collects the HTTP request header lines.
+ 
+ OSSL_HTTP_REQ_CTX_free() frees up the HTTP request context I<rctx>.
+ The I<rbio> is not free'd, I<wbio> will be free'd if I<free_wbio> is set.
++If the argument is NULL, nothing is done.
+ 
+ OSSL_HTTP_REQ_CTX_set_request_line() adds the 1st HTTP request line to I<rctx>.
+ The HTTP method is determined by I<method_POST>,
+diff --git a/doc/man3/OSSL_LIB_CTX.pod b/doc/man3/OSSL_LIB_CTX.pod
+index 45fdd8f39a..fc205b33da 100644
+--- a/doc/man3/OSSL_LIB_CTX.pod
++++ b/doc/man3/OSSL_LIB_CTX.pod
+@@ -88,7 +88,7 @@ This can be used to associate a library context with providers that are loaded
+ from a configuration.
+ 
+ OSSL_LIB_CTX_free() frees the given I<ctx>, unless it happens to be the
+-default OpenSSL library context.
++default OpenSSL library context. If the argument is NULL, nothing is done.
+ 
+ OSSL_LIB_CTX_get0_global_default() returns a concrete (non NULL) reference to
+ the global default library context.
+diff --git a/doc/man3/OSSL_PARAM_BLD.pod b/doc/man3/OSSL_PARAM_BLD.pod
+index 455761c20d..63e8eccb8c 100644
+--- a/doc/man3/OSSL_PARAM_BLD.pod
++++ b/doc/man3/OSSL_PARAM_BLD.pod
+@@ -53,6 +53,7 @@ so that values can be added.
+ Any existing values are cleared.
+ 
+ OSSL_PARAM_BLD_free() deallocates the memory allocates by OSSL_PARAM_BLD_new().
++If the argument is NULL, nothing is done.
+ 
+ OSSL_PARAM_BLD_to_param() converts a built up OSSL_PARAM_BLD structure
+ I<bld> into an allocated OSSL_PARAM array.
+diff --git a/doc/man3/OSSL_PARAM_dup.pod b/doc/man3/OSSL_PARAM_dup.pod
+index d55da4f5cb..22fb06ff98 100644
+--- a/doc/man3/OSSL_PARAM_dup.pod
++++ b/doc/man3/OSSL_PARAM_dup.pod
+@@ -32,6 +32,7 @@ array that have the same key.
+ 
+ OSSL_PARAM_free() frees the parameter array I<params> that was created using
+ OSSL_PARAM_dup(), OSSL_PARAM_merge() or OSSL_PARAM_BLD_to_param().
++If the argument to OSSL_PARAM_free() is NULL, nothing is done.
+ 
+ =head1 RETURN VALUES
+ 
+diff --git a/doc/man3/OSSL_SELF_TEST_new.pod b/doc/man3/OSSL_SELF_TEST_new.pod
+index 4c4b10fca9..dbacf9556a 100644
+--- a/doc/man3/OSSL_SELF_TEST_new.pod
++++ b/doc/man3/OSSL_SELF_TEST_new.pod
+@@ -32,6 +32,7 @@ The callback I<cb> may be triggered multiple times by a self test to indicate
+ different phases.
+ 
+ OSSL_SELF_TEST_free() frees the space allocated by OSSL_SELF_TEST_new().
++If the argument is NULL, nothing is done.
+ 
+ OSSL_SELF_TEST_onbegin() may be inserted at the start of a block of self test
+ code. It can be used for diagnostic purposes.
+diff --git a/doc/man3/OSSL_STORE_INFO.pod b/doc/man3/OSSL_STORE_INFO.pod
+index 39bb93fbf5..546ec54c70 100644
+--- a/doc/man3/OSSL_STORE_INFO.pod
++++ b/doc/man3/OSSL_STORE_INFO.pod
+@@ -101,6 +101,7 @@ holds if the B<OSSL_STORE_INFO> type (as returned by
+ OSSL_STORE_INFO_get_type()) matches the function, otherwise NULL.
+ 
+ OSSL_STORE_INFO_free() frees a B<OSSL_STORE_INFO> and its contained type.
++If the argument is NULL, nothing is done.
+ 
+ OSSL_STORE_INFO_new_NAME() , OSSL_STORE_INFO_new_PARAMS(),
+ , OSSL_STORE_INFO_new_PUBKEY(), OSSL_STORE_INFO_new_PKEY(),
+diff --git a/doc/man3/OSSL_STORE_LOADER.pod b/doc/man3/OSSL_STORE_LOADER.pod
+index 176d39f698..89c60f1ef1 100644
+--- a/doc/man3/OSSL_STORE_LOADER.pod
++++ b/doc/man3/OSSL_STORE_LOADER.pod
+@@ -125,6 +125,7 @@ I<loader>.
+ 
+ OSSL_STORE_LOADER_free() decrements the reference count for the given
+ I<loader>, and when the count reaches zero, frees it.
++If the argument is NULL, nothing is done.
+ 
+ OSSL_STORE_LOADER_get0_provider() returns the provider of the given
+ I<loader>.
+@@ -296,6 +297,7 @@ OSSL_STORE_LOADER_set_close() sets the closing function for the
+ I<store_loader>.
+ 
+ OSSL_STORE_LOADER_free() frees the given I<store_loader>.
++If the argument is NULL, nothing is done.
+ 
+ OSSL_STORE_register_loader() register the given I<store_loader> and
+ thereby makes it available for use with OSSL_STORE_open(),
+diff --git a/doc/man3/OSSL_STORE_SEARCH.pod b/doc/man3/OSSL_STORE_SEARCH.pod
+index 79186b0899..021ed0c8ba 100644
+--- a/doc/man3/OSSL_STORE_SEARCH.pod
++++ b/doc/man3/OSSL_STORE_SEARCH.pod
+@@ -75,6 +75,7 @@ criterion, so they must have at least the same life time as the created
+ B<OSSL_STORE_SEARCH>.
+ 
+ OSSL_STORE_SEARCH_free() is used to free the B<OSSL_STORE_SEARCH>.
++If the argument is NULL, nothing is done.
+ 
+ =head2 Loader Functions
+ 
+diff --git a/doc/man3/RSA_meth_new.pod b/doc/man3/RSA_meth_new.pod
+index 29ea4161b0..b5cfd43b6e 100644
+--- a/doc/man3/RSA_meth_new.pod
++++ b/doc/man3/RSA_meth_new.pod
+@@ -147,7 +147,7 @@ passed as a parameter. This might be useful for creating a new
+ B<RSA_METHOD> based on an existing one, but with some differences.
+ 
+ RSA_meth_free() destroys an B<RSA_METHOD> structure and frees up any
+-memory associated with it.
++memory associated with it. If the argument is NULL, nothing is done.
+ 
+ RSA_meth_get0_name() will return a pointer to the name of this
+ RSA_METHOD. This is a pointer to the internal name string and so
+diff --git a/doc/man3/SCT_new.pod b/doc/man3/SCT_new.pod
+index 2357627219..ecaa25e1d2 100644
+--- a/doc/man3/SCT_new.pod
++++ b/doc/man3/SCT_new.pod
+@@ -166,6 +166,12 @@ SCT_set_source() can be used to record where the SCT was found
+ (TLS extension, X.509 certificate extension or OCSP response). This is not
+ required for verifying the SCT.
+ 
++SCT_free() frees the specified SCT.
++If the argument is NULL, nothing is done.
++
++SCT_LIST_free() frees the specified stack of SCTs.
++If the argument is NULL, nothing is done.
++
+ =head1 NOTES
+ 
+ Some of the setters return int, instead of void. These will all return 1 on
+diff --git a/doc/man3/TS_RESP_CTX_new.pod b/doc/man3/TS_RESP_CTX_new.pod
+index 725a1921d1..3b5bfc65ba 100644
+--- a/doc/man3/TS_RESP_CTX_new.pod
++++ b/doc/man3/TS_RESP_CTX_new.pod
+@@ -27,6 +27,7 @@ and property query to NULL. This results in the default (NULL) library context
+ being used for any operations requiring algorithm fetches.
+ 
+ TS_RESP_CTX_free() frees the B<TS_RESP_CTX> object I<ctx>.
++If the argument is NULL, nothing is done.
+ 
+ =head1 RETURN VALUES
+ 
+diff --git a/doc/man3/X509_LOOKUP.pod b/doc/man3/X509_LOOKUP.pod
+index 4d2fe38f25..d086d1b35c 100644
+--- a/doc/man3/X509_LOOKUP.pod
++++ b/doc/man3/X509_LOOKUP.pod
+@@ -85,6 +85,7 @@ X509_LOOKUP_shutdown() tears down the internal state and resources of
+ the given B<X509_LOOKUP>.
+ 
+ X509_LOOKUP_free() destructs the given B<X509_LOOKUP>.
++If the argument is NULL, nothing is done.
+ 
+ X509_LOOKUP_set_method_data() and X509_LOOKUP_get_method_data()
+ associates and retrieves a pointer to application data to and from the
+diff --git a/doc/man3/X509_LOOKUP_meth_new.pod b/doc/man3/X509_LOOKUP_meth_new.pod
+index 2021749935..baaccd5220 100644
+--- a/doc/man3/X509_LOOKUP_meth_new.pod
++++ b/doc/man3/X509_LOOKUP_meth_new.pod
+@@ -110,6 +110,7 @@ be given a human-readable string containing a brief description of the lookup
+ method.
+ 
+ X509_LOOKUP_meth_free() destroys a B<X509_LOOKUP_METHOD> structure.
++If the argument is NULL, nothing is done.
+ 
+ X509_LOOKUP_get_new_item() and X509_LOOKUP_set_new_item() get and set the
+ function that is called when an B<X509_LOOKUP> object is created with
+diff --git a/doc/man3/X509_STORE_new.pod b/doc/man3/X509_STORE_new.pod
+index 31d466faa4..63c37e9530 100644
+--- a/doc/man3/X509_STORE_new.pod
++++ b/doc/man3/X509_STORE_new.pod
+@@ -27,6 +27,7 @@ X509_STORE_lock() locks the store from modification by other threads,
+ X509_STORE_unlock() unlocks it.
+ 
+ X509_STORE_free() frees up a single X509_STORE object.
++If the argument is NULL, nothing is done.
+ 
+ =head1 RETURN VALUES
+ 
+diff --git a/doc/man3/X509_dup.pod b/doc/man3/X509_dup.pod
+index 849364e2aa..c8dd79ff71 100644
+--- a/doc/man3/X509_dup.pod
++++ b/doc/man3/X509_dup.pod
+@@ -367,7 +367,7 @@ followed by I<X509_check_purpose(copied_cert, -1, 0)>,
+ which re-builds the cached data.
+ 
+ B<I<TYPE>_free>() releases the object and all pointers and sub-objects
+-within it.
++within it. If the argument is NULL, nothing is done.
+ 
+ B<I<TYPE>_print_ctx>() prints the object I<a> on the specified BIO I<out>.
+ Each line will be prefixed with I<indent> spaces.
+diff --git a/doc/man3/X509_new.pod b/doc/man3/X509_new.pod
+index ea2b3a2cc9..0e19a76fb1 100644
+--- a/doc/man3/X509_new.pod
++++ b/doc/man3/X509_new.pod
+@@ -18,7 +18,7 @@ X509_chain_up_ref - X509 certificate ASN1 allocation functions
+ 
+ =head1 DESCRIPTION
+ 
+-The X509 ASN1 allocation routines, allocate and free an
++The X509 ASN1 allocation routines allocate and free an
+ X509 structure, which represents an X509 certificate.
+ 
+ X509_new_ex() allocates and initializes a X509 structure with a
+@@ -33,7 +33,8 @@ and property query to NULL. This results in the default (NULL) library context
+ being used for any X509 operations requiring algorithm fetches.
+ 
+ X509_free() decrements the reference count of B<X509> structure B<a> and
+-frees it up if the reference count is zero. If B<a> is NULL nothing is done.
++frees it up if the reference count is zero. If the argument is NULL,
++nothing is done.
+ 
+ X509_up_ref() increments the reference count of B<a>.
+ 
+-- 
+2.39.5 (Apple Git-154)
+

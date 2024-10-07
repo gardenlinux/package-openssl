@@ -1,0 +1,41 @@
+From 7b2826f65d5b590085d154f26448a5b08a387aea Mon Sep 17 00:00:00 2001
+From: erbsland-dev <github@erbsland.dev>
+Date: Mon, 8 Jul 2024 12:35:55 +0200
+Subject: [PATCH 168/228] Enhance documentation for `BN_mask_bits()`
+
+Fixes #5537
+
+Added a note that the error check for `BN_mask_bits()` depends
+on the internal representation that depends on the platform's word size.
+Included a reference to the `BN_num_bits()` function for precise bit checking.
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24812)
+
+(cherry picked from commit 2a45839778955ffcab01918f10544d46e42f9a5b)
+---
+ doc/man3/BN_set_bit.pod | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/doc/man3/BN_set_bit.pod b/doc/man3/BN_set_bit.pod
+index 349ef9e056..e4d66791e8 100644
+--- a/doc/man3/BN_set_bit.pod
++++ b/doc/man3/BN_set_bit.pod
+@@ -33,8 +33,11 @@ error occurs if B<a> is shorter than B<n> bits.
+ BN_is_bit_set() tests if bit B<n> in B<a> is set.
+ 
+ BN_mask_bits() truncates B<a> to an B<n> bit number
+-(C<a&=~((~0)E<lt>E<lt>n)>).  An error occurs if B<a> already is
+-shorter than B<n> bits.
++(C<a&=~((~0)E<lt>E<lt>n)>). An error occurs if B<n> is negative. An error is
++also returned if the internal representation of B<a> is already shorter than
++B<n> bits. The internal representation depends on the platform's word size, and
++this error can be safely ignored. Use L<BN_num_bits(3)> to determine the exact
++number of bits if needed.
+ 
+ BN_lshift() shifts B<a> left by B<n> bits and places the result in
+ B<r> (C<r=a*2^n>). Note that B<n> must be nonnegative. BN_lshift1() shifts
+-- 
+2.39.5 (Apple Git-154)
+
