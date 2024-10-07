@@ -13,3 +13,4 @@ sed -i 's/dpkg-dev (>= 1.22.5)/dpkg-dev (>= 1.22.4)/' $dir/src/debian/control
 # set the corresponding version of the package.
 version_orig=3.1.7
 version="$version_orig-0"
+version_suffix="gardenlinux0+bp1443"
