@@ -3,3 +3,5 @@ cp patches/*.patch $dir/src/debian/patches/
 cat patches/series >> $dir/src/debian/patches/series
 cat patches/changelog >> $dir/src/debian/patches/changelog
 
+version_orig=3.1.7
+version="$version_orig-0"
