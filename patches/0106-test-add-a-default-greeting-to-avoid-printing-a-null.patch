@@ -1,0 +1,31 @@
+From f37e075c4473cb3eb4e253bcb1ddbb1099fa251d Mon Sep 17 00:00:00 2001
+From: Pauli <ppzgs1@gmail.com>
+Date: Mon, 19 Aug 2024 08:31:15 +1000
+Subject: [PATCH 106/125] test: add a default greeting to avoid printing a null
+ pointer.
+
+Reviewed-by: Shane Lontis <shane.lontis@oracle.com>
+Reviewed-by: Paul Yang <kaishen.yy@antfin.com>
+(Merged from https://github.com/openssl/openssl/pull/25221)
+
+(cherry picked from commit 34877dbcd467efb4e2dbf45d2fcb44c5a4b4926a)
+---
+ test/provider_internal_test.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/provider_internal_test.c b/test/provider_internal_test.c
+index 9998e6bf97..e4cc354f22 100644
+--- a/test/provider_internal_test.c
++++ b/test/provider_internal_test.c
+@@ -22,7 +22,7 @@ static OSSL_PARAM greeting_request[] = {
+ 
+ static int test_provider(OSSL_PROVIDER *prov, const char *expected_greeting)
+ {
+-    const char *greeting = NULL;
++    const char *greeting = "no greeting received";
+     int ret = 0;
+ 
+     ret =
+-- 
+2.39.5 (Apple Git-154)
+

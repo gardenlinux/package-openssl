@@ -1,0 +1,34 @@
+From 2bdf2026b6fd6dd692de197f17d682d1258b572c Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Thu, 1 Aug 2024 19:36:00 +0200
+Subject: [PATCH 095/125] Do not implicitly start connection with
+ SSL_handle_events()
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Matt Caswell <matt@openssl.org>
+
+(cherry picked from commit ca1d2db291530a827555b40974ed81efb91c2d19)
+
+Reviewed-by: Tim Hudson <tjh@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/25082)
+---
+ ssl/quic/quic_impl.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ssl/quic/quic_impl.c b/ssl/quic/quic_impl.c
+index 1918e57e50..2f6f22a983 100644
+--- a/ssl/quic/quic_impl.c
++++ b/ssl/quic/quic_impl.c
+@@ -1059,7 +1059,8 @@ int ossl_quic_handle_events(SSL *s)
+         return 0;
+ 
+     quic_lock(ctx.qc);
+-    ossl_quic_reactor_tick(ossl_quic_channel_get_reactor(ctx.qc->ch), 0);
++    if (ctx.qc->started)
++        ossl_quic_reactor_tick(ossl_quic_channel_get_reactor(ctx.qc->ch), 0);
+     quic_unlock(ctx.qc);
+     return 1;
+ }
+-- 
+2.39.5 (Apple Git-154)
+

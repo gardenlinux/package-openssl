@@ -1,0 +1,40 @@
+From a6fe1464bc7b2b35c50366f742c7ae9838f0415f Mon Sep 17 00:00:00 2001
+From: Robert Schulze <robert@clickhouse.com>
+Date: Tue, 18 Jun 2024 14:43:26 +0000
+Subject: [PATCH 019/125] Fix data race between SSL_SESSION_list_add and
+ ssl_session_dup
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Matt Caswell <matt@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24673)
+
+(cherry picked from commit 79886c85b378d73aec4d96f8e258f12915faddf7)
+---
+ ssl/ssl_sess.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/ssl/ssl_sess.c b/ssl/ssl_sess.c
+index 5011c87bab..29565b5f6a 100644
+--- a/ssl/ssl_sess.c
++++ b/ssl/ssl_sess.c
+@@ -139,7 +139,15 @@ static SSL_SESSION *ssl_session_dup_intern(const SSL_SESSION *src, int ticket)
+     dest = OPENSSL_malloc(sizeof(*dest));
+     if (dest == NULL)
+         return NULL;
+-    memcpy(dest, src, sizeof(*dest));
++
++    /*
++     * Copy until prev ptr, because it's a part of sessons cache which can be modified
++     * concurrently. Other fields filled in the code bellow.
++     */
++    memcpy(dest, src, offsetof(SSL_SESSION, prev));
++    dest->ext = src->ext;
++    dest->ticket_appdata_len = src->ticket_appdata_len;
++    dest->flags = src->flags;
+ 
+     /*
+      * Set the various pointers to NULL so that we can call SSL_SESSION_free in
+-- 
+2.39.5 (Apple Git-154)
+

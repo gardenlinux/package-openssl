@@ -1,0 +1,29 @@
+From 22c75933cce0c41dd4986eb3492b61169fe1cf9e Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Mon, 19 Aug 2024 11:34:27 +0200
+Subject: [PATCH 107/125] Explicitly include e_os.h for close()
+
+Reviewed-by: Tim Hudson <tjh@openssl.org>
+Reviewed-by: Matt Caswell <matt@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/25229)
+
+(cherry picked from commit 0c0c6954bf4fa7b56e21e1393c9e5e5d55c1b2d6)
+---
+ crypto/rand/randfile.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/crypto/rand/randfile.c b/crypto/rand/randfile.c
+index c120fa421c..fff4fce586 100644
+--- a/crypto/rand/randfile.c
++++ b/crypto/rand/randfile.c
+@@ -16,6 +16,7 @@
+ # include <sys/stat.h>
+ #endif
+ 
++#include "internal/e_os.h"
+ #include "internal/cryptlib.h"
+ 
+ #include <errno.h>
+-- 
+2.39.5 (Apple Git-154)
+

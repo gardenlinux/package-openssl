@@ -1,0 +1,34 @@
+From 76cb2357be60cebf0fe360bd4c39862c8474104a Mon Sep 17 00:00:00 2001
+From: Richard Levitte <levitte@openssl.org>
+Date: Wed, 5 Jun 2024 10:22:22 +0200
+Subject: [PATCH 003/125] Drop the old PGP key fingerprint
+
+All public releases have the information of the new PGP key in
+doc/fingerprints.txt, so it is finally time to drop the old.
+
+Reviewed-by: Kurt Roeckx <kurt@roeckx.be>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24563)
+
+(cherry picked from commit a9fa07f47cea6a43d5ac4a3aa336ab34756c2e9b)
+---
+ doc/fingerprints.txt | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/doc/fingerprints.txt b/doc/fingerprints.txt
+index 9613cbac98..bdcad14723 100644
+--- a/doc/fingerprints.txt
++++ b/doc/fingerprints.txt
+@@ -12,9 +12,6 @@ in the file named openssl-1.0.1h.tar.gz.asc.
+ The following is the list of fingerprints for the keys that are
+ currently in use to sign OpenSSL distributions:
+ 
+-OpenSSL OMC:
+-EFC0 A467 D613 CB83 C7ED 6D30 D894 E2CE 8B3D 79F5
+-
+ OpenSSL:
+ BA54 73A2 B058 7B07 FB27 CF2D 2160 94DF D0CB 81EF
+ 
+-- 
+2.39.5 (Apple Git-154)
+

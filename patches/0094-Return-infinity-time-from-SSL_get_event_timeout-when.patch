@@ -1,0 +1,36 @@
+From a714f3ddb7fa978bec5a66b33aa5c3999373fac4 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Thu, 1 Aug 2024 19:14:16 +0200
+Subject: [PATCH 094/125] Return infinity time from SSL_get_event_timeout when
+ the connection is not started
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Matt Caswell <matt@openssl.org>
+
+(cherry picked from commit b1f4aebb74192afb197487bf6f4998fbb87cd1c1)
+
+Reviewed-by: Tim Hudson <tjh@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/25082)
+---
+ ssl/quic/quic_impl.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/ssl/quic/quic_impl.c b/ssl/quic/quic_impl.c
+index 5da9a65f81..1918e57e50 100644
+--- a/ssl/quic/quic_impl.c
++++ b/ssl/quic/quic_impl.c
+@@ -1082,8 +1082,9 @@ int ossl_quic_get_event_timeout(SSL *s, struct timeval *tv, int *is_infinite)
+ 
+     quic_lock(ctx.qc);
+ 
+-    deadline
+-        = ossl_quic_reactor_get_tick_deadline(ossl_quic_channel_get_reactor(ctx.qc->ch));
++    if (ctx.qc->started)
++        deadline
++            = ossl_quic_reactor_get_tick_deadline(ossl_quic_channel_get_reactor(ctx.qc->ch));
+ 
+     if (ossl_time_is_infinite(deadline)) {
+         *is_infinite = 1;
+-- 
+2.39.5 (Apple Git-154)
+

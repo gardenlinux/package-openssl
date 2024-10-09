@@ -1,0 +1,47 @@
+From d2a456681c3e0f08928144395153d31f7fd29239 Mon Sep 17 00:00:00 2001
+From: Andreas Treichel <gmblar@gmail.com>
+Date: Sat, 18 May 2024 08:27:46 +0200
+Subject: [PATCH 102/125] apps/cms.c, apps/smime.c: Fix -crlfeol help messages
+
+CLA: trivial
+
+Reviewed-by: Todd Short <todd.short@me.com>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24434)
+
+(cherry picked from commit 0813ffee2fe6d1a4fe4ec04b7b18fe91cc74a34c)
+---
+ apps/cms.c   | 2 +-
+ apps/smime.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/apps/cms.c b/apps/cms.c
+index f93c98ac92..fc9c020bf2 100644
+--- a/apps/cms.c
++++ b/apps/cms.c
+@@ -133,7 +133,7 @@ const OPTIONS cms_options[] = {
+     {"binary", OPT_BINARY, '-',
+      "Treat input as binary: do not translate to canonical form"},
+     {"crlfeol", OPT_CRLFEOL, '-',
+-     "Use CRLF as EOL termination instead of CR only" },
++     "Use CRLF as EOL termination instead of LF only" },
+     {"asciicrlf", OPT_ASCIICRLF, '-',
+      "Perform CRLF canonicalisation when signing"},
+ 
+diff --git a/apps/smime.c b/apps/smime.c
+index b59e14b0b5..fbd7bda950 100644
+--- a/apps/smime.c
++++ b/apps/smime.c
+@@ -118,7 +118,7 @@ const OPTIONS smime_options[] = {
+      "Do not load certificates from the default certificates store"},
+     {"nochain", OPT_NOCHAIN, '-',
+      "set PKCS7_NOCHAIN so certificates contained in the message are not used as untrusted CAs" },
+-    {"crlfeol", OPT_CRLFEOL, '-', "Use CRLF as EOL termination instead of CR only"},
++    {"crlfeol", OPT_CRLFEOL, '-', "Use CRLF as EOL termination instead of LF only"},
+ 
+     OPT_R_OPTIONS,
+     OPT_V_OPTIONS,
+-- 
+2.39.5 (Apple Git-154)
+

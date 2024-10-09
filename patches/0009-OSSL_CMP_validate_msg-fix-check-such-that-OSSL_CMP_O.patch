@@ -1,0 +1,33 @@
+From 9283c2bdb7914a9a004cc71c21718383afab7575 Mon Sep 17 00:00:00 2001
+From: "Dr. David von Oheimb" <dev@ddvo.net>
+Date: Mon, 11 Mar 2024 12:48:26 +0100
+Subject: [PATCH 009/125] OSSL_CMP_validate_msg(): fix check such that
+ OSSL_CMP_OPT_PERMIT_TA_IN_EXTRACERTS_FOR_IR becomes usable again
+
+Fixes #23706
+
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/23814)
+
+(cherry picked from commit b893ceef2feb6b64504446f984ee5a57d2b69d1f)
+---
+ crypto/cmp/cmp_vfy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/crypto/cmp/cmp_vfy.c b/crypto/cmp/cmp_vfy.c
+index 1869fae696..7e4b317471 100644
+--- a/crypto/cmp/cmp_vfy.c
++++ b/crypto/cmp/cmp_vfy.c
+@@ -632,7 +632,7 @@ int OSSL_CMP_validate_msg(OSSL_CMP_CTX *ctx, const OSSL_CMP_MSG *msg)
+     default:
+         scrt = ctx->srvCert;
+         if (scrt == NULL) {
+-            if (ctx->trusted == NULL) {
++            if (ctx->trusted == NULL && ctx->secretValue != NULL) {
+                 ossl_cmp_info(ctx, "no trust store nor pinned server cert available for verifying signature-based CMP message protection");
+                 ERR_raise(ERR_LIB_CMP, CMP_R_MISSING_TRUST_ANCHOR);
+                 return 0;
+-- 
+2.39.5 (Apple Git-154)
+

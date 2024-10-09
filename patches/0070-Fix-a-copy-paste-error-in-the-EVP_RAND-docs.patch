@@ -1,0 +1,34 @@
+From 18df81066cf9b669eabdc2bdb504b2938e2d6ef0 Mon Sep 17 00:00:00 2001
+From: Matt Caswell <matt@openssl.org>
+Date: Fri, 12 Jul 2024 09:16:36 +0100
+Subject: [PATCH 070/125] Fix a copy & paste error in the EVP_RAND docs
+
+The "max_request" string is defined via the OSSL_RAND_PARAM_MAX_REQUEST
+macro.
+
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24863)
+
+(cherry picked from commit 5c6975bd44dce4bb342b7bc130de5aaefbe2c35b)
+---
+ doc/man3/EVP_RAND.pod | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/doc/man3/EVP_RAND.pod b/doc/man3/EVP_RAND.pod
+index 0c79c57b81..fb6b98e264 100644
+--- a/doc/man3/EVP_RAND.pod
++++ b/doc/man3/EVP_RAND.pod
+@@ -285,7 +285,7 @@ associated RAND ctx.
+ Reads or set the number of elapsed seconds before reseeding the
+ associated RAND ctx.
+ 
+-=item "max_request" (B<OSSL_DRBG_PARAM_RESEED_REQUESTS>) <unsigned integer>
++=item "max_request" (B<OSSL_RAND_PARAM_MAX_REQUEST>) <unsigned integer>
+ 
+ Specifies the maximum number of bytes that can be generated in a single
+ call to OSSL_FUNC_rand_generate.
+-- 
+2.39.5 (Apple Git-154)
+

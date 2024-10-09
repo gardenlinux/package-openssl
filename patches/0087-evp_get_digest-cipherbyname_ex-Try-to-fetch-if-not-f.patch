@@ -1,0 +1,190 @@
+From 51ab19ea480c236715746b105de123e6115e5724 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Fri, 19 Jul 2024 12:24:47 +0200
+Subject: [PATCH 087/125] evp_get_digest/cipherbyname_ex(): Try to fetch if not
+ found
+
+If the name is not found in namemap, we need
+to try to fetch the algorithm and query the
+namemap again.
+
+Fixes #19338
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Shane Lontis <shane.lontis@oracle.com>
+(Merged from https://github.com/openssl/openssl/pull/24940)
+
+(cherry picked from commit 454ca902c7d5337249172b38efc5e4fd63f483f4)
+---
+ crypto/evp/names.c                | 34 ++++++++++++++++++++++----
+ test/build.info                   |  6 ++++-
+ test/evp_byname_test.c            | 40 +++++++++++++++++++++++++++++++
+ test/recipes/30-test_evp_byname.t | 16 +++++++++++++
+ 4 files changed, 91 insertions(+), 5 deletions(-)
+ create mode 100644 test/evp_byname_test.c
+ create mode 100644 test/recipes/30-test_evp_byname.t
+
+diff --git a/crypto/evp/names.c b/crypto/evp/names.c
+index 19c03a3085..66d136fca0 100644
+--- a/crypto/evp/names.c
++++ b/crypto/evp/names.c
+@@ -78,6 +78,7 @@ const EVP_CIPHER *evp_get_cipherbyname_ex(OSSL_LIB_CTX *libctx,
+     const EVP_CIPHER *cp;
+     OSSL_NAMEMAP *namemap;
+     int id;
++    int do_retry = 1;
+ 
+     if (!OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_CIPHERS, NULL))
+         return NULL;
+@@ -94,9 +95,21 @@ const EVP_CIPHER *evp_get_cipherbyname_ex(OSSL_LIB_CTX *libctx,
+      */
+ 
+     namemap = ossl_namemap_stored(libctx);
++ retry:
+     id = ossl_namemap_name2num(namemap, name);
+-    if (id == 0)
+-        return NULL;
++    if (id == 0) {
++        EVP_CIPHER *fetched_cipher;
++
++        /* Try to fetch it because the name might not be known yet. */
++        if (!do_retry)
++            return NULL;
++        do_retry = 0;
++        ERR_set_mark();
++        fetched_cipher = EVP_CIPHER_fetch(libctx, name, NULL);
++        EVP_CIPHER_free(fetched_cipher);
++        ERR_pop_to_mark();
++        goto retry;
++    }
+ 
+     if (!ossl_namemap_doall_names(namemap, id, cipher_from_name, &cp))
+         return NULL;
+@@ -124,6 +137,7 @@ const EVP_MD *evp_get_digestbyname_ex(OSSL_LIB_CTX *libctx, const char *name)
+     const EVP_MD *dp;
+     OSSL_NAMEMAP *namemap;
+     int id;
++    int do_retry = 1;
+ 
+     if (!OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_DIGESTS, NULL))
+         return NULL;
+@@ -140,9 +154,21 @@ const EVP_MD *evp_get_digestbyname_ex(OSSL_LIB_CTX *libctx, const char *name)
+      */
+ 
+     namemap = ossl_namemap_stored(libctx);
++ retry:
+     id = ossl_namemap_name2num(namemap, name);
+-    if (id == 0)
+-        return NULL;
++    if (id == 0) {
++        EVP_MD *fetched_md;
++
++        /* Try to fetch it because the name might not be known yet. */
++        if (!do_retry)
++            return NULL;
++        do_retry = 0;
++        ERR_set_mark();
++        fetched_md = EVP_MD_fetch(libctx, name, NULL);
++        EVP_MD_free(fetched_md);
++        ERR_pop_to_mark();
++        goto retry;
++    }
+ 
+     if (!ossl_namemap_doall_names(namemap, id, digest_from_name, &dp))
+         return NULL;
+diff --git a/test/build.info b/test/build.info
+index 90f4b26dfc..bb8c07745b 100644
+--- a/test/build.info
++++ b/test/build.info
+@@ -40,7 +40,7 @@ IF[{- !$disabled{tests} -}]
+           exptest pbetest localetest evp_pkey_ctx_new_from_name \
+           evp_pkey_provided_test evp_test evp_extra_test evp_extra_test2 \
+           evp_fetch_prov_test evp_libctx_test ossl_store_test \
+-          v3nametest v3ext punycode_test \
++          v3nametest v3ext punycode_test evp_byname_test \
+           crltest danetest bad_dtls_test lhash_test sparse_array_test \
+           conf_include_test params_api_test params_conversion_test \
+           constant_time_test safe_math_test verify_extra_test clienthellotest \
+@@ -390,6 +390,10 @@ IF[{- !$disabled{tests} -}]
+   INCLUDE[punycode_test]=../include ../apps/include
+   DEPEND[punycode_test]=../libcrypto.a libtestutil.a
+ 
++  SOURCE[evp_byname_test]=evp_byname_test.c
++  INCLUDE[evp_byname_test]=../include ../apps/include
++  DEPEND[evp_byname_test]=../libcrypto libtestutil.a
++
+   SOURCE[stack_test]=stack_test.c
+   INCLUDE[stack_test]=../include ../apps/include
+   DEPEND[stack_test]=../libcrypto libtestutil.a
+diff --git a/test/evp_byname_test.c b/test/evp_byname_test.c
+new file mode 100644
+index 0000000000..e16e27a3a5
+--- /dev/null
++++ b/test/evp_byname_test.c
+@@ -0,0 +1,40 @@
++/*
++ * Copyright 2024 The OpenSSL Project Authors. All Rights Reserved.
++ *
++ * Licensed under the Apache License 2.0 (the "License").  You may not use
++ * this file except in compliance with the License.  You can obtain a copy
++ * in the file LICENSE in the source distribution or at
++ * https://www.openssl.org/source/license.html
++ */
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include <openssl/evp.h>
++#include "testutil.h"
++
++static int test_evp_get_digestbyname(void)
++{
++    const EVP_MD *md;
++
++    if (!TEST_ptr(md = EVP_get_digestbyname("SHA2-256")))
++        return 0;
++    return 1;
++}
++
++static int test_evp_get_cipherbyname(void)
++{
++    const EVP_CIPHER *cipher;
++
++    if (!TEST_ptr(cipher = EVP_get_cipherbyname("AES-256-WRAP")))
++        return 0;
++    return 1;
++}
++
++int setup_tests(void)
++{
++    ADD_TEST(test_evp_get_digestbyname);
++    ADD_TEST(test_evp_get_cipherbyname);
++    return 1;
++}
+diff --git a/test/recipes/30-test_evp_byname.t b/test/recipes/30-test_evp_byname.t
+new file mode 100644
+index 0000000000..d06e874fe9
+--- /dev/null
++++ b/test/recipes/30-test_evp_byname.t
+@@ -0,0 +1,16 @@
++#! /usr/bin/env perl
++# Copyright 2024 The OpenSSL Project Authors. All Rights Reserved.
++#
++# Licensed under the Apache License 2.0 (the "License").  You may not use
++# this file except in compliance with the License.  You can obtain a copy
++# in the file LICENSE in the source distribution or at
++# https://www.openssl.org/source/license.html
++
++use strict;
++use OpenSSL::Test;
++use OpenSSL::Test::Simple;
++use OpenSSL::Test::Utils;
++
++setup("test_evp_byname");
++
++simple_test("test_evp_byname", "evp_byname_test");
+-- 
+2.39.5 (Apple Git-154)
+

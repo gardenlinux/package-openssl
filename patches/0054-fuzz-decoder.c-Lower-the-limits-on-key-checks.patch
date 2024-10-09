@@ -1,0 +1,39 @@
+From e3cedc5c59afdbfd1b1a2ed985988bfb772b563d Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Tue, 2 Jul 2024 15:36:03 +0200
+Subject: [PATCH 054/125] fuzz/decoder.c: Lower the limits on key checks
+
+These checks still take too long time on clusterfuzz
+so they are longer than the timeout limit.
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Kurt Roeckx <kurt@roeckx.be>
+(Merged from https://github.com/openssl/openssl/pull/24781)
+
+(cherry picked from commit 29696af689df734cae05181d85ee04470c3839d3)
+---
+ fuzz/decoder.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fuzz/decoder.c b/fuzz/decoder.c
+index 7b53fe61a9..6d8ddbe640 100644
+--- a/fuzz/decoder.c
++++ b/fuzz/decoder.c
+@@ -69,12 +69,12 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
+          * Skip it.
+          */
+         if ((!EVP_PKEY_is_a(pkey, "DH") && !EVP_PKEY_is_a(pkey, "DHX"))
+-            || EVP_PKEY_get_bits(pkey) <= 8192)
++            || EVP_PKEY_get_bits(pkey) <= 2048)
+             EVP_PKEY_param_check(ctx);
+ 
+         EVP_PKEY_public_check(ctx);
+         /* Private and pairwise checks are unbounded, skip for large keys. */
+-        if (EVP_PKEY_get_bits(pkey) <= 16384) {
++        if (EVP_PKEY_get_bits(pkey) <= 4096) {
+             EVP_PKEY_private_check(ctx);
+             EVP_PKEY_pairwise_check(ctx);
+         }
+-- 
+2.39.5 (Apple Git-154)
+

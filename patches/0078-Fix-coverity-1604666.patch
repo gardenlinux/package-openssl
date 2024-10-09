@@ -1,0 +1,36 @@
+From 7209a6b5f4bc758349f45d35f68d6dc41b11a8d3 Mon Sep 17 00:00:00 2001
+From: Neil Horman <nhorman@openssl.org>
+Date: Mon, 15 Jul 2024 14:30:16 -0400
+Subject: [PATCH 078/125] Fix coverity-1604666
+
+Coverity recently flaged an error in which the return value for
+EVP_MD_get_size wasn't checked for negative values prior to use, which
+can cause underflow later in the function.
+
+Just add the check and error out if get_size returns an error.
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24896)
+
+(cherry picked from commit 22e08c7cdc596d4f16749811d1022fb8b07a8e41)
+---
+ crypto/rsa/rsa_oaep.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/crypto/rsa/rsa_oaep.c b/crypto/rsa/rsa_oaep.c
+index b9030440c4..52a0e8f052 100644
+--- a/crypto/rsa/rsa_oaep.c
++++ b/crypto/rsa/rsa_oaep.c
+@@ -184,7 +184,7 @@ int RSA_padding_check_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
+ 
+     mdlen = EVP_MD_get_size(md);
+ 
+-    if (tlen <= 0 || flen <= 0)
++    if (tlen <= 0 || flen <= 0 || mdlen <= 0)
+         return -1;
+     /*
+      * |num| is the length of the modulus; |flen| is the length of the
+-- 
+2.39.5 (Apple Git-154)
+

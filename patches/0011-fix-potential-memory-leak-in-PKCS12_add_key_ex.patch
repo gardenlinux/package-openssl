@@ -1,0 +1,50 @@
+From fd6d2ee6c9f7f123532efaae446aea1039420c6a Mon Sep 17 00:00:00 2001
+From: sashan <anedvedicky@gmail.com>
+Date: Wed, 22 May 2024 09:16:49 +0200
+Subject: [PATCH 011/125] fix potential memory leak in PKCS12_add_key_ex()
+
+function must make sure memorry allocated for `p8`
+gets freed in error path. Issue reported by LuMingYinDetect
+
+Fixes #24453
+
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Todd Short <todd.short@me.com>
+(Merged from https://github.com/openssl/openssl/pull/24456)
+---
+ crypto/pkcs12/p12_crt.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/crypto/pkcs12/p12_crt.c b/crypto/pkcs12/p12_crt.c
+index 2e40dd93c2..9f94dce806 100644
+--- a/crypto/pkcs12/p12_crt.c
++++ b/crypto/pkcs12/p12_crt.c
+@@ -249,16 +249,19 @@ PKCS12_SAFEBAG *PKCS12_add_key_ex(STACK_OF(PKCS12_SAFEBAG) **pbags,
+     if (key_usage && !PKCS8_add_keyusage(p8, key_usage))
+         goto err;
+     if (nid_key != -1) {
++        /* This call does not take ownership of p8 */
+         bag = PKCS12_SAFEBAG_create_pkcs8_encrypt_ex(nid_key, pass, -1, NULL, 0,
+                                                      iter, p8, ctx, propq);
+-        PKCS8_PRIV_KEY_INFO_free(p8);
+-    } else
++    } else {
+         bag = PKCS12_SAFEBAG_create0_p8inf(p8);
++        if (bag != NULL)
++           p8 = NULL; /* bag takes ownership of p8 */
++    }
++    /* This does not need to be in the error path */
++    if (p8 != NULL)
++        PKCS8_PRIV_KEY_INFO_free(p8);
+ 
+-    if (!bag)
+-        goto err;
+-
+-    if (!pkcs12_add_bag(pbags, bag))
++    if (bag == NULL || !pkcs12_add_bag(pbags, bag))
+         goto err;
+ 
+     return bag;
+-- 
+2.39.5 (Apple Git-154)
+

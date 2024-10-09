@@ -1,0 +1,132 @@
+From 90d40badbe4e7444d4941ad61c6fbbf9d81bcb26 Mon Sep 17 00:00:00 2001
+From: Jamie Cui <jamie.cui@outlook.com>
+Date: Thu, 22 Aug 2024 11:41:50 +0800
+Subject: [PATCH 115/125] Fix decoder error on SM2 private key
+
+Added sm2 testcases to endecode_test.c.
+
+Reviewed-by: Richard Levitte <levitte@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/25266)
+
+(cherry picked from commit 25bd0c77bfa7e8127faafda2b082432ea58f9570)
+---
+ .../encode_decode/decode_der2key.c            | 33 +++++++++++++++----
+ test/endecode_test.c                          | 13 ++++++++
+ 2 files changed, 39 insertions(+), 7 deletions(-)
+
+diff --git a/providers/implementations/encode_decode/decode_der2key.c b/providers/implementations/encode_decode/decode_der2key.c
+index b0d4e0ecf6..984f26b4bc 100644
+--- a/providers/implementations/encode_decode/decode_der2key.c
++++ b/providers/implementations/encode_decode/decode_der2key.c
+@@ -32,6 +32,7 @@
+ #include "crypto/ecx.h"
+ #include "crypto/rsa.h"
+ #include "crypto/x509.h"
++#include "openssl/obj_mac.h"
+ #include "prov/bio.h"
+ #include "prov/implementations.h"
+ #include "endecoder_local.h"
+@@ -109,7 +110,10 @@ static void *der2key_decode_p8(const unsigned char **input_der,
+ 
+     if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, input_der, input_der_len)) != NULL
+         && PKCS8_pkey_get0(NULL, NULL, NULL, &alg, p8inf)
+-        && OBJ_obj2nid(alg->algorithm) == ctx->desc->evp_type)
++        && (OBJ_obj2nid(alg->algorithm) == ctx->desc->evp_type
++            /* Allow decoding sm2 private key with id_ecPublicKey */
++            || (OBJ_obj2nid(alg->algorithm) == NID_X9_62_id_ecPublicKey
++                && ctx->desc->evp_type == NID_sm2)))
+         key = key_from_pkcs8(p8inf, PROV_LIBCTX_OF(ctx->provctx), ctx->propq);
+     PKCS8_PRIV_KEY_INFO_free(p8inf);
+ 
+@@ -312,10 +316,19 @@ static int der2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
+ 
+         params[0] =
+             OSSL_PARAM_construct_int(OSSL_OBJECT_PARAM_TYPE, &object_type);
+-        params[1] =
+-            OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_TYPE,
+-                                             (char *)ctx->desc->keytype_name,
+-                                             0);
++
++#ifndef OPENSSL_NO_SM2
++        if (strcmp(ctx->desc->keytype_name, "EC") == 0
++            && (EC_KEY_get_flags(key) & EC_FLAG_SM2_RANGE) != 0)
++            params[1] =
++                OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_TYPE,
++                                                 "SM2", 0);
++        else
++#endif
++            params[1] =
++                OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_TYPE,
++                                                 (char *)ctx->desc->keytype_name,
++                                                 0);
+         /* The address of the key becomes the octet string */
+         params[2] =
+             OSSL_PARAM_construct_octet_string(OSSL_OBJECT_PARAM_REFERENCE,
+@@ -435,10 +448,16 @@ static void *ec_d2i_PKCS8(void **key, const unsigned char **der, long der_len,
+ static int ec_check(void *key, struct der2key_ctx_st *ctx)
+ {
+     /* We're trying to be clever by comparing two truths */
+-
++    int ret = 0;
+     int sm2 = (EC_KEY_get_flags(key) & EC_FLAG_SM2_RANGE) != 0;
+ 
+-    return sm2 == (ctx->desc->evp_type == EVP_PKEY_SM2);
++    if (sm2)
++        ret = ctx->desc->evp_type == EVP_PKEY_SM2
++            || ctx->desc->evp_type == NID_X9_62_id_ecPublicKey;
++    else
++        ret = ctx->desc->evp_type != EVP_PKEY_SM2;
++
++    return ret;
+ }
+ 
+ static void ec_adjust(void *key, struct der2key_ctx_st *ctx)
+diff --git a/test/endecode_test.c b/test/endecode_test.c
+index e28fd41b75..97576cedc7 100644
+--- a/test/endecode_test.c
++++ b/test/endecode_test.c
+@@ -1032,6 +1032,10 @@ DOMAIN_KEYS(ECExplicitTri2G);
+ IMPLEMENT_TEST_SUITE(ECExplicitTri2G, "EC", 0)
+ IMPLEMENT_TEST_SUITE_LEGACY(ECExplicitTri2G, "EC")
+ # endif
++# ifndef OPENSSL_NO_SM2
++KEYS(SM2);
++IMPLEMENT_TEST_SUITE(SM2, "SM2", 0)
++# endif
+ KEYS(ED25519);
+ IMPLEMENT_TEST_SUITE(ED25519, "ED25519", 1)
+ KEYS(ED448);
+@@ -1396,6 +1400,9 @@ int setup_tests(void)
+ # ifndef OPENSSL_NO_EC2M
+     MAKE_DOMAIN_KEYS(ECExplicitTriNamedCurve, "EC", ec_explicit_tri_params_nc);
+     MAKE_DOMAIN_KEYS(ECExplicitTri2G, "EC", ec_explicit_tri_params_explicit);
++# endif
++# ifndef OPENSSL_NO_SM2
++    MAKE_KEYS(SM2, "SM2", NULL);
+ # endif
+     MAKE_KEYS(ED25519, "ED25519", NULL);
+     MAKE_KEYS(ED448, "ED448", NULL);
+@@ -1442,6 +1449,9 @@ int setup_tests(void)
+         ADD_TEST_SUITE_LEGACY(ECExplicitTriNamedCurve);
+         ADD_TEST_SUITE(ECExplicitTri2G);
+         ADD_TEST_SUITE_LEGACY(ECExplicitTri2G);
++# endif
++# ifndef OPENSSL_NO_SM2
++        ADD_TEST_SUITE(SM2);
+ # endif
+         ADD_TEST_SUITE(ED25519);
+         ADD_TEST_SUITE(ED448);
+@@ -1499,6 +1509,9 @@ void cleanup_tests(void)
+ # ifndef OPENSSL_NO_EC2M
+     FREE_DOMAIN_KEYS(ECExplicitTriNamedCurve);
+     FREE_DOMAIN_KEYS(ECExplicitTri2G);
++# endif
++# ifndef OPENSSL_NO_SM2
++    FREE_KEYS(SM2);
+ # endif
+     FREE_KEYS(ED25519);
+     FREE_KEYS(ED448);
+-- 
+2.39.5 (Apple Git-154)
+
