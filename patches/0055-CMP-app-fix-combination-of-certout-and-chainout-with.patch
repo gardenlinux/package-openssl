@@ -1,0 +1,113 @@
+From 14b3955e10b54447d1f7e8f4368cc1264a6760f9 Mon Sep 17 00:00:00 2001
+From: "Dr. David von Oheimb" <dev@ddvo.net>
+Date: Fri, 21 Jun 2024 08:11:03 +0200
+Subject: [PATCH 055/125] CMP app: fix combination of -certout and -chainout
+ with equal filename argument
+
+This backports commit 5aec3f4a72604d76970581f1ea445b331beda608 of PR #24267 to 3.2
+
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24696)
+---
+ apps/cmp.c                                    | 27 ++++++++++++++-----
+ doc/man1/openssl-cmp.pod.in                   |  6 +++++
+ doc/man3/OSSL_CMP_CTX_new.pod                 |  2 ++
+ .../80-test_cmp_http_data/test_enrollment.csv |  5 +++-
+ 4 files changed, 33 insertions(+), 7 deletions(-)
+
+diff --git a/apps/cmp.c b/apps/cmp.c
+index dd5a69af7c..d5a2209ebd 100644
+--- a/apps/cmp.c
++++ b/apps/cmp.c
+@@ -3259,13 +3259,28 @@ int cmp_main(int argc, char **argv)
+                             opt_extracertsout, "extra") < 0)
+             goto err;
+         if (newcert != NULL && (opt_cmd == CMP_IR || opt_cmd == CMP_CR
+-                                || opt_cmd == CMP_KUR || opt_cmd == CMP_P10CR))
+-            if (!save_cert_or_delete(newcert, opt_certout, "newly enrolled")
+-                || save_free_certs(OSSL_CMP_CTX_get1_newChain(cmp_ctx),
+-                                   opt_chainout, "chain") < 0
+-                || save_free_certs(OSSL_CMP_CTX_get1_caPubs(cmp_ctx),
+-                                   opt_cacertsout, "CA") < 0)
++                                || opt_cmd == CMP_KUR || opt_cmd == CMP_P10CR)) {
++            STACK_OF(X509) *newchain = OSSL_CMP_CTX_get1_newChain(cmp_ctx);
++
++            if (newcert != NULL && newchain != NULL /* NULL is on error only */
++                && opt_certout != NULL && opt_chainout != NULL
++                && strcmp(opt_certout, opt_chainout) == 0) {
++                if (!X509_add_cert(newchain, newcert, X509_ADD_FLAG_PREPEND
++                                   | X509_ADD_FLAG_UP_REF)) {
++                    sk_X509_pop_free(newchain, X509_free);
++                    goto err;
++                }
++                if (!save_free_certs(newchain, opt_chainout, "newly enrolled cert and chain"))
++                    goto err;
++            } else {
++                if (save_free_certs(newchain, opt_chainout, "chain") < 0
++                    || !save_cert_or_delete(newcert, opt_certout, "newly enrolled"))
++                    goto err;
++            }
++            if (save_free_certs(OSSL_CMP_CTX_get1_caPubs(cmp_ctx),
++                                opt_cacertsout, "CA") < 0)
+                 goto err;
++        }
+         if (!OSSL_CMP_CTX_reinit(cmp_ctx))
+             goto err;
+     }
+diff --git a/doc/man1/openssl-cmp.pod.in b/doc/man1/openssl-cmp.pod.in
+index 051c749d08..6a60e711b4 100644
+--- a/doc/man1/openssl-cmp.pod.in
++++ b/doc/man1/openssl-cmp.pod.in
+@@ -403,6 +403,12 @@ The file where any newly enrolled certificate should be saved.
+ =item B<-chainout> I<filename>
+ 
+ The file where the chain of any newly enrolled certificate should be saved.
++This chain excludes the leaf certificate, i.e., the newly enrolled certificate.
++Also the trust anchor (the root certificate) is not included.
++
++If the B<-certout> option is given, too, with equal I<filename> argument,
++then the file produced contains both outputs concatenated:
++the newly enrolled certificate followed by its chain.
+ 
+ =back
+ 
+diff --git a/doc/man3/OSSL_CMP_CTX_new.pod b/doc/man3/OSSL_CMP_CTX_new.pod
+index 2f1df925f3..7ddd202d33 100644
+--- a/doc/man3/OSSL_CMP_CTX_new.pod
++++ b/doc/man3/OSSL_CMP_CTX_new.pod
+@@ -634,6 +634,8 @@ If the callback argument is NULL the function tries building an approximate
+ chain as far as possible using the same untrusted certificates from the I<ctx>,
+ and if this fails it takes the received extraCerts as fallback.
+ The resulting cert chain can be retrieved using OSSL_CMP_CTX_get1_newChain().
++This chain excludes the leaf certificate, i.e., the newly enrolled certificate.
++Also the trust anchor (the root certificate) is not included.
+ 
+ OSSL_CMP_CTX_set_certConf_cb() sets the callback used for evaluating the newly
+ enrolled certificate before the library sends, depending on its result,
+diff --git a/test/recipes/80-test_cmp_http_data/test_enrollment.csv b/test/recipes/80-test_cmp_http_data/test_enrollment.csv
+index bcd11002f6..9bd7222042 100644
+--- a/test/recipes/80-test_cmp_http_data/test_enrollment.csv
++++ b/test/recipes/80-test_cmp_http_data/test_enrollment.csv
+@@ -1,7 +1,7 @@
+ expected,description, -section,val, -cmd,val, -newkey,val,val, -newkeypass,val, -subject,val, -issuer,val, -days,int, -reqexts,val, -sans,spec, -san_nodefault,noarg, -popo,int, -implicit_confirm,noarg, -disable_confirm,noarg, -certout,val,val2, -out_trusted,val,val2, -oldcert,val, -csr,val, -revreason,val
+ ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Misc,request options:,,,,
+ ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+-1,newkey, -section,, -cmd,ir, -newkey,new.key,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, -certout,_RESULT_DIR/test.certout_newkey.pem,, -out_trusted,root.crt,,BLANK,,BLANK,,,
++1,newkey, -section,, -cmd,ir, -newkey,new.key,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, -certout,_RESULT_DIR/test.certout_newkey.pem,, -out_trusted,root.crt,,BLANK,,BLANK,,,,-chainout,_RESULT_DIR/test.chainout.pem
+ 0,newkey missing arg, -section,, -cmd,ir, -newkey,,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, -certout,_RESULT_DIR/test.certout_newkey1.pem,, -out_trusted,root.crt,,BLANK,,BLANK,,,
+ 0,newkey is non-existing directory and file, -section,, -cmd,ir, -newkey,idontexist/idontexist,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, -certout,_RESULT_DIR/test.certout_newkey2.pem,, -out_trusted,root.crt,,BLANK,,BLANK,,,
+ 0,newkey too many parameters, -section,, -cmd,ir, -newkey,abc,def, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, -certout,_RESULT_DIR/test.certout_newkey3.pem,, -out_trusted,root.crt,,BLANK,,BLANK,,,
+@@ -63,6 +63,9 @@ expected,description, -section,val, -cmd,val, -newkey,val,val, -newkeypass,val,
+ 1,disable_confirm, -section,, -cmd,ir, -newkey,new.key,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, -disable_confirm,, -certout,_RESULT_DIR/test.certout_disable.pem,, -out_trusted,root.crt,,BLANK,,BLANK,,,
+ 0,disable_confirm with parameter, -section,, -cmd,ir, -newkey,new.key,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, -disable_confirm,abc, -certout,_RESULT_DIR/test.certout_disable1.pem,, -out_trusted,root.crt,,BLANK,,BLANK,,,
+ ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
++1,use certout (and chainout)            , -section,, -cmd,ir, -newkey,new.key,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, ,,, -out_trusted,root.crt,,BLANK,,BLANK,,,,-cert,_RESULT_DIR/test.certout_newkey.pem,-untrusted,_RESULT_DIR/test.chainout.pem
++1,certout and chainout sent to same file, -section,, -cmd,ir, -newkey,new.key,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, ,,, -out_trusted,root.crt,,BLANK,,BLANK,,,,-certout,_RESULT_DIR/test.certout_chainout.pem,,-chainout,_RESULT_DIR/test.certout_chainout.pem
++1,use certout and chainout from same file, -section,, -cmd,ir, -newkey,new.key,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, ,,, -out_trusted,root.crt,,BLANK,,BLANK,,,,-cert,_RESULT_DIR/test.certout_chainout.pem,-untrusted,""""
+ 0,no certout, -section,, -cmd,ir, -newkey,new.key,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, -certout,"""",, -out_trusted,root.crt,,BLANK,,BLANK,,,
+ 0,certout missing arg, -section,, -cmd,ir, -newkey,new.key,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, -certout,,, -out_trusted,root.crt,,BLANK,,BLANK,,,
+ 0,certout is non-existing directory and file, -section,, -cmd,ir, -newkey,new.key,, -newkeypass,pass:,,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,,BLANK,, -certout,idontexist/idontexist,, -out_trusted,root.crt,,BLANK,,BLANK,,,
+-- 
+2.39.5 (Apple Git-154)
+

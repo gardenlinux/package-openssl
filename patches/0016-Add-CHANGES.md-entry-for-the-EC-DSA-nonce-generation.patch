@@ -1,0 +1,38 @@
+From b00374b479a95ca9a67359101dbe42d3b301e58b Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Mon, 17 Jun 2024 12:35:39 +0200
+Subject: [PATCH 016/125] Add CHANGES.md entry for the EC/DSA nonce generation
+ fixes
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Dmitry Belyavskiy <beldmit@gmail.com>
+(Merged from https://github.com/openssl/openssl/pull/24660)
+
+(cherry picked from commit 72bff68f6acc4f420e283bcc77db76eb1917d7bf)
+---
+ CHANGES.md | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/CHANGES.md b/CHANGES.md
+index 02b61eb949..67fe20fea6 100644
+--- a/CHANGES.md
++++ b/CHANGES.md
+@@ -71,6 +71,14 @@ OpenSSL 3.2
+ 
+    *Tomáš Mráz*
+ 
++ * Improved EC/DSA nonce generation routines to avoid bias and timing
++   side channel leaks.
++
++   Thanks to Florian Sieck from Universität zu Lübeck and George Pantelakis
++   and Hubert Kario from Red Hat for reporting the issues.
++
++   *Tomáš Mráz and Paul Dale*
++
+  * Fixed an issue where some non-default TLS server configurations can cause
+    unbounded memory growth when processing TLSv1.3 sessions. An attacker may
+    exploit certain server configurations to trigger unbounded memory growth that
+-- 
+2.39.5 (Apple Git-154)
+

@@ -1,0 +1,40 @@
+From 9f1c127eba4012dbae3f931bc5a1963a472d3925 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Tue, 9 Jul 2024 09:17:05 +0200
+Subject: [PATCH 079/125] Document that DH and DHX key types cannot be used
+ together in KEX
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Kurt Roeckx <kurt@roeckx.be>
+(Merged from https://github.com/openssl/openssl/pull/24819)
+
+(cherry picked from commit 45611a8a8962c06e1d7ba0e5c00974da17e9c37a)
+---
+ doc/man7/EVP_KEYEXCH-DH.pod | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/doc/man7/EVP_KEYEXCH-DH.pod b/doc/man7/EVP_KEYEXCH-DH.pod
+index a6927afefb..04ac08bce2 100644
+--- a/doc/man7/EVP_KEYEXCH-DH.pod
++++ b/doc/man7/EVP_KEYEXCH-DH.pod
+@@ -7,9 +7,14 @@ EVP_KEYEXCH-DH
+ 
+ =head1 DESCRIPTION
+ 
+-Key exchange support for the B<DH> key type.
++Key exchange support for the B<DH> and B<DHX> key types.
+ 
+-=head2 DH key exchange parameters
++Please note that although both key types support the same key exchange
++operations, they cannot be used together in a single key exchange. It
++is not possible to use a private key of the B<DH> type in key exchange
++with the public key of B<DHX> type and vice versa.
++
++=head2 DH and DHX key exchange parameters
+ 
+ =over 4
+ 
+-- 
+2.39.5 (Apple Git-154)
+

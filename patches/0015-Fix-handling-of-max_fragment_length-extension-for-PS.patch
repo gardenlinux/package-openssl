@@ -1,0 +1,134 @@
+From fd979ee3e4d666140606d5111832ee38cba085c7 Mon Sep 17 00:00:00 2001
+From: Frederik Wedel-Heinen <frederik.wedel-heinen@dencrypt.dk>
+Date: Tue, 28 May 2024 13:59:44 +0200
+Subject: [PATCH 015/125] Fix handling of max_fragment_length extension for PSK
+
+A psk session was assumed to be a resumption which failed a check
+when parsing the max_fragment_length extension hello from the client.
+
+Relevant code from PR#18130 which was a suggested fix to the issue
+was cherry-picked.
+
+Fixes #18121
+
+Reviewed-by: Matt Caswell <matt@openssl.org>
+Reviewed-by: Viktor Dukhovni <viktor@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24513)
+
+(cherry picked from commit fa495604516a610d988f02298c8d97a6ac4777bb)
+---
+ include/openssl/tls1.h       |  2 ++
+ ssl/ssl_sess.c               |  1 +
+ ssl/statem/extensions.c      | 12 +++---------
+ ssl/statem/extensions_srvr.c | 29 +++++++++++++++++------------
+ ssl/t1_lib.c                 |  2 ++
+ 5 files changed, 25 insertions(+), 21 deletions(-)
+
+diff --git a/include/openssl/tls1.h b/include/openssl/tls1.h
+index 7e3d1a725b..3b354f7b84 100644
+--- a/include/openssl/tls1.h
++++ b/include/openssl/tls1.h
+@@ -231,6 +231,8 @@ extern "C" {
+ # define TLSEXT_max_fragment_length_1024        2
+ # define TLSEXT_max_fragment_length_2048        3
+ # define TLSEXT_max_fragment_length_4096        4
++/* OpenSSL value for unset maximum fragment length extension */
++# define TLSEXT_max_fragment_length_UNSPECIFIED 255
+ 
+ /*
+  * TLS Certificate Type (for RFC7250)
+diff --git a/ssl/ssl_sess.c b/ssl/ssl_sess.c
+index 254de4a091..5011c87bab 100644
+--- a/ssl/ssl_sess.c
++++ b/ssl/ssl_sess.c
+@@ -109,6 +109,7 @@ SSL_SESSION *SSL_SESSION_new(void)
+     if (ss == NULL)
+         return NULL;
+ 
++    ss->ext.max_fragment_len_mode = TLSEXT_max_fragment_length_UNSPECIFIED;
+     ss->verify_result = 1;      /* avoid 0 (= X509_V_OK) just in case */
+    /* 5 minute timeout by default */
+     ss->timeout = ossl_seconds2time(60 * 5 + 4);
+diff --git a/ssl/statem/extensions.c b/ssl/statem/extensions.c
+index 0a64ca2246..a52b9096ef 100644
+--- a/ssl/statem/extensions.c
++++ b/ssl/statem/extensions.c
+@@ -1741,15 +1741,9 @@ static int final_early_data(SSL_CONNECTION *s, unsigned int context, int sent)
+ static int final_maxfragmentlen(SSL_CONNECTION *s, unsigned int context,
+                                 int sent)
+ {
+-    /*
+-     * Session resumption on server-side with MFL extension active
+-     *  BUT MFL extension packet was not resent (i.e. sent == 0)
+-     */
+-    if (s->server && s->hit && USE_MAX_FRAGMENT_LENGTH_EXT(s->session)
+-            && !sent ) {
+-        SSLfatal(s, SSL_AD_MISSING_EXTENSION, SSL_R_BAD_EXTENSION);
+-        return 0;
+-    }
++    /* MaxFragmentLength defaults to disabled */
++    if (s->session->ext.max_fragment_len_mode == TLSEXT_max_fragment_length_UNSPECIFIED)
++        s->session->ext.max_fragment_len_mode = TLSEXT_max_fragment_length_DISABLED;
+ 
+     if (s->session && USE_MAX_FRAGMENT_LENGTH_EXT(s->session)) {
+         s->rlayer.rrlmethod->set_max_frag_len(s->rlayer.rrl,
+diff --git a/ssl/statem/extensions_srvr.c b/ssl/statem/extensions_srvr.c
+index 64ccb3ed6d..800654450e 100644
+--- a/ssl/statem/extensions_srvr.c
++++ b/ssl/statem/extensions_srvr.c
+@@ -192,21 +192,26 @@ int tls_parse_ctos_maxfragmentlen(SSL_CONNECTION *s, PACKET *pkt,
+     }
+ 
+     /*
+-     * RFC 6066:  The negotiated length applies for the duration of the session
++     * When doing a full handshake or a renegotiation max_fragment_len_mode will
++     * be TLSEXT_max_fragment_length_UNSPECIFIED
++     *
++     * In case of a resumption max_fragment_len_mode will be one of
++     *      TLSEXT_max_fragment_length_DISABLED, TLSEXT_max_fragment_length_512,
++     *      TLSEXT_max_fragment_length_1024, TLSEXT_max_fragment_length_2048.
++     *      TLSEXT_max_fragment_length_4096
++     *
++     * RFC 6066: The negotiated length applies for the duration of the session
+      * including session resumptions.
+-     * We should receive the same code as in resumed session !
++     *
++     * So we only set the value in case it is unspecified.
+      */
+-    if (s->hit && s->session->ext.max_fragment_len_mode != value) {
+-        SSLfatal(s, SSL_AD_ILLEGAL_PARAMETER,
+-                 SSL_R_SSL3_EXT_INVALID_MAX_FRAGMENT_LENGTH);
+-        return 0;
+-    }
++    if (s->session->ext.max_fragment_len_mode == TLSEXT_max_fragment_length_UNSPECIFIED)
++        /*
++         * Store it in session, so it'll become binding for us
++         * and we'll include it in a next Server Hello.
++         */
++        s->session->ext.max_fragment_len_mode = value;
+ 
+-    /*
+-     * Store it in session, so it'll become binding for us
+-     * and we'll include it in a next Server Hello.
+-     */
+-    s->session->ext.max_fragment_len_mode = value;
+     return 1;
+ }
+ 
+diff --git a/ssl/t1_lib.c b/ssl/t1_lib.c
+index ea1e256d6f..2e6b720dca 100644
+--- a/ssl/t1_lib.c
++++ b/ssl/t1_lib.c
+@@ -3905,6 +3905,8 @@ int SSL_set_tlsext_max_fragment_length(SSL *ssl, uint8_t mode)
+ 
+ uint8_t SSL_SESSION_get_max_fragment_length(const SSL_SESSION *session)
+ {
++    if (session->ext.max_fragment_len_mode == TLSEXT_max_fragment_length_UNSPECIFIED)
++        return TLSEXT_max_fragment_length_DISABLED;
+     return session->ext.max_fragment_len_mode;
+ }
+ 
+-- 
+2.39.5 (Apple Git-154)
+

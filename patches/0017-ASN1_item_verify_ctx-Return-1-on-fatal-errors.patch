@@ -1,0 +1,37 @@
+From 58d94c58b99cb943c26cf9795acb4963e0ae59d8 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Thu, 6 Jun 2024 15:36:00 +0200
+Subject: [PATCH 017/125] ASN1_item_verify_ctx(): Return -1 on fatal errors
+
+Fixes #24575
+
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Dmitry Belyavskiy <beldmit@gmail.com>
+(Merged from https://github.com/openssl/openssl/pull/24576)
+
+(cherry picked from commit 8d380f85da215012570347f156e642d69909877a)
+---
+ crypto/asn1/a_verify.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/crypto/asn1/a_verify.c b/crypto/asn1/a_verify.c
+index 94d29e7c27..f754216eb7 100644
+--- a/crypto/asn1/a_verify.c
++++ b/crypto/asn1/a_verify.c
+@@ -202,10 +202,12 @@ int ASN1_item_verify_ctx(const ASN1_ITEM *it, const X509_ALGOR *alg,
+     inl = ASN1_item_i2d(data, &buf_in, it);
+     if (inl <= 0) {
+         ERR_raise(ERR_LIB_ASN1, ERR_R_INTERNAL_ERROR);
++        ret = -1;
+         goto err;
+     }
+     if (buf_in == NULL) {
+         ERR_raise(ERR_LIB_ASN1, ERR_R_ASN1_LIB);
++        ret = -1;
+         goto err;
+     }
+     inll = inl;
+-- 
+2.39.5 (Apple Git-154)
+

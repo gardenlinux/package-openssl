@@ -1,0 +1,87 @@
+From f68bd6f672e10d4101fa26c326daabfaaa3ddec6 Mon Sep 17 00:00:00 2001
+From: Bernd Edlinger <bernd.edlinger@hotmail.de>
+Date: Tue, 14 Nov 2023 02:55:36 +0100
+Subject: [PATCH 056/125] Fix possible double-free in pkcs7 add_attribute
+ function
+
+The problem is the ownership of the input parameter value
+is transfered to the X509_ATTRIBUTE object attr, as soon
+as X509_ATTRIBUTE_create succeeds, but when an error happens
+after that point there is no way to get the ownership back
+to the caller, which is necessary to fullfill the API contract.
+
+Fixed that by moving the call to X509_ATTRIBUTE_create to the
+end of the function, and make sure that no errors are possible
+after that point.
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/22721)
+
+(cherry picked from commit 82a13a1f5053462f826bfb90061f0f77e3cc98a5)
+---
+ crypto/pkcs7/pk7_doit.c | 43 +++++++++++++++++------------------------
+ 1 file changed, 18 insertions(+), 25 deletions(-)
+
+diff --git a/crypto/pkcs7/pk7_doit.c b/crypto/pkcs7/pk7_doit.c
+index c753a0880b..4748d4207d 100644
+--- a/crypto/pkcs7/pk7_doit.c
++++ b/crypto/pkcs7/pk7_doit.c
+@@ -1234,36 +1234,29 @@ static int add_attribute(STACK_OF(X509_ATTRIBUTE) **sk, int nid, int atrtype,
+                          void *value)
+ {
+     X509_ATTRIBUTE *attr = NULL;
++    int i, n;
+ 
+     if (*sk == NULL) {
+         if ((*sk = sk_X509_ATTRIBUTE_new_null()) == NULL)
+             return 0;
+- new_attrib:
+-        if ((attr = X509_ATTRIBUTE_create(nid, atrtype, value)) == NULL)
+-            return 0;
+-        if (!sk_X509_ATTRIBUTE_push(*sk, attr)) {
+-            X509_ATTRIBUTE_free(attr);
+-            return 0;
+-        }
+-    } else {
+-        int i;
+-
+-        for (i = 0; i < sk_X509_ATTRIBUTE_num(*sk); i++) {
+-            attr = sk_X509_ATTRIBUTE_value(*sk, i);
+-            if (OBJ_obj2nid(X509_ATTRIBUTE_get0_object(attr)) == nid) {
+-                X509_ATTRIBUTE_free(attr);
+-                attr = X509_ATTRIBUTE_create(nid, atrtype, value);
+-                if (attr == NULL)
+-                    return 0;
+-                if (!sk_X509_ATTRIBUTE_set(*sk, i, attr)) {
+-                    X509_ATTRIBUTE_free(attr);
+-                    return 0;
+-                }
+-                goto end;
+-            }
+-        }
+-        goto new_attrib;
+     }
++    n = sk_X509_ATTRIBUTE_num(*sk);
++    for (i = 0; i < n; i++) {
++        attr = sk_X509_ATTRIBUTE_value(*sk, i);
++        if (OBJ_obj2nid(X509_ATTRIBUTE_get0_object(attr)) == nid)
++            goto end;
++    }
++    if (!sk_X509_ATTRIBUTE_push(*sk, NULL))
++        return 0;
++
+  end:
++    attr = X509_ATTRIBUTE_create(nid, atrtype, value);
++    if (attr == NULL) {
++        if (i == n)
++            sk_X509_ATTRIBUTE_pop(*sk);
++        return 0;
++    }
++    X509_ATTRIBUTE_free(sk_X509_ATTRIBUTE_value(*sk, i));
++    (void) sk_X509_ATTRIBUTE_set(*sk, i, attr);
+     return 1;
+ }
+-- 
+2.39.5 (Apple Git-154)
+

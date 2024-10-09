@@ -1,0 +1,44 @@
+From ed96c0ddfa0ecab9e8ec3f7f0407b92b07908528 Mon Sep 17 00:00:00 2001
+From: Neil Horman <nhorman@openssl.org>
+Date: Mon, 15 Jul 2024 15:59:14 -0400
+Subject: [PATCH 077/125] Fix coverity-1604665
+
+Coverity issued an error in the opt_uintmax code, detecting a potential
+overflow on a cast to ossl_intmax_t
+
+Looks like it was just a typo, casting m from uintmax_t to ossl_intmax_t
+
+Fix it by correcting the cast to be ossl_uintmax_t, as would be expected
+
+Theres also some conditionals that seem like they should be removed, but
+I'll save that for later, as there may be some corner cases in which
+ossl_uintmax_t isn't equal in size to uintmax_t..maybe.
+
+Fixes openssl/private#567
+
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24897)
+
+(cherry picked from commit a753547eefc9739f341824a0cb0642afe7a06fcc)
+---
+ apps/lib/opt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/apps/lib/opt.c b/apps/lib/opt.c
+index 0490c39c25..d72b624a9e 100644
+--- a/apps/lib/opt.c
++++ b/apps/lib/opt.c
+@@ -646,7 +646,7 @@ int opt_uintmax(const char *value, ossl_uintmax_t *result)
+         opt_number_error(value);
+         return 0;
+     }
+-    *result = (ossl_intmax_t)m;
++    *result = (ossl_uintmax_t)m;
+     errno = oerrno;
+     return 1;
+ }
+-- 
+2.39.5 (Apple Git-154)
+

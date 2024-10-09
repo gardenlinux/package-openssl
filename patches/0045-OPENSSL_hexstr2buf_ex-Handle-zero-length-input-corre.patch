@@ -1,0 +1,73 @@
+From 70827b3d788205541d65c1ce533bb847110edb8e Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Mon, 1 Jul 2024 09:30:56 +0200
+Subject: [PATCH 045/125] OPENSSL_hexstr2buf_ex(): Handle zero-length input
+ correctly
+
+In case of zero-length input the code wrote one byte
+before the start of the output buffer. The length
+of the output was also reported incorrectly in this case.
+
+Reviewed-by: Tim Hudson <tjh@openssl.org>
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24770)
+
+(cherry picked from commit 3f7b355733407cf777bfad5ce5b79610588bacc5)
+---
+ crypto/o_str.c     | 6 ++++--
+ test/hexstr_test.c | 9 +++++++--
+ 2 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/crypto/o_str.c b/crypto/o_str.c
+index 065460336f..dfac215ac3 100644
+--- a/crypto/o_str.c
++++ b/crypto/o_str.c
+@@ -225,12 +225,14 @@ static int buf2hexstr_sep(char *str, size_t str_n, size_t *strlength,
+     int has_sep = (sep != CH_ZERO);
+     size_t len = has_sep ? buflen * 3 : 1 + buflen * 2;
+ 
++    if (len == 0)
++        ++len;
+     if (strlength != NULL)
+         *strlength = len;
+     if (str == NULL)
+         return 1;
+ 
+-    if (str_n < (unsigned long)len) {
++    if (str_n < len) {
+         ERR_raise(ERR_LIB_CRYPTO, CRYPTO_R_TOO_SMALL_BUFFER);
+         return 0;
+     }
+@@ -242,7 +244,7 @@ static int buf2hexstr_sep(char *str, size_t str_n, size_t *strlength,
+         if (has_sep)
+             *q++ = sep;
+     }
+-    if (has_sep)
++    if (has_sep && buflen > 0)
+         --q;
+     *q = CH_ZERO;
+ 
+diff --git a/test/hexstr_test.c b/test/hexstr_test.c
+index 5a9684e0e6..89d6d97139 100644
+--- a/test/hexstr_test.c
++++ b/test/hexstr_test.c
+@@ -120,9 +120,14 @@ static int test_hexstr_ex_to_from(int test_index)
+ 
+     return TEST_true(OPENSSL_hexstr2buf_ex(buf, sizeof(buf), &len, test->in, ':'))
+            && TEST_mem_eq(buf, len, test->expected, test->expected_len)
++           && TEST_false(OPENSSL_buf2hexstr_ex(out, 3 * len - 1, NULL, buf, len,
++                                               ':'))
+            && TEST_true(OPENSSL_buf2hexstr_ex(out, sizeof(out), NULL, buf, len,
+-                        ':'))
+-           && TEST_str_eq(out, test->in);
++                                              ':'))
++           && TEST_str_eq(out, test->in)
++           && TEST_true(OPENSSL_buf2hexstr_ex(out, sizeof(out), NULL, buf, 0,
++                                              ':'))
++           && TEST_size_t_eq(strlen(out), 0);
+ }
+ 
+ int setup_tests(void)
+-- 
+2.39.5 (Apple Git-154)
+

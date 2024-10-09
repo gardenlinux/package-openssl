@@ -1,0 +1,47 @@
+From 8cacf1c74228e618c4eaebf1c3c6ecb55eefc01a Mon Sep 17 00:00:00 2001
+From: Dmitry Misharov <dmitry@openssl.org>
+Date: Wed, 10 Jul 2024 14:51:04 +0200
+Subject: [PATCH 066/125] deploy docs.openssl.org on doc changes
+
+Reviewed-by: Todd Short <todd.short@me.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24839)
+
+(cherry picked from commit 8b591dceeff52965dbde14a0e455c5d3548a2609)
+---
+ .github/workflows/deploy-docs-openssl-org.yml | 23 +++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+ create mode 100644 .github/workflows/deploy-docs-openssl-org.yml
+
+diff --git a/.github/workflows/deploy-docs-openssl-org.yml b/.github/workflows/deploy-docs-openssl-org.yml
+new file mode 100644
+index 0000000000..7b8e6838a7
+--- /dev/null
++++ b/.github/workflows/deploy-docs-openssl-org.yml
+@@ -0,0 +1,23 @@
++name: "Trigger docs.openssl.org deployment"
++
++on:
++  push:
++    branches:
++      - "openssl-3.[0-9]+"
++      - "master"
++    paths:
++      - "doc/man*/**"
++
++jobs:
++  trigger:
++    runs-on: ubuntu-latest
++    steps:
++      - name: "Trigger deployment workflow"
++        run: |
++          gh workflow run -f branch=${{ github.ref_name }} deploy-site.yaml
++          sleep 3
++          RUN_ID=$(gh run list -w deploy-site.yaml -L 1 --json databaseId -q ".[0].databaseId")
++          gh run watch ${RUN_ID} --exit-status
++        env:
++          GH_REPO: "openssl/openssl-docs"
++          GH_TOKEN: ${{ secrets.OPENSSL_MACHINE_TOKEN }}
+-- 
+2.39.5 (Apple Git-154)
+

@@ -1,0 +1,45 @@
+From 1967b7316dfa66d80957a329ab91c94b2f676d54 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Mon, 24 Jun 2024 11:25:12 +0200
+Subject: [PATCH 028/125] evp_pkey_ctx_setget_params_to_ctrl(): Always properly
+ set ctx.action_type
+
+Fixes #24698
+
+Some applicable translations are bidirectional so they have
+NONE action_type. However we need to set the real action_type
+in the ctx.
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Paul Dale <ppzgs1@gmail.com>
+(Merged from https://github.com/openssl/openssl/pull/24709)
+
+(cherry picked from commit 55c1458303c0fef88e4b2b35a090e9145f3e07eb)
+---
+ crypto/evp/ctrl_params_translate.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/crypto/evp/ctrl_params_translate.c b/crypto/evp/ctrl_params_translate.c
+index 54e589054c..de06348a33 100644
+--- a/crypto/evp/ctrl_params_translate.c
++++ b/crypto/evp/ctrl_params_translate.c
+@@ -2845,7 +2845,7 @@ static int evp_pkey_ctx_setget_params_to_ctrl(EVP_PKEY_CTX *pctx,
+         fixup_args_fn *fixup = default_fixup_args;
+         int ret;
+ 
+-        tmpl.action_type = action_type;
++        ctx.action_type = tmpl.action_type = action_type;
+         tmpl.keytype1 = tmpl.keytype2 = keytype;
+         tmpl.optype = optype;
+         tmpl.param_key = params->key;
+@@ -2854,7 +2854,6 @@ static int evp_pkey_ctx_setget_params_to_ctrl(EVP_PKEY_CTX *pctx,
+         if (translation != NULL) {
+             if (translation->fixup_args != NULL)
+                 fixup = translation->fixup_args;
+-            ctx.action_type = translation->action_type;
+             ctx.ctrl_cmd = translation->ctrl_num;
+         }
+         ctx.pctx = pctx;
+-- 
+2.39.5 (Apple Git-154)
+

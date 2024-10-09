@@ -1,0 +1,37 @@
+From eadf6912faba9ad5690d48009db91ee9a52bff30 Mon Sep 17 00:00:00 2001
+From: Pauli <ppzgs1@gmail.com>
+Date: Mon, 15 Jul 2024 13:26:50 +1000
+Subject: [PATCH 075/125] Fix kbkdf bug if MAC is set to KMAC and then
+ something else
+
+A context that is set to KMAC sets the is_kmac flag and this cannot be reset.
+So a user that does kbkdf using KMAC and then wants to use HMAC or CMAC will
+experience a failure.
+
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Shane Lontis <shane.lontis@oracle.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24883)
+
+(cherry picked from commit f35fc4f184fa8a2088cd16648c4017fa321d6712)
+---
+ providers/implementations/kdfs/kbkdf.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/providers/implementations/kdfs/kbkdf.c b/providers/implementations/kdfs/kbkdf.c
+index e6855d5732..ebc0e58e5b 100644
+--- a/providers/implementations/kdfs/kbkdf.c
++++ b/providers/implementations/kdfs/kbkdf.c
+@@ -354,7 +354,8 @@ static int kbkdf_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+     if (!ossl_prov_macctx_load_from_params(&ctx->ctx_init, params, NULL,
+                                            NULL, NULL, libctx))
+         return 0;
+-    else if (ctx->ctx_init != NULL) {
++    if (ctx->ctx_init != NULL) {
++        ctx->is_kmac = 0;
+         if (EVP_MAC_is_a(EVP_MAC_CTX_get0_mac(ctx->ctx_init),
+                          OSSL_MAC_NAME_KMAC128)
+             || EVP_MAC_is_a(EVP_MAC_CTX_get0_mac(ctx->ctx_init),
+-- 
+2.39.5 (Apple Git-154)
+

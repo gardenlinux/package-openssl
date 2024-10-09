@@ -1,0 +1,46 @@
+From e0489ad1da4647f0b08c1c4418c45420f6812919 Mon Sep 17 00:00:00 2001
+From: Tomas Mraz <tomas@openssl.org>
+Date: Fri, 28 Jun 2024 10:34:23 +0200
+Subject: [PATCH 049/125] Configure: Remove -Wswitch-default from strict
+ warnings
+
+Also move -Wno-tautological-constant-out-of-range-compare to
+clang-specific options as it is not supported by gcc.
+
+Reviewed-by: Bernd Edlinger <bernd.edlinger@hotmail.de>
+Reviewed-by: Richard Levitte <levitte@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24758)
+
+(cherry picked from commit 3d9c6b16d8b8e75b73e2fd34849e930e2792f3a4)
+---
+ Configure | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/Configure b/Configure
+index 58f3e31b44..64852ed7c4 100755
+--- a/Configure
++++ b/Configure
+@@ -167,7 +167,6 @@ my @gcc_devteam_warn = qw(
+     -Wshadow
+     -Wformat
+     -Wno-type-limits
+-    -Wno-tautological-constant-out-of-range-compare
+     -Wundef
+     -Werror
+     -Wmissing-prototypes
+@@ -184,11 +183,11 @@ my @gcc_devteam_warn = qw(
+ #       -Wextended-offsetof -- no, needed in CMS ASN1 code
+ my @clang_devteam_warn = qw(
+     -Wno-unknown-warning-option
+-    -Wswitch-default
+     -Wno-parentheses-equality
+     -Wno-language-extension-token
+     -Wno-extended-offsetof
+     -Wno-missing-braces
++    -Wno-tautological-constant-out-of-range-compare
+     -Wconditional-uninitialized
+     -Wincompatible-pointer-types-discards-qualifiers
+     -Wmissing-variable-declarations
+-- 
+2.39.5 (Apple Git-154)
+

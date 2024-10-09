@@ -1,0 +1,32 @@
+From a28b04ac7ba3290cdb32c4fd68c4838d43a3c6e9 Mon Sep 17 00:00:00 2001
+From: Frederik Wedel-Heinen <frederik.wedel-heinen@dencrypt.dk>
+Date: Fri, 14 Jun 2024 14:57:28 +0200
+Subject: [PATCH 052/125] Allow shared iOS builds
+
+Fixes #24545
+
+Reviewed-by: Todd Short <todd.short@me.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24649)
+
+(cherry picked from commit 070b6a965485e91b02453919e0a47c0659420d9a)
+---
+ Configurations/15-ios.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Configurations/15-ios.conf b/Configurations/15-ios.conf
+index 9652a8f2af..368be14c24 100644
+--- a/Configurations/15-ios.conf
++++ b/Configurations/15-ios.conf
+@@ -11,7 +11,7 @@ my %targets = (
+         template         => 1,
+         inherit_from     => [ "darwin-common" ],
+         sys_id           => "iOS",
+-        disable          => [ "shared", "async" ],
++        disable          => [ "async" ],
+     },
+     "ios-xcrun" => {
+         inherit_from     => [ "ios-common" ],
+-- 
+2.39.5 (Apple Git-154)
+

@@ -1,0 +1,32 @@
+From c78cca53cc6ef63a0c28315320a9ecc6dd753c66 Mon Sep 17 00:00:00 2001
+From: Richard Levitte <levitte@openssl.org>
+Date: Mon, 1 Jul 2024 15:28:14 +0200
+Subject: [PATCH 047/125] fix: openssl speed: RSA encryption is on the pubkey,
+ not the privkey
+
+Reviewed-by: Neil Horman <nhorman@openssl.org>
+Reviewed-by: Tom Cosgrove <tom.cosgrove@arm.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.org>
+(Merged from https://github.com/openssl/openssl/pull/24776)
+
+(cherry picked from commit bb90a7861cbf27e29790b66077c23a2e9805014b)
+---
+ apps/speed.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/apps/speed.c b/apps/speed.c
+index 9ab34eac53..f9cbc4106c 100644
+--- a/apps/speed.c
++++ b/apps/speed.c
+@@ -2969,7 +2969,7 @@ skip_hmac:
+             ERR_print_errors(bio_err);
+             op_count = 1;
+         } else {
+-            pkey_print_message("private", "rsa encrypt",
++            pkey_print_message("public", "rsa encrypt",
+                                rsa_keys[testnum].bits, seconds.rsa);
+             /* RSA_blinding_on(rsa_key[testnum],NULL); */
+             Time_F(START);
+-- 
+2.39.5 (Apple Git-154)
+
