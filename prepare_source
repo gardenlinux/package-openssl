@@ -2,3 +2,4 @@ version_orig=3.1.7
 version="$version_orig-0"
 git_src --branch "openssl-$version_orig" https://github.com/openssl/openssl.git
 apt_src --ignore-orig openssl
+version_suffix=gl0~bp1443
