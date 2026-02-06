@@ -1,1 +1,27 @@
 apt_src openssl
+ls -l $dir
+echo $dir
+version_suffix="gl1"
+# Enable FIPS flag.
+
+#sed -i '49iCONFARGS += enable-fips' openssl/debian/rules
+#sed -i '32s/$/ enable-fips/' $dir/src/debian/rules
+
+#sed -i '49iCONFARGS += enable-fips' $dir/src/openssl/debian/rules
+
+# Write that openssl-fips package should be installed.
+#cat <<EOF>> $dir/src/debian/control 
+#
+#Package: openssl-fips
+#Section: utils
+#Architecture: all
+#Multi-Arch: foreign
+#Depends: \${shlibs:Depends}, \${perl:Depends}, \${misc:Depends}
+#Description: Secure Sockets Layer toolkit with FIPS
+#EOF
+
+#apply_patches
+sleep 3000
+import_upstream_patches patches
+
+
