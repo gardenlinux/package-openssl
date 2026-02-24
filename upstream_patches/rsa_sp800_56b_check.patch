@@ -1,0 +1,44 @@
+commit cb7c359c1fdc4d15424b8a077416730856f90702
+Author: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date:   Tue Feb 24 23:35:08 2026 +0100
+
+    rsa: enforce public key validation for RSA key establishment in FIPS mode
+    
+    Add SP800-56B public key checks to RSA encrypt and RSA-KEM encapsulation paths prior to calling RSA_public_encrypt
+
+diff --git a/providers/implementations/asymciphers/rsa_enc.c b/providers/implementations/asymciphers/rsa_enc.c
+index 4995b00102..466dd0e35a 100644
+--- a/providers/implementations/asymciphers/rsa_enc.c
++++ b/providers/implementations/asymciphers/rsa_enc.c
+@@ -179,6 +179,13 @@ static int rsa_encrypt(void *vprsactx, unsigned char *out, size_t *outlen,
+         return 1;
+     }
+ 
++#ifdef FIPS_MODULE
++    if (!ossl_rsa_validate_public(prsactx->rsa)) {
++        ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_KEY);
++        return 0;
++    }
++#endif
++
+     if (outsize < len) {
+         ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
+         return 0;
+diff --git a/providers/implementations/kem/rsa_kem.c b/providers/implementations/kem/rsa_kem.c
+index f7bf368a0d..eaa5cd57cd 100644
+--- a/providers/implementations/kem/rsa_kem.c
++++ b/providers/implementations/kem/rsa_kem.c
+@@ -308,6 +308,13 @@ static int rsasve_generate(PROV_RSA_CTX *prsactx,
+         return 0;
+     }
+ 
++#ifdef FIPS_MODULE
++    if (!ossl_rsa_validate_public(prsactx->rsa)) {
++        ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_KEY);
++        return 0;
++    }
++#endif
++
+     /*
+      * Step (2): Generate a random byte string z of nlen bytes where
+      *            1 < z < n - 1
