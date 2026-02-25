@@ -1,3 +1,4 @@
 apt_src openssl
 import_upstream_patches
-version_suffix="gl2"
+apply_patches patches-debian
+version_suffix="gl10"
