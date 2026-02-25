@@ -1,1 +1,2 @@
-rsa_sp800_56b_check.patch
+0001-Allow-SHA256-192-to-be-used-internally-in-the-FIPS-p.patch
+0011-rsa_sp800_56b_check.patch
