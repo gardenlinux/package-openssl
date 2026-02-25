@@ -1,4 +1,6 @@
-apt_src openssl
+version_orig="3.5.5"
+version="$version_orig-1"
+git_src --branch "debian/openssl-$version" "https://salsa.debian.org/debian/openssl.git"
 import_upstream_patches
 apply_patches patches-debian
 version_suffix="gl10~bp1877"
