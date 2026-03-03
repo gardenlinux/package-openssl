@@ -1,2 +1,8 @@
 0001-Allow-SHA256-192-to-be-used-internally-in-the-FIPS-p.patch
-0011-rsa_sp800_56b_check.patch
+0003-FIPS-EC-DH-DSA-PCTs.patch
+0004-FIPS-enforce-error-state.patch
+0006-FIPS-enable-security-checks-by-default.patch
+0007-FIPS-PBKDF2-Set-minimum-password-length.patch
+0011-FIPS-Check-RSA-SP800-56b.patch
+0016-RH-Allow-disabling-of-SHA1-signatures.patch
+0035-FIPS-DH-PCT.patch
