@@ -5,5 +5,6 @@
 0006-FIPS-enable-security-checks-by-default.patch
 0007-FIPS-PBKDF2-Set-minimum-password-length.patch
 0008-FIPS-DH-Disable-FIPS-186-4-type-parameters.patch
+0009-FIPS-DH-PCT.patch
+0010-FIPS-Add-extra-public-private-key-checks.patch
 0011-FIPS-Check-RSA-SP800-56b.patch
-0035-FIPS-DH-PCT.patch
