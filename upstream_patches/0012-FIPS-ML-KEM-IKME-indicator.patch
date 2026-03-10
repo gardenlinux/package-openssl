@@ -1,0 +1,102 @@
+commit 03f69738add6f3f3885b70b963f4e9dab393b773
+Author: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date:   Tue Mar 10 15:40:02 2026 +0100
+
+    ml-kem: add FIPS indicator for caller-provided encapsulation randomness
+    
+    Mark encapsulation using OSSL_KEM_PARAM_IKME as unapproved in FIPS mode unless tolerated via indicator, as randomness must originate from an approved RBG.
+
+diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
+index 2f97ffde4a..68dfce36c1 100644
+--- a/providers/fips/include/fips_indicator_params.inc
++++ b/providers/fips/include/fips_indicator_params.inc
+@@ -26,3 +26,4 @@ OSSL_FIPS_PARAM(x963kdf_key_check, X963KDF_KEY_CHECK, 1)
+ OSSL_FIPS_PARAM(x942kdf_key_check, X942KDF_KEY_CHECK, 1)
+ OSSL_FIPS_PARAM(pbkdf2_lower_bound_check, PBKDF2_LOWER_BOUND_CHECK, 1)
+ OSSL_FIPS_PARAM(ecdh_cofactor_check, ECDH_COFACTOR_CHECK, 1)
++OSSL_FIPS_PARAM(ml_kem_ikme_check, ML_KEM_IKME_CHECK, 1)
+diff --git a/providers/implementations/kem/ml_kem_kem.c b/providers/implementations/kem/ml_kem_kem.c
+index 722eadf228..66c219d794 100644
+--- a/providers/implementations/kem/ml_kem_kem.c
++++ b/providers/implementations/kem/ml_kem_kem.c
+@@ -35,6 +35,8 @@ typedef struct {
+     uint8_t entropy_buf[ML_KEM_RANDOM_BYTES];
+     uint8_t *entropy;
+     int op;
++    void *provctx;
++    OSSL_FIPS_IND_DECLARE
+ } PROV_ML_KEM_CTX;
+ 
+ static void *ml_kem_newctx(void *provctx)
+@@ -47,6 +49,8 @@ static void *ml_kem_newctx(void *provctx)
+     ctx->key = NULL;
+     ctx->entropy = NULL;
+     ctx->op = 0;
++    ctx->provctx = provctx;
++    OSSL_FIPS_IND_INIT(ctx)
+     return ctx;
+ }
+ 
+@@ -112,6 +116,16 @@ static int ml_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+     if (ossl_param_is_empty(params))
+         return 1;
+ 
++#ifdef FIPS_MODULE
++    if (!OSSL_FIPS_IND_SET_CTX_PARAM(
++        ctx,
++        OSSL_FIPS_IND_SETTABLE0,
++        params,
++        OSSL_KEM_PARAM_FIPS_IKME_CHECK
++    ))
++        return 0;
++#endif
++
+     /* Encapsulation ephemeral input key material "ikmE" */
+     if (ctx->op == EVP_PKEY_OP_ENCAPSULATE
+         && (p = OSSL_PARAM_locate_const(params, OSSL_KEM_PARAM_IKME)) != NULL) {
+@@ -120,8 +134,24 @@ static int ml_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+         ctx->entropy = ctx->entropy_buf;
+         if (OSSL_PARAM_get_octet_string(p, (void **)&ctx->entropy,
+                 len, &len)
+-            && len == ML_KEM_RANDOM_BYTES)
++            && len == ML_KEM_RANDOM_BYTES) {
++#ifdef FIPS_MODULE
++            if (!OSSL_FIPS_IND_ON_UNAPPROVED(
++                ctx,
++                OSSL_FIPS_IND_SETTABLE0,
++                PROV_LIBCTX_OF(ctx->provctx),
++                "ML-KEM",
++                "Explicit encapsulation seed",
++                ossl_fips_config_ml_kem_ikme_check
++            )) {
++                ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_SEED_LENGTH);
++                OPENSSL_cleanse(ctx->entropy, ML_KEM_RANDOM_BYTES);
++                ctx->entropy = NULL;
++                return 0;
++            }
++#endif
+             return 1;
++        }
+ 
+         /* Possibly, but much less likely wrong type */
+         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_SEED_LENGTH);
+diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
+index 262c184ca2..e681747e83 100644
+--- a/util/perl/OpenSSL/paramnames.pm
++++ b/util/perl/OpenSSL/paramnames.pm
+@@ -58,6 +58,7 @@ my %params = (
+     'PROV_PARAM_PBKDF2_LOWER_BOUND_CHECK' => "pbkdf2-lower-bound-check", # uint
+     'PROV_PARAM_ECDH_COFACTOR_CHECK' =>    "ecdh-cofactor-check",    # uint
+     'PROV_PARAM_SIGNATURE_DIGEST_CHECK' => "signature-digest-check", # uint
++    'PROV_PARAM_ML_KEM_IKME_CHECK' =>      "ml-kem-ikme-check",      # uint
+ 
+ # Self test callback parameters
+     'PROV_PARAM_SELF_TEST_PHASE' =>  "st-phase",# utf8_string
+@@ -543,6 +544,7 @@ my %params = (
+     'KEM_PARAM_OPERATION' =>            "operation",
+     'KEM_PARAM_IKME' =>                 "ikme",
+     'KEM_PARAM_FIPS_KEY_CHECK' =>       '*PKEY_PARAM_FIPS_KEY_CHECK',
++    'KEM_PARAM_FIPS_IKME_CHECK' =>      '*PROV_PARAM_ML_KEM_IKME_CHECK',
+     'KEM_PARAM_FIPS_APPROVED_INDICATOR' => '*ALG_PARAM_FIPS_APPROVED_INDICATOR',
+ 
+ # Capabilities
