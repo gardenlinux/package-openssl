@@ -1,0 +1,110 @@
+commit c44f6f626b49643fef3a901552192634b71c3912
+Author: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date:   Tue Mar 10 22:14:09 2026 +0100
+
+    ml-kem: add FIPS indicator for caller-provided key generation seed
+    
+    Mark key generation using OSSL_PKEY_PARAM_ML_KEM_SEED as unapproved in FIPS mode unless tolerated via indicator, as key generation randomness must originate from an approved RBG.
+
+diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
+index 68dfce36c1..667fb46852 100644
+--- a/providers/fips/include/fips_indicator_params.inc
++++ b/providers/fips/include/fips_indicator_params.inc
+@@ -27,3 +27,4 @@ OSSL_FIPS_PARAM(x942kdf_key_check, X942KDF_KEY_CHECK, 1)
+ OSSL_FIPS_PARAM(pbkdf2_lower_bound_check, PBKDF2_LOWER_BOUND_CHECK, 1)
+ OSSL_FIPS_PARAM(ecdh_cofactor_check, ECDH_COFACTOR_CHECK, 1)
+ OSSL_FIPS_PARAM(ml_kem_ikme_check, ML_KEM_IKME_CHECK, 1)
++OSSL_FIPS_PARAM(ml_kem_seed_check, ML_KEM_SEED_CHECK, 1)
+diff --git a/providers/implementations/keymgmt/ml_kem_kmgmt.c b/providers/implementations/keymgmt/ml_kem_kmgmt.c
+index 0be2a1e298..5ca5c488ba 100644
+--- a/providers/implementations/keymgmt/ml_kem_kmgmt.c
++++ b/providers/implementations/keymgmt/ml_kem_kmgmt.c
+@@ -61,6 +61,7 @@ typedef struct ml_kem_gen_ctx_st {
+     int evp_type;
+     uint8_t seedbuf[ML_KEM_SEED_BYTES];
+     uint8_t *seed;
++    OSSL_FIPS_IND_DECLARE
+ } PROV_ML_KEM_GEN_CTX;
+ 
+ static int ml_kem_pairwise_test(const ML_KEM_KEY *key, int key_flags)
+@@ -687,6 +688,16 @@ static int ml_kem_gen_set_params(void *vgctx, const OSSL_PARAM params[])
+     if (ossl_param_is_empty(params))
+         return 1;
+ 
++#ifdef FIPS_MODULE
++    if (!OSSL_FIPS_IND_SET_CTX_PARAM(
++        gctx,
++        OSSL_FIPS_IND_SETTABLE0,
++        params,
++        OSSL_KEM_PARAM_FIPS_SEED_CHECK
++    ))
++        return 0;
++#endif
++
+     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PROPERTIES);
+     if (p != NULL) {
+         if (p->data_type != OSSL_PARAM_UTF8_STRING)
+@@ -702,8 +713,24 @@ static int ml_kem_gen_set_params(void *vgctx, const OSSL_PARAM params[])
+ 
+         gctx->seed = gctx->seedbuf;
+         if (OSSL_PARAM_get_octet_string(p, (void **)&gctx->seed, len, &len)
+-            && len == ML_KEM_SEED_BYTES)
++            && len == ML_KEM_SEED_BYTES) {
++#ifdef FIPS_MODULE
++            if (!OSSL_FIPS_IND_ON_UNAPPROVED(
++                gctx,
++                OSSL_FIPS_IND_SETTABLE0,
++                PROV_LIBCTX_OF(gctx->provctx),
++                "ML-KEM",
++                "Explicit key generation seed",
++                ossl_fips_config_ml_kem_seed_check
++            )) {
++                ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_SEED_LENGTH);
++                OPENSSL_cleanse(gctx->seed, ML_KEM_SEED_BYTES);
++                gctx->seed = NULL;
++                return 0;
++            }
++#endif
+             return 1;
++        }
+ 
+         /* Possibly, but less likely wrong data type */
+         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_SEED_LENGTH);
+@@ -731,6 +758,8 @@ static void *ml_kem_gen_init(void *provctx, int selection,
+     gctx->selection = selection;
+     gctx->evp_type = evp_type;
+     gctx->provctx = provctx;
++    OSSL_FIPS_IND_INIT(gctx)
++
+     if (ml_kem_gen_set_params(gctx, params))
+         return gctx;
+ 
+@@ -799,7 +828,7 @@ static void ml_kem_gen_cleanup(void *vgctx)
+         return;
+ 
+     if (gctx->seed != NULL)
+-        OPENSSL_cleanse(gctx->seed, ML_KEM_RANDOM_BYTES);
++        OPENSSL_cleanse(gctx->seed, ML_KEM_SEED_BYTES);
+     OPENSSL_free(gctx->propq);
+     OPENSSL_free(gctx);
+ }
+diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
+index e681747e83..74858a45bb 100644
+--- a/util/perl/OpenSSL/paramnames.pm
++++ b/util/perl/OpenSSL/paramnames.pm
+@@ -59,6 +59,7 @@ my %params = (
+     'PROV_PARAM_ECDH_COFACTOR_CHECK' =>    "ecdh-cofactor-check",    # uint
+     'PROV_PARAM_SIGNATURE_DIGEST_CHECK' => "signature-digest-check", # uint
+     'PROV_PARAM_ML_KEM_IKME_CHECK' =>      "ml-kem-ikme-check",      # uint
++    'PROV_PARAM_ML_KEM_SEED_CHECK' =>      "ml-kem-seed-check",      # uint
+ 
+ # Self test callback parameters
+     'PROV_PARAM_SELF_TEST_PHASE' =>  "st-phase",# utf8_string
+@@ -545,6 +546,7 @@ my %params = (
+     'KEM_PARAM_IKME' =>                 "ikme",
+     'KEM_PARAM_FIPS_KEY_CHECK' =>       '*PKEY_PARAM_FIPS_KEY_CHECK',
+     'KEM_PARAM_FIPS_IKME_CHECK' =>      '*PROV_PARAM_ML_KEM_IKME_CHECK',
++    'KEM_PARAM_FIPS_SEED_CHECK' =>      '*PROV_PARAM_ML_KEM_SEED_CHECK',
+     'KEM_PARAM_FIPS_APPROVED_INDICATOR' => '*ALG_PARAM_FIPS_APPROVED_INDICATOR',
+ 
+ # Capabilities
