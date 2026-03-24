@@ -1,0 +1,18 @@
+:100644 100644 87613c937d 0000000000 M	crypto/ml_dsa/ml_dsa_key.c
+
+diff --git a/crypto/ml_dsa/ml_dsa_key.c b/crypto/ml_dsa/ml_dsa_key.c
+index 87613c937d..0c6a4e3a6c 100644
+--- a/crypto/ml_dsa/ml_dsa_key.c
++++ b/crypto/ml_dsa/ml_dsa_key.c
+@@ -62,4 +62,4 @@ end:
+     if (!ret) {
+-        OPENSSL_free(key->priv_encoding);
+-        OPENSSL_free(key->seed);
++        OPENSSL_cleanse(key->priv_encoding, sizeof(key->priv_encoding));
++        OPENSSL_cleanse(key->seed, seed_len);
+         key->priv_encoding = key->seed = NULL;
+@@ -160,3 +160,3 @@ void ossl_ml_dsa_key_reset(ML_DSA_KEY *key)
+     OPENSSL_cleanse(key->K, sizeof(key->K));
+-    OPENSSL_free(key->pub_encoding);
++    OPENSSL_clear_free(key->pub_encoding, sizeof(key->pub_encoding));
+     key->pub_encoding = NULL;
