@@ -1,0 +1,11 @@
+:100644 100644 dd8a39197a 0000000000 M	crypto/ml_kem/ml_kem.c
+
+diff --git a/crypto/ml_kem/ml_kem.c b/crypto/ml_kem/ml_kem.c
+index dd8a39197a..23dfa02523 100644
+--- a/crypto/ml_kem/ml_kem.c
++++ b/crypto/ml_kem/ml_kem.c
+@@ -1840,2 +1840,4 @@ static int decap(uint8_t secret[ML_KEM_SHARED_SECRET_BYTES],
+     OPENSSL_cleanse(Kr, sizeof(Kr));
++    OPENSSL_cleanse(&mask, sizeof(mask));
++    OPENSSL_cleanse(failure_key, ML_KEM_RANDOM_BYTES);
+     return 1;
