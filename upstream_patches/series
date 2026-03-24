@@ -8,3 +8,4 @@
 0009-FIPS-DH-PCT.patch
 0010-FIPS-Add-extra-public-private-key-checks.patch
 0011-FIPS-Check-RSA-SP800-56b.patch
+0017-zeroization-of-mask-in-ml_kem-decap.patch
