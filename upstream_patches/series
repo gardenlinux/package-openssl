@@ -12,5 +12,6 @@
 0012-FIPS-ML-KEM-IKME-indicator.patch
 0013-FIPS-ML-KEM-SEED-indicator.patch
 0017-zeroization-of-mask-in-ml_kem-decap.patch
+0019-zeroization-of-ml_dsa_key.patch
 0021-fix-ossl_slh_dsa_key_free.patch
 0025-FIPS-disable-userspace-entropy.patch
