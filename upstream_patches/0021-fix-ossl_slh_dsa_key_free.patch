@@ -1,0 +1,13 @@
+:100644 100644 2fa59a6598 0000000000 M	crypto/slh_dsa/slh_dsa_key.c
+
+diff --git a/crypto/slh_dsa/slh_dsa_key.c b/crypto/slh_dsa/slh_dsa_key.c
+index 2fa59a6598..ab667a91b2 100644
+--- a/crypto/slh_dsa/slh_dsa_key.c
++++ b/crypto/slh_dsa/slh_dsa_key.c
+@@ -133,4 +133,4 @@ void ossl_slh_dsa_key_free(SLH_DSA_KEY *key)
+     slh_dsa_key_hash_cleanup(key);
+-    OPENSSL_cleanse(&key->priv, sizeof(key->priv) >> 1);
+-    OPENSSL_free(key);
++    OPENSSL_cleanse(&key->priv, sizeof(&key->priv));
++    OPENSSL_clear_free(key, sizeof(key));
+ }
