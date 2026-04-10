@@ -1,0 +1,10 @@
+:100644 100644 ab667a91b2 0000000000 M	crypto/slh_dsa/slh_dsa_key.c
+
+diff --git a/crypto/slh_dsa/slh_dsa_key.c b/crypto/slh_dsa/slh_dsa_key.c
+index ab667a91b2..5cfe580d97 100644
+--- a/crypto/slh_dsa/slh_dsa_key.c
++++ b/crypto/slh_dsa/slh_dsa_key.c
+@@ -392,2 +392,3 @@ int ossl_slh_dsa_generate_key(SLH_DSA_HASH_CTX *ctx, SLH_DSA_KEY *out,
+ err:
++    OPENSSL_cleanse(out->pub, sizeof(out->pub));
+     out->pub = NULL;
