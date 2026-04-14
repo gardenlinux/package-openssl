@@ -1,4 +1,4 @@
-commit c44f6f626b49643fef3a901552192634b71c3912
+commit 3c4eacddbd99c8b9df03197d5121be859e13504f
 Author: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
 Date:   Tue Mar 10 22:14:09 2026 +0100
 
@@ -15,6 +15,41 @@ index 68dfce36c1..667fb46852 100644
  OSSL_FIPS_PARAM(ecdh_cofactor_check, ECDH_COFACTOR_CHECK, 1)
  OSSL_FIPS_PARAM(ml_kem_ikme_check, ML_KEM_IKME_CHECK, 1)
 +OSSL_FIPS_PARAM(ml_kem_seed_check, ML_KEM_SEED_CHECK, 1)
+diff --git a/providers/fips/self_test_kats.c b/providers/fips/self_test_kats.c
+index 065663486e..849e583fc5 100644
+--- a/providers/fips/self_test_kats.c
++++ b/providers/fips/self_test_kats.c
+@@ -609,12 +609,18 @@ static int self_test_asym_keygen(const ST_KAT_ASYM_KEYGEN *t, OSSL_SELF_TEST *st
+     OSSL_LIB_CTX *libctx)
+ {
+     int ret = 0;
++    int seed_check = 0;
+     const ST_KAT_PARAM *expected;
++    const ST_KAT_PARAM *extra_keygen_params = NULL;
+     OSSL_PARAM *key_params = NULL;
+     EVP_PKEY_CTX *key_ctx = NULL;
+     EVP_PKEY *key = NULL;
+     uint8_t out[MAX_ML_DSA_PRIV_LEN];
+     size_t out_len = 0;
++    const ST_KAT_PARAM ml_kem_keygen_fips_params[] = {
++        ST_KAT_PARAM_INT(OSSL_KEM_PARAM_FIPS_SEED_CHECK, seed_check),
++        ST_KAT_PARAM_END()
++    };
+ 
+     OSSL_SELF_TEST_onbegin(st, OSSL_SELF_TEST_TYPE_KAT_ASYM_KEYGEN, t->desc);
+ 
+@@ -622,7 +628,10 @@ static int self_test_asym_keygen(const ST_KAT_ASYM_KEYGEN *t, OSSL_SELF_TEST *st
+     if (key_ctx == NULL)
+         goto err;
+     if (t->keygen_params != NULL) {
+-        key_params = kat_params_to_ossl_params(libctx, t->keygen_params, NULL);
++        if (strncmp(t->algorithm, "ML-KEM-", 7) == 0)
++            extra_keygen_params = ml_kem_keygen_fips_params;
++        key_params = kat_params_to_ossl_params(libctx, t->keygen_params,
++                                               extra_keygen_params, NULL);
+         if (key_params == NULL)
+             goto err;
+     }
 diff --git a/providers/implementations/keymgmt/ml_kem_kmgmt.c b/providers/implementations/keymgmt/ml_kem_kmgmt.c
 index 0be2a1e298..5ca5c488ba 100644
 --- a/providers/implementations/keymgmt/ml_kem_kmgmt.c

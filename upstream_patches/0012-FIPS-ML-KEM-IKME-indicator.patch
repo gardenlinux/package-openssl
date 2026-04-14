@@ -1,11 +1,35 @@
-commit 03f69738add6f3f3885b70b963f4e9dab393b773
+commit 49ace279c115c9732d50c1803d64c464697592d1
 Author: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
-Date:   Tue Mar 10 15:40:02 2026 +0100
+Date:   Fri Apr 10 15:03:32 2026 +0200
 
     ml-kem: add FIPS indicator for caller-provided encapsulation randomness
     
     Mark encapsulation using OSSL_KEM_PARAM_IKME as unapproved in FIPS mode unless tolerated via indicator, as randomness must originate from an approved RBG.
 
+diff --git a/providers/fips/fipsprov.c b/providers/fips/fipsprov.c
+index a5f0ae335b..8f26c3ad56 100644
+--- a/providers/fips/fipsprov.c
++++ b/providers/fips/fipsprov.c
+@@ -145,7 +145,18 @@ static int fips_random_bytes(ossl_unused void *vprov, int which,
+  */
+ static int fips_get_params_from_core(FIPS_GLOBAL *fgbl)
+ {
+-    OSSL_PARAM core_params[32], *p = core_params;
++    OSSL_PARAM core_params[
++/*
++ * automatically count all instances of OSSL_FIPS_PARAM in the inc files
++ * start with 1 to leave room for OSSL_PARAM_construct_end at the end
++ */
++        1
++#define OSSL_FIPS_PARAM(structname, paramname) + 1
++#include "fips_selftest_params.inc"
++#define OSSL_FIPS_PARAM(structname, paramname, initvalue) + 1
++#include "fips_indicator_params.inc"
++#undef OSSL_FIPS_PARAM
++    ], *p = core_params;
+ 
+ #define OSSL_FIPS_PARAM(structname, paramname)                 \
+     *p++ = OSSL_PARAM_construct_utf8_ptr(                      \
 diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
 index 2f97ffde4a..68dfce36c1 100644
 --- a/providers/fips/include/fips_indicator_params.inc
@@ -15,6 +39,36 @@ index 2f97ffde4a..68dfce36c1 100644
  OSSL_FIPS_PARAM(pbkdf2_lower_bound_check, PBKDF2_LOWER_BOUND_CHECK, 1)
  OSSL_FIPS_PARAM(ecdh_cofactor_check, ECDH_COFACTOR_CHECK, 1)
 +OSSL_FIPS_PARAM(ml_kem_ikme_check, ML_KEM_IKME_CHECK, 1)
+diff --git a/providers/fips/self_test_kats.c b/providers/fips/self_test_kats.c
+index f453b2f2fb..065663486e 100644
+--- a/providers/fips/self_test_kats.c
++++ b/providers/fips/self_test_kats.c
+@@ -661,10 +661,11 @@ static int self_test_kem_encapsulate(const ST_KAT_KEM *t, OSSL_SELF_TEST *st,
+     OSSL_LIB_CTX *libctx, EVP_PKEY *pkey)
+ {
+     int ret = 0;
++    int ikme_check = 0;
+     EVP_PKEY_CTX *ctx;
+     unsigned char *wrapped = NULL, *secret = NULL;
+     size_t wrappedlen = t->cipher_text_len, secretlen = t->secret_len;
+-    OSSL_PARAM params[2] = { OSSL_PARAM_END, OSSL_PARAM_END };
++    OSSL_PARAM params[3] = { OSSL_PARAM_END, OSSL_PARAM_END, OSSL_PARAM_END };
+ 
+     OSSL_SELF_TEST_onbegin(st, OSSL_SELF_TEST_TYPE_KAT_KEM,
+         OSSL_SELF_TEST_DESC_ENCAP_KEM);
+@@ -673,9 +674,11 @@ static int self_test_kem_encapsulate(const ST_KAT_KEM *t, OSSL_SELF_TEST *st,
+     if (ctx == NULL)
+         goto err;
+ 
+-    *params = OSSL_PARAM_construct_octet_string(OSSL_KEM_PARAM_IKME,
++    params[0] = OSSL_PARAM_construct_octet_string(OSSL_KEM_PARAM_IKME,
+         (unsigned char *)t->entropy,
+         t->entropy_len);
++    params[1] = OSSL_PARAM_construct_int(OSSL_KEM_PARAM_FIPS_IKME_CHECK,
++        &ikme_check);
+     if (EVP_PKEY_encapsulate_init(ctx, params) <= 0)
+         goto err;
+ 
 diff --git a/providers/implementations/kem/ml_kem_kem.c b/providers/implementations/kem/ml_kem_kem.c
 index 722eadf228..66c219d794 100644
 --- a/providers/implementations/kem/ml_kem_kem.c
