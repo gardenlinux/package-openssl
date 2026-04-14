@@ -1,3 +1,4 @@
+0000-set-FIPS-vendor.patch
 0001-Allow-SHA256-192-to-be-used-internally-in-the-FIPS-p.patch
 0002-FIPS-Allow-disabling-of-SHA1-signatures-and-Deny-SHA-1-signature-verification.patch
 0003-FIPS-EC-DH-DSA-PCTs.patch
