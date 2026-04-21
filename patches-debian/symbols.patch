@@ -4,6 +4,7 @@
   *@OPENSSL_3.3.0 3.3.0
   *@OPENSSL_3.4.0 3.4.0
   *@OPENSSL_3.5.0 3.5.0
+  *@OPENSSL_3.6.0 3.6.0
 + OPENSSL_3.0.1@OPENSSL_3.0.1 3.5.5-1gl13
 + ossl_ctx_legacy_digest_signatures_allowed@OPENSSL_3.0.1 3.5.5-1gl13
 + ossl_ctx_legacy_digest_signatures_allowed_set@OPENSSL_3.0.1 3.5.5-1gl13
