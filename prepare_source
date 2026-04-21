@@ -1,4 +1,4 @@
-git_src -b debian/openssl-3.5.5-1 https://salsa.debian.org/debian/openssl.git
+git_src -b debian/openssl-3.6.2-1 https://salsa.debian.org/debian/openssl.git
 import_upstream_patches
 apply_patches patches-debian
-version_suffix="gl20"
+version_suffix="gl21"
