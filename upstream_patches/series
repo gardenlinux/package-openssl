@@ -27,3 +27,4 @@ Avoid-possible-buffer-overflow-in-buf2hex-conversion.patch
 rsa_kem-validate-RSA_public_encrypt-result-in-RSASVE.patch
 rsa_kem-test-RSA_public_encrypt-result-in-RSASVE.patch
 0026-FIPS-ML-DSA-SEED-indicator.patch
+0027-FIPS-slh_dsa.patch
