@@ -1,0 +1,126 @@
+From 3269cbe1ef7d9476bc7b8212dcccf1e67e31a56f Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 5 Jun 2026 14:52:58 +0200
+Subject: [PATCH] providers: add FIPS RSA no-padding encrypt indicator
+
+---
+ providers/fips/include/fips_indicator_params.inc |  1 +
+ providers/fips/self_test_kats.c                  | 13 +++++++++++++
+ providers/implementations/asymciphers/rsa_enc.c  | 13 +++++++++++++
+ util/perl/OpenSSL/paramnames.pm                  |  2 ++
+ 4 files changed, 29 insertions(+)
+
+diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
+index a3808a9bdb..04b7a099b5 100644
+--- a/providers/fips/include/fips_indicator_params.inc
++++ b/providers/fips/include/fips_indicator_params.inc
+@@ -16,6 +16,7 @@ OSSL_FIPS_PARAM(dsa_sign_disallowed, DSA_SIGN_DISABLED, 1)
+ OSSL_FIPS_PARAM(dsa_verify_disallowed, DSA_VERIFY_DISABLED, 1)
+ OSSL_FIPS_PARAM(tdes_encrypt_disallowed, TDES_ENCRYPT_DISABLED, 1)
+ OSSL_FIPS_PARAM(rsa_pkcs15_padding_disabled, RSA_PKCS15_PAD_DISABLED, 1)
++OSSL_FIPS_PARAM(rsa_no_padding_disabled, RSA_NO_PAD_DISABLED, 1)
+ OSSL_FIPS_PARAM(rsa_pss_saltlen_check, RSA_PSS_SALTLEN_CHECK, 1)
+ OSSL_FIPS_PARAM(rsa_sign_x931_disallowed, RSA_SIGN_X931_PAD_DISABLED, 1)
+ OSSL_FIPS_PARAM(hkdf_key_check, HKDF_KEY_CHECK, 1)
+diff --git a/providers/fips/self_test_kats.c b/providers/fips/self_test_kats.c
+index 4c06cbcd27..f856c7ffab 100644
+--- a/providers/fips/self_test_kats.c
++++ b/providers/fips/self_test_kats.c
+@@ -857,6 +857,7 @@ static int self_test_asym_cipher(const ST_KAT_ASYM_CIPHER *t, OSSL_SELF_TEST *st
+     OSSL_LIB_CTX *libctx)
+ {
+     int ret = 0;
++    int rsa_no_pad_check = 0;
+     OSSL_PARAM *keyparams = NULL, *initparams = NULL;
+     OSSL_PARAM_BLD *keybld = NULL, *initbld = NULL;
+     EVP_PKEY_CTX *encctx = NULL, *keyctx = NULL;
+@@ -864,9 +865,18 @@ static int self_test_asym_cipher(const ST_KAT_ASYM_CIPHER *t, OSSL_SELF_TEST *st
+     BN_CTX *bnctx = NULL;
+     unsigned char out[256];
+     size_t outlen = sizeof(out);
++    const ST_KAT_PARAM *extra_postinit_params = NULL;
++    const ST_KAT_PARAM rsa_encrypt_fips_params[] = {
++        ST_KAT_PARAM_INT(OSSL_ASYM_CIPHER_PARAM_FIPS_RSA_NO_PAD_DISABLED,
++                         rsa_no_pad_check),
++        ST_KAT_PARAM_END()
++    };
+ 
+     OSSL_SELF_TEST_onbegin(st, OSSL_SELF_TEST_TYPE_KAT_ASYM_CIPHER, t->desc);
+ 
++    if (t->encrypt && strcmp(t->algorithm, "RSA") == 0)
++        extra_postinit_params = rsa_encrypt_fips_params;
++
+     bnctx = BN_CTX_new_ex(libctx);
+     if (bnctx == NULL)
+         goto err;
+@@ -898,6 +908,9 @@ static int self_test_asym_cipher(const ST_KAT_ASYM_CIPHER *t, OSSL_SELF_TEST *st
+             goto err;
+         if (!add_params(initbld, t->postinit, bnctx))
+             goto err;
++        if (extra_postinit_params != NULL && !add_params(initbld,
++                extra_postinit_params, bnctx))
++            goto err;
+         initparams = OSSL_PARAM_BLD_to_param(initbld);
+         if (initparams == NULL)
+             goto err;
+diff --git a/providers/implementations/asymciphers/rsa_enc.c b/providers/implementations/asymciphers/rsa_enc.c
+index 466dd0e35a..17e6760354 100644
+--- a/providers/implementations/asymciphers/rsa_enc.c
++++ b/providers/implementations/asymciphers/rsa_enc.c
+@@ -158,6 +158,15 @@ static int rsa_encrypt(void *vprsactx, unsigned char *out, size_t *outlen,
+         return 0;
+ 
+ #ifdef FIPS_MODULE
++    if (prsactx->pad_mode == RSA_NO_PADDING
++        && !OSSL_FIPS_IND_ON_UNAPPROVED(prsactx, OSSL_FIPS_IND_SETTABLE2,
++            prsactx->libctx, "RSA Encrypt",
++            "No padding",
++            ossl_fips_config_rsa_no_padding_disabled)) {
++        ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE);
++        return 0;
++    }
++
+     if ((prsactx->pad_mode == RSA_PKCS1_PADDING
+             || prsactx->pad_mode == RSA_PKCS1_WITH_TLS_PADDING)
+         && !OSSL_FIPS_IND_ON_UNAPPROVED(prsactx, OSSL_FIPS_IND_SETTABLE1,
+@@ -483,6 +492,9 @@ static int rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
+     if (!OSSL_FIPS_IND_SET_CTX_PARAM(prsactx, OSSL_FIPS_IND_SETTABLE1, params,
+             OSSL_ASYM_CIPHER_PARAM_FIPS_RSA_PKCS15_PAD_DISABLED))
+         return 0;
++    if (!OSSL_FIPS_IND_SET_CTX_PARAM(prsactx, OSSL_FIPS_IND_SETTABLE2, params,
++            OSSL_ASYM_CIPHER_PARAM_FIPS_RSA_NO_PAD_DISABLED))
++        return 0;
+ 
+     p = OSSL_PARAM_locate_const(params, OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST);
+     if (p != NULL) {
+@@ -620,6 +632,7 @@ static const OSSL_PARAM known_settable_ctx_params[] = {
+     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_IMPLICIT_REJECTION, NULL),
+     OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_ASYM_CIPHER_PARAM_FIPS_KEY_CHECK)
+         OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_ASYM_CIPHER_PARAM_FIPS_RSA_PKCS15_PAD_DISABLED)
++            OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_ASYM_CIPHER_PARAM_FIPS_RSA_NO_PAD_DISABLED)
+             OSSL_PARAM_END
+ };
+ 
+diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
+index aaeb14f01d..ae053cc123 100644
+--- a/util/perl/OpenSSL/paramnames.pm
++++ b/util/perl/OpenSSL/paramnames.pm
+@@ -49,6 +49,7 @@ my %params = (
+     'PROV_PARAM_RSA_PSS_SALTLEN_CHECK' =>  "rsa-pss-saltlen-check",  # uint
+     'PROV_PARAM_RSA_SIGN_X931_PAD_DISABLED' =>  "rsa-sign-x931-pad-disabled",   # uint
+     'PROV_PARAM_RSA_PKCS15_PAD_DISABLED' => "rsa-pkcs15-pad-disabled", # uint
++    'PROV_PARAM_RSA_NO_PAD_DISABLED' => "rsa-no-pad-disabled", # uint
+     'PROV_PARAM_HKDF_KEY_CHECK' =>         "hkdf-key-check",         # uint
+     'PROV_PARAM_KBKDF_KEY_CHECK' =>        "kbkdf-key-check",        # uint
+     'PROV_PARAM_TLS13_KDF_KEY_CHECK' =>    "tls13-kdf-key-check",    # uint
+@@ -513,6 +514,7 @@ my %params = (
+     'ASYM_CIPHER_PARAM_TLS_NEGOTIATED_VERSION' =>   "tls-negotiated-version",
+     'ASYM_CIPHER_PARAM_IMPLICIT_REJECTION' =>       "implicit-rejection",
+     'ASYM_CIPHER_PARAM_FIPS_RSA_PKCS15_PAD_DISABLED' => '*PROV_PARAM_RSA_PKCS15_PAD_DISABLED',
++    'ASYM_CIPHER_PARAM_FIPS_RSA_NO_PAD_DISABLED' => '*PROV_PARAM_RSA_NO_PAD_DISABLED',
+     'ASYM_CIPHER_PARAM_FIPS_KEY_CHECK' =>           '*PKEY_PARAM_FIPS_KEY_CHECK',
+     'ASYM_CIPHER_PARAM_FIPS_APPROVED_INDICATOR' =>  '*ALG_PARAM_FIPS_APPROVED_INDICATOR',
+ 
+-- 
+2.54.0
+

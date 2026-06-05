@@ -1,0 +1,29 @@
+From 0aebdec746b67ca4ab83e468bcfd949d3cff76f6 Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Wed, 3 Jun 2026 18:16:18 +0200
+Subject: [PATCH] providers: treat RSA decapsulation as protected
+
+---
+ providers/common/securitycheck.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/providers/common/securitycheck.c b/providers/common/securitycheck.c
+index 6985be0400..ee318d8e18 100644
+--- a/providers/common/securitycheck.c
++++ b/providers/common/securitycheck.c
+@@ -36,11 +36,11 @@ int ossl_rsa_key_op_get_protect(const RSA *rsa, int operation, int *outprotect)
+     case EVP_PKEY_OP_VERIFYMSG:
+         break;
+     case EVP_PKEY_OP_ENCAPSULATE:
++    case EVP_PKEY_OP_DECAPSULATE:
+     case EVP_PKEY_OP_ENCRYPT:
+         protect = 1;
+         /* fallthrough */
+     case EVP_PKEY_OP_VERIFYRECOVER:
+-    case EVP_PKEY_OP_DECAPSULATE:
+     case EVP_PKEY_OP_DECRYPT:
+         if (RSA_test_flags(rsa,
+                 RSA_FLAG_TYPE_MASK)
+-- 
+2.54.0
+
