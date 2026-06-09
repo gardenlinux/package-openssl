@@ -1,0 +1,88 @@
+From c31d8a828c1723c8b7e72dbfb126ada093867918 Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 5 Jun 2026 15:02:25 +0200
+Subject: [PATCH] providers: add FIPS RSA pkcs1 primitive indicators
+
+---
+ .../implementations/asymciphers/rsa_enc.c     | 11 ++++++++
+ providers/implementations/signature/rsa_sig.c | 28 +++++++++++++++++++
+ 2 files changed, 39 insertions(+)
+
+diff --git a/providers/implementations/asymciphers/rsa_enc.c b/providers/implementations/asymciphers/rsa_enc.c
+index 17e6760354..330fc71f7b 100644
+--- a/providers/implementations/asymciphers/rsa_enc.c
++++ b/providers/implementations/asymciphers/rsa_enc.c
+@@ -250,6 +250,17 @@ static int rsa_decrypt(void *vprsactx, unsigned char *out, size_t *outlen,
+     if (!ossl_prov_is_running())
+         return 0;
+ 
++#ifdef FIPS_MODULE
++    if (prsactx->pad_mode == RSA_PKCS1_PADDING
++        && !OSSL_FIPS_IND_ON_UNAPPROVED(prsactx, OSSL_FIPS_IND_SETTABLE1,
++            prsactx->libctx, "RSA Decrypt",
++            "PKCS#1 v1.5 padding",
++            ossl_fips_config_rsa_pkcs15_padding_disabled)) {
++        ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE);
++        return 0;
++    }
++#endif
++
+     if (prsactx->pad_mode == RSA_PKCS1_WITH_TLS_PADDING) {
+         if (out == NULL) {
+             *outlen = SSL_MAX_MASTER_KEY_LENGTH;
+diff --git a/providers/implementations/signature/rsa_sig.c b/providers/implementations/signature/rsa_sig.c
+index 1e38dff6b5..54d9e9abb8 100644
+--- a/providers/implementations/signature/rsa_sig.c
++++ b/providers/implementations/signature/rsa_sig.c
+@@ -653,6 +653,23 @@ static int rsa_pss_saltlen_check_passed(PROV_RSA_CTX *ctx, const char *algoname,
+ 
+     return 1;
+ }
++
++static int rsa_pkcs15_primitive_padding_allowed(PROV_RSA_CTX *ctx,
++    const char *algoname)
++{
++    if (ctx->pad_mode == RSA_PKCS1_PADDING
++        && (ctx->operation == EVP_PKEY_OP_SIGN
++            || ctx->operation == EVP_PKEY_OP_VERIFY)
++        && !OSSL_FIPS_IND_ON_UNAPPROVED(ctx, OSSL_FIPS_IND_SETTABLE4,
++                ctx->libctx,
++                algoname, "PKCS#1 v1.5 padding",
++                ossl_fips_config_rsa_pkcs15_padding_disabled)) {
++        ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE);
++        return 0;
++    }
++
++    return 1;
++}
+ #endif
+ 
+ static int rsa_sign_init(void *vprsactx, void *vrsa, const OSSL_PARAM params[])
+@@ -684,6 +701,11 @@ static int rsa_sign_directly(PROV_RSA_CTX *prsactx,
+     if (!ossl_prov_is_running())
+         return 0;
+ 
++#ifdef FIPS_MODULE
++    if (!rsa_pkcs15_primitive_padding_allowed(prsactx, "RSA Sign"))
++        return 0;
++#endif
++
+     if (sig == NULL) {
+         *siglen = rsasize;
+         return 1;
+@@ -1027,6 +1049,12 @@ static int rsa_verify_directly(PROV_RSA_CTX *prsactx,
+ 
+     if (!ossl_prov_is_running())
+         return 0;
++
++#ifdef FIPS_MODULE
++    if (!rsa_pkcs15_primitive_padding_allowed(prsactx, "RSA Verify"))
++        return 0;
++#endif
++
+     if (prsactx->md != NULL) {
+         switch (prsactx->pad_mode) {
+         case RSA_PKCS1_PADDING:
+-- 
+2.54.0
+
