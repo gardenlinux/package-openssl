@@ -1,0 +1,98 @@
+From 85e8908ce9bb3a227f0e1f0aa7098838cd40d48b Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Wed, 3 Jun 2026 18:21:08 +0200
+Subject: [PATCH] providers: flag KBKDF Triple-DES as unapproved
+
+---
+ providers/implementations/kdfs/kbkdf.c | 40 ++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/providers/implementations/kdfs/kbkdf.c b/providers/implementations/kdfs/kbkdf.c
+index 65b2344a96..2de0868e87 100644
+--- a/providers/implementations/kdfs/kbkdf.c
++++ b/providers/implementations/kdfs/kbkdf.c
+@@ -72,6 +72,8 @@ typedef struct {
+     size_t iv_len;
+     int use_l;
+     int is_kmac;
++    int is_tdes_cipher;
++    int is_cmac_tdes;
+     int use_separator;
+     OSSL_FIPS_IND_DECLARE
+ } KBKDF;
+@@ -109,6 +111,8 @@ static void init(KBKDF *ctx)
+     ctx->use_l = 1;
+     ctx->use_separator = 1;
+     ctx->is_kmac = 0;
++    ctx->is_tdes_cipher = 0;
++    ctx->is_cmac_tdes = 0;
+ }
+ 
+ static void *kbkdf_new(void *provctx)
+@@ -201,6 +205,21 @@ static int fips_kbkdf_key_check_passed(KBKDF *ctx)
+     }
+     return 1;
+ }
++
++static int fips_kbkdf_mac_check_passed(KBKDF *ctx)
++{
++    OSSL_LIB_CTX *libctx = PROV_LIBCTX_OF(ctx->provctx);
++
++    if (ctx->is_cmac_tdes
++        && !OSSL_FIPS_IND_ON_UNAPPROVED(ctx, OSSL_FIPS_IND_SETTABLE1,
++            libctx, "KBKDF", "Triple-DES",
++            ossl_fips_config_tdes_encrypt_disallowed)) {
++        ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_MAC,
++            "mac=CMAC cipher=DES-EDE3-CBC");
++        return 0;
++    }
++    return 1;
++}
+ #endif
+ 
+ /* SP800-108 section 5.1 or section 5.2 depending on mode. */
+@@ -375,6 +394,9 @@ static int kbkdf_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+     if (!OSSL_FIPS_IND_SET_CTX_PARAM(ctx, OSSL_FIPS_IND_SETTABLE0, params,
+             OSSL_KDF_PARAM_FIPS_KEY_CHECK))
+         return 0;
++    if (!OSSL_FIPS_IND_SET_CTX_PARAM(ctx, OSSL_FIPS_IND_SETTABLE1, params,
++            OSSL_CIPHER_PARAM_FIPS_ENCRYPT_CHECK))
++        return 0;
+ 
+     if (!ossl_prov_macctx_load_from_params(&ctx->ctx_init, params, NULL,
+             NULL, NULL, libctx))
+@@ -393,6 +415,23 @@ static int kbkdf_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+             ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_MAC);
+             return 0;
+         }
++
++        ctx->is_cmac_tdes = EVP_MAC_is_a(EVP_MAC_CTX_get0_mac(ctx->ctx_init),
++            OSSL_MAC_NAME_CMAC) && ctx->is_tdes_cipher;
++    }
++
++    p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_CIPHER);
++    if (p != NULL) {
++        ctx->is_tdes_cipher = p->data_type == OSSL_PARAM_UTF8_STRING
++            && OPENSSL_strcasecmp(p->data, "DES-EDE3-CBC") == 0;
++        if (ctx->ctx_init != NULL) {
++            ctx->is_cmac_tdes = EVP_MAC_is_a(EVP_MAC_CTX_get0_mac(ctx->ctx_init),
++                OSSL_MAC_NAME_CMAC) && ctx->is_tdes_cipher;
++        }
++#ifdef FIPS_MODULE
++        if (!fips_kbkdf_mac_check_passed(ctx))
++            return 0;
++#endif
+     }
+ 
+     p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_MODE);
+@@ -479,6 +518,7 @@ static const OSSL_PARAM *kbkdf_settable_ctx_params(ossl_unused void *ctx,
+         OSSL_PARAM_int(OSSL_KDF_PARAM_KBKDF_USE_L, NULL),
+         OSSL_PARAM_int(OSSL_KDF_PARAM_KBKDF_USE_SEPARATOR, NULL),
+         OSSL_PARAM_int(OSSL_KDF_PARAM_KBKDF_R, NULL),
++        OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_CIPHER_PARAM_FIPS_ENCRYPT_CHECK)
+         OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_KDF_PARAM_FIPS_KEY_CHECK)
+             OSSL_PARAM_END,
+     };
+-- 
+2.54.0
+

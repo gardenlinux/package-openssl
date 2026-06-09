@@ -28,3 +28,10 @@ rsa_kem-validate-RSA_public_encrypt-result-in-RSASVE.patch
 rsa_kem-test-RSA_public_encrypt-result-in-RSASVE.patch
 0026-FIPS-ML-DSA-SEED-indicator.patch
 0027-FIPS-slh_dsa.patch
+0028-FIPS-DSA-verify-indicator.patch
+0029-FIPS-DSA-key-check-indicator.patch
+0030-FIPS-RSA-decapsulation-protected.patch
+0031-FIPS-KBKDF-TDES-indicator.patch
+0032-FIPS-RSA-no-padding-encrypt-indicator.patch
+0033-FIPS-RSA-pkcs1-primitive-indicators.patch
+0034-FIPS-ECDSA-verify-indicator.patch

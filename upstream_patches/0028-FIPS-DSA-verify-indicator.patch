@@ -1,0 +1,137 @@
+From 64961a6d534c65951a1c07c6101d53199d8c1d3f Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Wed, 3 Jun 2026 17:47:46 +0200
+Subject: [PATCH] providers: add FIPS DSA verify indicator check
+
+---
+ .../fips/include/fips_indicator_params.inc    |  1 +
+ providers/fips/self_test_kats.c               | 21 ++++++++++++++++++-
+ providers/implementations/signature/dsa_sig.c | 12 +++++++++++
+ util/perl/OpenSSL/paramnames.pm               |  2 ++
+ 4 files changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
+index f3b3445b9b..ef675d6ebf 100644
+--- a/providers/fips/include/fips_indicator_params.inc
++++ b/providers/fips/include/fips_indicator_params.inc
+@@ -12,6 +12,7 @@ OSSL_FIPS_PARAM(sshkdf_digest_check, SSHKDF_DIGEST_CHECK, 1)
+ OSSL_FIPS_PARAM(sskdf_digest_check, SSKDF_DIGEST_CHECK, 1)
+ OSSL_FIPS_PARAM(x963kdf_digest_check, X963KDF_DIGEST_CHECK, 1)
+ OSSL_FIPS_PARAM(dsa_sign_disallowed, DSA_SIGN_DISABLED, 1)
++OSSL_FIPS_PARAM(dsa_verify_disallowed, DSA_VERIFY_DISABLED, 1)
+ OSSL_FIPS_PARAM(tdes_encrypt_disallowed, TDES_ENCRYPT_DISABLED, 1)
+ OSSL_FIPS_PARAM(rsa_pkcs15_padding_disabled, RSA_PKCS15_PAD_DISABLED, 1)
+ OSSL_FIPS_PARAM(rsa_pss_saltlen_check, RSA_PSS_SALTLEN_CHECK, 1)
+diff --git a/providers/fips/self_test_kats.c b/providers/fips/self_test_kats.c
+index 6f78c90a2b..4c06cbcd27 100644
+--- a/providers/fips/self_test_kats.c
++++ b/providers/fips/self_test_kats.c
+@@ -481,6 +481,7 @@ static int self_test_digest_sign(const ST_KAT_SIGN *t,
+     OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx)
+ {
+     int ret = 0;
++    int dsa_verify_check = 0;
+     OSSL_PARAM *paramskey = NULL, *paramsinit = NULL, *paramsverify = NULL;
+     EVP_SIGNATURE *sigalg = NULL;
+     EVP_PKEY_CTX *ctx = NULL;
+@@ -490,6 +491,12 @@ static int self_test_digest_sign(const ST_KAT_SIGN *t,
+     size_t siglen;
+     int digested = 0;
+     const char *typ = OSSL_SELF_TEST_TYPE_KAT_SIGNATURE;
++    const ST_KAT_PARAM *extra_verify_params = NULL;
++    const ST_KAT_PARAM dsa_verify_fips_params[] = {
++        ST_KAT_PARAM_INT(OSSL_SIGNATURE_PARAM_FIPS_VERIFY_CHECK,
++                         dsa_verify_check),
++        ST_KAT_PARAM_END()
++    };
+ 
+     if (t->sig_expected_len > sizeof(sig))
+         goto err;
+@@ -497,6 +504,10 @@ static int self_test_digest_sign(const ST_KAT_SIGN *t,
+     if (t->sig_expected == NULL)
+         typ = OSSL_SELF_TEST_TYPE_PCT_SIGNATURE;
+ 
++    if ((t->mode & SIGNATURE_MODE_VERIFY_ONLY) != 0
++        && strcmp(t->keytype, "DSA") == 0)
++        extra_verify_params = dsa_verify_fips_params;
++
+     OSSL_SELF_TEST_onbegin(st, typ, t->desc);
+ 
+     if (t->entropy != NULL) {
+@@ -507,7 +518,15 @@ static int self_test_digest_sign(const ST_KAT_SIGN *t,
+ 
+     paramskey = kat_params_to_ossl_params(libctx, t->key, NULL);
+     paramsinit = kat_params_to_ossl_params(libctx, t->init, NULL);
+-    paramsverify = kat_params_to_ossl_params(libctx, t->verify, NULL);
++    if (extra_verify_params == NULL) {
++        paramsverify = kat_params_to_ossl_params(libctx, t->verify, NULL);
++    } else if (t->verify == NULL) {
++        paramsverify = kat_params_to_ossl_params(libctx,
++                                                 extra_verify_params, NULL);
++    } else {
++        paramsverify = kat_params_to_ossl_params(libctx, t->verify,
++                                                 extra_verify_params, NULL);
++    }
+ 
+     fromctx = EVP_PKEY_CTX_new_from_name(libctx, t->keytype, NULL);
+     if (fromctx == NULL
+diff --git a/providers/implementations/signature/dsa_sig.c b/providers/implementations/signature/dsa_sig.c
+index 0de750c247..dda2ecd04b 100644
+--- a/providers/implementations/signature/dsa_sig.c
++++ b/providers/implementations/signature/dsa_sig.c
+@@ -253,6 +253,14 @@ static int dsa_sign_check_approved(PROV_DSA_CTX *ctx, int signing,
+             ctx->libctx, desc, "DSA",
+             ossl_fips_config_dsa_sign_disallowed))
+         return 0;
++
++    /* DSA verification is only allowed for legacy use and is not approved. */
++    if (!signing
++        && !OSSL_FIPS_IND_ON_UNAPPROVED(ctx, OSSL_FIPS_IND_SETTABLE3,
++            ctx->libctx, desc, "DSA Verify",
++            ossl_fips_config_dsa_verify_disallowed))
++        return 0;
++
+     return 1;
+ }
+ 
+@@ -728,6 +736,9 @@ static int dsa_common_set_ctx_params(void *vpdsactx, const OSSL_PARAM params[])
+     if (!OSSL_FIPS_IND_SET_CTX_PARAM(pdsactx, OSSL_FIPS_IND_SETTABLE2, params,
+             OSSL_SIGNATURE_PARAM_FIPS_SIGN_CHECK))
+         return 0;
++    if (!OSSL_FIPS_IND_SET_CTX_PARAM(pdsactx, OSSL_FIPS_IND_SETTABLE3, params,
++            OSSL_SIGNATURE_PARAM_FIPS_VERIFY_CHECK))
++        return 0;
+ 
+     p = OSSL_PARAM_locate_const(params, OSSL_SIGNATURE_PARAM_NONCE_TYPE);
+     if (p != NULL
+@@ -741,6 +752,7 @@ static int dsa_common_set_ctx_params(void *vpdsactx, const OSSL_PARAM params[])
+         OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_SIGNATURE_PARAM_FIPS_KEY_CHECK)          \
+             OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_SIGNATURE_PARAM_FIPS_DIGEST_CHECK)   \
+                 OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_SIGNATURE_PARAM_FIPS_SIGN_CHECK) \
++                    OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_SIGNATURE_PARAM_FIPS_VERIFY_CHECK) \
+                     OSSL_PARAM_END
+ 
+ static int dsa_set_ctx_params(void *vpdsactx, const OSSL_PARAM params[])
+diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
+index 42b0cab307..ef56713f2a 100644
+--- a/util/perl/OpenSSL/paramnames.pm
++++ b/util/perl/OpenSSL/paramnames.pm
+@@ -43,6 +43,7 @@ my %params = (
+     'PROV_PARAM_SSKDF_DIGEST_CHECK' =>     "sskdf-digest-check",     # uint
+     'PROV_PARAM_X963KDF_DIGEST_CHECK' =>   "x963kdf-digest-check",   # uint
+     'PROV_PARAM_DSA_SIGN_DISABLED' =>      "dsa-sign-disabled",      # uint
++    'PROV_PARAM_DSA_VERIFY_DISABLED' =>    "dsa-verify-disabled",    # uint
+     'PROV_PARAM_TDES_ENCRYPT_DISABLED' =>  "tdes-encrypt-disabled",  # uint
+     'PROV_PARAM_RSA_PSS_SALTLEN_CHECK' =>  "rsa-pss-saltlen-check",  # uint
+     'PROV_PARAM_RSA_SIGN_X931_PAD_DISABLED' =>  "rsa-sign-x931-pad-disabled",   # uint
+@@ -485,6 +486,7 @@ my %params = (
+     'SIGNATURE_PARAM_FIPS_VERIFY_MESSAGE' =>  'verify-message',
+     'SIGNATURE_PARAM_FIPS_KEY_CHECK' =>       '*PKEY_PARAM_FIPS_KEY_CHECK',
+     'SIGNATURE_PARAM_FIPS_SIGN_CHECK' =>      '*PKEY_PARAM_FIPS_SIGN_CHECK',
++    'SIGNATURE_PARAM_FIPS_VERIFY_CHECK' =>    'verify-check',
+     'SIGNATURE_PARAM_FIPS_RSA_PSS_SALTLEN_CHECK' => "rsa-pss-saltlen-check",
+     'SIGNATURE_PARAM_FIPS_SIGN_X931_PAD_CHECK' => "sign-x931-pad-check",
+     'SIGNATURE_PARAM_FIPS_APPROVED_INDICATOR' => '*ALG_PARAM_FIPS_APPROVED_INDICATOR',
+-- 
+2.54.0
+
