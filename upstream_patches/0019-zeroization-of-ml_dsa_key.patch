@@ -16,3 +16,10 @@ index 87613c937d..0c6a4e3a6c 100644
 -    OPENSSL_free(key->pub_encoding);
 +    OPENSSL_clear_free(key->pub_encoding, sizeof(key->pub_encoding));
      key->pub_encoding = NULL;
+@@ -167,2 +167,6 @@ void ossl_ml_dsa_key_reset(ML_DSA_KEY *key)
+         OPENSSL_clear_free(key->seed, ML_DSA_SEED_BYTES);
++    if (key->rho != NULL)
++        OPENSSL_cleanse(key->rho, sizeof(key->rho));
++    if (key->tr != NULL)
++        OPENSSL_cleanse(key->tr, sizeof(key->tr));
+     key->seed = NULL;
