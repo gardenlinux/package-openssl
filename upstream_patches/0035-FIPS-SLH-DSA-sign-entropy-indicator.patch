@@ -1,0 +1,114 @@
+From c7cb2e9bbf8a833e0e8507142438ea6dcb683bbb Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Thu, 11 Jun 2026 22:41:20 +0000
+Subject: [PATCH] providers: add FIPS SLH-DSA signing entropy indicator
+
+Mark SLH-DSA signing using OSSL_SIGNATURE_PARAM_TEST_ENTROPY (i.e.
+hedged sigGen with caller-supplied addrnd) as unapproved in FIPS mode
+unless tolerated via indicator, as section 9.2 of FIPS 205 requires
+the additional randomness to be obtained internally from an approved
+RBG and explicitly forbids passing it from outside the module.
+---
+ .../fips/include/fips_indicator_params.inc    |  1 +
+ .../implementations/signature/slh_dsa_sig.c   | 27 +++++++++++++++++++
+ util/perl/OpenSSL/paramnames.pm               |  2 ++
+ 3 files changed, 30 insertions(+)
+
+diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
+index 30c73f7cb3..168dd6c968 100644
+--- a/providers/fips/include/fips_indicator_params.inc
++++ b/providers/fips/include/fips_indicator_params.inc
+@@ -33,3 +33,4 @@ OSSL_FIPS_PARAM(ecdh_cofactor_check, ECDH_COFACTOR_CHECK, 1)
+ OSSL_FIPS_PARAM(ml_kem_ikme_check, ML_KEM_IKME_CHECK, 1)
+ OSSL_FIPS_PARAM(ml_kem_seed_check, ML_KEM_SEED_CHECK, 1)
+ OSSL_FIPS_PARAM(ml_dsa_seed_check, ML_DSA_SEED_CHECK, 1)
++OSSL_FIPS_PARAM(slh_dsa_sign_entropy_check, SLH_DSA_SIGN_ENTROPY_CHECK, 1)
+diff --git a/providers/implementations/signature/slh_dsa_sig.c b/providers/implementations/signature/slh_dsa_sig.c
+index c2ee2e6bed..5aa58f6eb8 100644
+--- a/providers/implementations/signature/slh_dsa_sig.c
++++ b/providers/implementations/signature/slh_dsa_sig.c
+@@ -14,6 +14,7 @@
+ #include "prov/implementations.h"
+ #include "prov/providercommon.h"
+ #include "prov/provider_ctx.h"
++#include "prov/securitycheck.h"
+ #include "prov/der_slh_dsa.h"
+ #include "crypto/slh_dsa.h"
+ #include "internal/sizes.h"
+@@ -53,6 +54,7 @@ typedef struct {
+     /* The Algorithm Identifier of the signature algorithm */
+     uint8_t aid_buf[OSSL_MAX_ALGORITHM_ID_SIZE];
+     size_t aid_len;
++    OSSL_FIPS_IND_DECLARE
+ } PROV_SLH_DSA_CTX;
+ 
+ static void slh_dsa_freectx(void *vctx)
+@@ -81,6 +83,7 @@ static void *slh_dsa_newctx(void *provctx, const char *alg, const char *propq)
+         goto err;
+     ctx->alg = alg;
+     ctx->msg_encode = SLH_DSA_MESSAGE_ENCODE_PURE;
++    OSSL_FIPS_IND_INIT(ctx)
+     return ctx;
+ err:
+     slh_dsa_freectx(ctx);
+@@ -266,6 +269,16 @@ static int slh_dsa_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+     if (ossl_param_is_empty(params))
+         return 1;
+ 
++#ifdef FIPS_MODULE
++    if (!OSSL_FIPS_IND_SET_CTX_PARAM(
++        pctx,
++        OSSL_FIPS_IND_SETTABLE0,
++        params,
++        OSSL_SIGNATURE_PARAM_FIPS_SLH_DSA_ENTROPY_CHECK
++    ))
++        return 0;
++#endif
++
+     p = OSSL_PARAM_locate_const(params, OSSL_SIGNATURE_PARAM_CONTEXT_STRING);
+     if (p != NULL) {
+         void *vp = pctx->context_string;
+@@ -286,6 +299,20 @@ static int slh_dsa_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+             pctx->add_random_len = 0;
+             return 0;
+         }
++#ifdef FIPS_MODULE
++        if (!OSSL_FIPS_IND_ON_UNAPPROVED(
++            pctx,
++            OSSL_FIPS_IND_SETTABLE0,
++            pctx->libctx,
++            "SLH-DSA",
++            "Explicit signing entropy",
++            ossl_fips_config_slh_dsa_sign_entropy_check
++        )) {
++            OPENSSL_cleanse(pctx->add_random, pctx->add_random_len);
++            pctx->add_random_len = 0;
++            return 0;
++        }
++#endif
+     }
+     p = OSSL_PARAM_locate_const(params, OSSL_SIGNATURE_PARAM_DETERMINISTIC);
+     if (p != NULL && !OSSL_PARAM_get_int(p, &pctx->deterministic))
+diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
+index f782d55209..9f0d2009d7 100644
+--- a/util/perl/OpenSSL/paramnames.pm
++++ b/util/perl/OpenSSL/paramnames.pm
+@@ -65,6 +65,7 @@ my %params = (
+     'PROV_PARAM_ML_KEM_IKME_CHECK' =>      "ml-kem-ikme-check",      # uint
+     'PROV_PARAM_ML_KEM_SEED_CHECK' =>      "ml-kem-seed-check",      # uint
+     'PROV_PARAM_ML_DSA_SEED_CHECK' =>      "ml-dsa-seed-check",      # uint
++    'PROV_PARAM_SLH_DSA_SIGN_ENTROPY_CHECK' => "slh-dsa-sign-entropy-check", # uint
+ 
+ # Self test callback parameters
+     'PROV_PARAM_SELF_TEST_PHASE' =>  "st-phase",# utf8_string
+@@ -492,6 +493,7 @@ my %params = (
+     'SIGNATURE_PARAM_FIPS_VERIFY_CHECK' =>    'verify-check',
+     'SIGNATURE_PARAM_FIPS_RSA_PSS_SALTLEN_CHECK' => "rsa-pss-saltlen-check",
+     'SIGNATURE_PARAM_FIPS_SIGN_X931_PAD_CHECK' => "sign-x931-pad-check",
++    'SIGNATURE_PARAM_FIPS_SLH_DSA_ENTROPY_CHECK' => '*PROV_PARAM_SLH_DSA_SIGN_ENTROPY_CHECK',
+     'SIGNATURE_PARAM_FIPS_APPROVED_INDICATOR' => '*ALG_PARAM_FIPS_APPROVED_INDICATOR',
+     'SIGNATURE_PARAM_SIGNATURE' =>          "signature",
+     'SIGNATURE_PARAM_MESSAGE_ENCODING' =>   "message-encoding",
+-- 
+2.47.3
+
