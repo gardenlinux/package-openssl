@@ -35,3 +35,5 @@ rsa_kem-test-RSA_public_encrypt-result-in-RSASVE.patch
 0032-FIPS-RSA-no-padding-encrypt-indicator.patch
 0033-FIPS-RSA-pkcs1-primitive-indicators.patch
 0034-FIPS-ECDSA-verify-indicator.patch
+0035-FIPS-SLH-DSA-sign-entropy-indicator.patch
+0036-FIPS-SLH-DSA-keygen-seed-indicator.patch

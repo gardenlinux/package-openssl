@@ -1,0 +1,142 @@
+From c88b5029780cb2e4354dbd276e3d3fa02e33e4a4 Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Thu, 11 Jun 2026 23:00:27 +0000
+Subject: [PATCH] providers: add FIPS SLH-DSA keygen seed indicator
+
+Mark SLH-DSA key pair generation using OSSL_PKEY_PARAM_SLH_DSA_SEED
+(caller-provided entropy) as unapproved in FIPS mode unless tolerated
+via indicator. Section 3.1 of FIPS 205 requires the SK.seed, SK.prf
+and PK.seed values to be retrieved from an approved RBG inside the
+module and explicitly forbids passing them in from outside.
+
+Wire the corresponding KAT to opt out of strict mode so the
+deterministic SLH-DSA keygen self-test still passes.
+---
+ .../fips/include/fips_indicator_params.inc    |  1 +
+ providers/fips/self_test_kats.c               |  6 +++++
+ .../implementations/keymgmt/slh_dsa_kmgmt.c   | 27 +++++++++++++++++++
+ util/perl/OpenSSL/paramnames.pm               |  2 ++
+ 4 files changed, 36 insertions(+)
+
+diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
+index 168dd6c968..de0e372548 100644
+--- a/providers/fips/include/fips_indicator_params.inc
++++ b/providers/fips/include/fips_indicator_params.inc
+@@ -34,3 +34,4 @@ OSSL_FIPS_PARAM(ml_kem_ikme_check, ML_KEM_IKME_CHECK, 1)
+ OSSL_FIPS_PARAM(ml_kem_seed_check, ML_KEM_SEED_CHECK, 1)
+ OSSL_FIPS_PARAM(ml_dsa_seed_check, ML_DSA_SEED_CHECK, 1)
+ OSSL_FIPS_PARAM(slh_dsa_sign_entropy_check, SLH_DSA_SIGN_ENTROPY_CHECK, 1)
++OSSL_FIPS_PARAM(slh_dsa_seed_check, SLH_DSA_SEED_CHECK, 1)
+diff --git a/providers/fips/self_test_kats.c b/providers/fips/self_test_kats.c
+index f856c7ffab..e17cd2cd8e 100644
+--- a/providers/fips/self_test_kats.c
++++ b/providers/fips/self_test_kats.c
+@@ -644,6 +644,10 @@ static int self_test_asym_keygen(const ST_KAT_ASYM_KEYGEN *t, OSSL_SELF_TEST *st
+         ST_KAT_PARAM_INT(OSSL_PKEY_PARAM_FIPS_ML_DSA_SEED_CHECK, seed_check),
+         ST_KAT_PARAM_END()
+     };
++    const ST_KAT_PARAM slh_dsa_keygen_fips_params[] = {
++        ST_KAT_PARAM_INT(OSSL_PKEY_PARAM_FIPS_SLH_DSA_SEED_CHECK, seed_check),
++        ST_KAT_PARAM_END()
++    };
+ 
+     OSSL_SELF_TEST_onbegin(st, OSSL_SELF_TEST_TYPE_KAT_ASYM_KEYGEN, t->desc);
+ 
+@@ -655,6 +659,8 @@ static int self_test_asym_keygen(const ST_KAT_ASYM_KEYGEN *t, OSSL_SELF_TEST *st
+             extra_keygen_params = ml_kem_keygen_fips_params;
+         else if (strncmp(t->algorithm, "ML-DSA-", 7) == 0)
+             extra_keygen_params = ml_dsa_keygen_fips_params;
++        else if (strncmp(t->algorithm, "SLH-DSA-", 8) == 0)
++            extra_keygen_params = slh_dsa_keygen_fips_params;
+         key_params = kat_params_to_ossl_params(libctx, t->keygen_params,
+                                                extra_keygen_params, NULL);
+         if (key_params == NULL)
+diff --git a/providers/implementations/keymgmt/slh_dsa_kmgmt.c b/providers/implementations/keymgmt/slh_dsa_kmgmt.c
+index 8a67621390..88963e5c4d 100644
+--- a/providers/implementations/keymgmt/slh_dsa_kmgmt.c
++++ b/providers/implementations/keymgmt/slh_dsa_kmgmt.c
+@@ -18,6 +18,7 @@
+ #include "prov/implementations.h"
+ #include "prov/providercommon.h"
+ #include "prov/provider_ctx.h"
++#include "prov/securitycheck.h"
+ 
+ #ifdef FIPS_MODULE
+ static int slh_dsa_fips140_pairwise_test(const SLH_DSA_KEY *key,
+@@ -49,6 +50,7 @@ struct slh_dsa_gen_ctx {
+     char *propq;
+     uint8_t entropy[SLH_DSA_MAX_N * 3];
+     size_t entropy_len;
++    OSSL_FIPS_IND_DECLARE
+ };
+ 
+ static void *slh_dsa_new_key(void *provctx, const char *alg)
+@@ -275,6 +277,7 @@ static void *slh_dsa_gen_init(void *provctx, int selection,
+ 
+     if ((gctx = OPENSSL_zalloc(sizeof(*gctx))) != NULL) {
+         gctx->libctx = libctx;
++        OSSL_FIPS_IND_INIT(gctx)
+         if (!slh_dsa_gen_set_params(gctx, params)) {
+             OPENSSL_free(gctx);
+             gctx = NULL;
+@@ -387,6 +390,16 @@ static int slh_dsa_gen_set_params(void *genctx, const OSSL_PARAM params[])
+     if (gctx == NULL)
+         return 0;
+ 
++#ifdef FIPS_MODULE
++    if (!OSSL_FIPS_IND_SET_CTX_PARAM(
++        gctx,
++        OSSL_FIPS_IND_SETTABLE0,
++        params,
++        OSSL_PKEY_PARAM_FIPS_SLH_DSA_SEED_CHECK
++    ))
++        return 0;
++#endif
++
+     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_SLH_DSA_SEED);
+     if (p != NULL) {
+         void *vp = gctx->entropy;
+@@ -396,6 +409,20 @@ static int slh_dsa_gen_set_params(void *genctx, const OSSL_PARAM params[])
+             gctx->entropy_len = 0;
+             return 0;
+         }
++#ifdef FIPS_MODULE
++        if (!OSSL_FIPS_IND_ON_UNAPPROVED(
++            gctx,
++            OSSL_FIPS_IND_SETTABLE0,
++            gctx->libctx,
++            "SLH-DSA",
++            "Explicit key generation seed",
++            ossl_fips_config_slh_dsa_seed_check
++        )) {
++            OPENSSL_cleanse(gctx->entropy, gctx->entropy_len);
++            gctx->entropy_len = 0;
++            return 0;
++        }
++#endif
+     }
+ 
+     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PROPERTIES);
+diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
+index 9f0d2009d7..240b29cba3 100644
+--- a/util/perl/OpenSSL/paramnames.pm
++++ b/util/perl/OpenSSL/paramnames.pm
+@@ -66,6 +66,7 @@ my %params = (
+     'PROV_PARAM_ML_KEM_SEED_CHECK' =>      "ml-kem-seed-check",      # uint
+     'PROV_PARAM_ML_DSA_SEED_CHECK' =>      "ml-dsa-seed-check",      # uint
+     'PROV_PARAM_SLH_DSA_SIGN_ENTROPY_CHECK' => "slh-dsa-sign-entropy-check", # uint
++    'PROV_PARAM_SLH_DSA_SEED_CHECK' =>     "slh-dsa-seed-check",     # uint
+ 
+ # Self test callback parameters
+     'PROV_PARAM_SELF_TEST_PHASE' =>  "st-phase",# utf8_string
+@@ -458,6 +459,7 @@ my %params = (
+ 
+ # SLH_DSA Key generation parameters
+     'PKEY_PARAM_SLH_DSA_SEED' =>              "seed",
++    'PKEY_PARAM_FIPS_SLH_DSA_SEED_CHECK' => '*PROV_PARAM_SLH_DSA_SEED_CHECK',
+ 
+ # Key Exchange parameters
+     'EXCHANGE_PARAM_PAD' =>                   "pad",# uint
+-- 
+2.47.3
+
