@@ -46,3 +46,4 @@ rsa_kem-test-RSA_public_encrypt-result-in-RSASVE.patch
 0043-FIPS-ECDSA-P192-verify-disallow.patch
 0044-FIPS-ML-KEM-encap-key-check.patch
 0045-FIPS-ML-KEM-decap-key-check.patch
+0046-disable-hybrid-MLKEM-in-FIPS-mode.patch
