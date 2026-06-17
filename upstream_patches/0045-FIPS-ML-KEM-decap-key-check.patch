@@ -1,0 +1,72 @@
+From d5a53156e9da26dceb722a310382e1389b83840d Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 12 Jun 2026 16:17:15 +0000
+Subject: [PATCH] providers: validate ML-KEM decapsulation key at decap entry
+
+FIPS 203 Section 7.3 requires the module to validate the candidate
+decapsulation key (and check the received ciphertext) before
+performing decapsulation. ossl_ml_kem_parse_private_key() already
+verifies the embedded H(ek) == key->pkhash relationship at import
+time, but the check is not re-asserted at operation time; do that at
+the top of ossl_ml_kem_decap() by recomputing H(ek) via the existing
+hash_h_pubkey() helper and comparing against key->pkhash.
+
+The spec also calls for a coefficient-range check on the received
+ciphertext.  ML-KEM ciphertexts are encoded at du and dv bits per
+coefficient; scalar_decode() masks the extracted bits to exactly that
+width, so all decoded coefficients are structurally in [0, 2^du) and
+[0, 2^dv).  Document this in the new comment block and skip the
+explicit range gate.
+---
+ crypto/ml_kem/ml_kem.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/crypto/ml_kem/ml_kem.c b/crypto/ml_kem/ml_kem.c
+index 358f388778..63be5ee936 100644
+--- a/crypto/ml_kem/ml_kem.c
++++ b/crypto/ml_kem/ml_kem.c
+@@ -2327,6 +2327,7 @@ int ossl_ml_kem_decap(uint8_t *shared_secret, size_t slen,
+ {
+     const ML_KEM_VINFO *vinfo;
+     EVP_MD_CTX *mdctx;
++    uint8_t expected_pkhash[ML_KEM_PKHASH_BYTES];
+     int ret = 0;
+ #if defined(OPENSSL_CONSTANT_TIME_VALIDATION)
+     int classify_bytes;
+@@ -2344,6 +2345,33 @@ int ossl_ml_kem_decap(uint8_t *shared_secret, size_t slen,
+             ML_KEM_SHARED_SECRET_BYTES, vinfo->secbits);
+         return 0;
+     }
++
++    /*
++     * FIPS 203 Section 7.3 requires the module to validate the candidate
++     * decapsulation key before decapsulation: in particular the embedded
++     * H(ek) must match the encapsulation-key components stored alongside it.
++     * ossl_ml_kem_parse_private_key() already enforces this at import time
++     * (see the memcmp(key->pkhash, ...) guard there); re-assert it here so
++     * the check also runs at the decapsulation entry point.
++     *
++     * Note: the spec also calls for a coefficient-range check on the
++     * received ciphertext.  ML-KEM's ciphertext is encoded with du and dv
++     * bits per coefficient, and scalar_decode() masks each extracted value
++     * to exactly that bit width, so all decoded coefficients are
++     * structurally in [0, 2^du) and [0, 2^dv); no explicit range gate is
++     * required.
++     */
++    if (!hash_h_pubkey(expected_pkhash, mdctx, (ML_KEM_KEY *)key)) {
++        EVP_MD_CTX_free(mdctx);
++        return 0;
++    }
++    if (memcmp(expected_pkhash, key->pkhash, ML_KEM_PKHASH_BYTES) != 0) {
++        EVP_MD_CTX_free(mdctx);
++        ERR_raise_data(ERR_LIB_CRYPTO, ERR_R_PASSED_INVALID_ARGUMENT,
++            "%s decapsulation key hash mismatch",
++            vinfo->algorithm_name);
++        return 0;
++    }
+ #if defined(OPENSSL_CONSTANT_TIME_VALIDATION)
+     /*
+      * Data derived from |s| and |z| defaults secret, and to avoid side-channel
+-- 
+2.47.3
+

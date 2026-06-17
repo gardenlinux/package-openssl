@@ -37,3 +37,12 @@ rsa_kem-test-RSA_public_encrypt-result-in-RSASVE.patch
 0034-FIPS-ECDSA-verify-indicator.patch
 0035-FIPS-SLH-DSA-sign-entropy-indicator.patch
 0036-FIPS-SLH-DSA-keygen-seed-indicator.patch
+0037-FIPS-ECDSA-allow-truncated-SHA512.patch
+0038-FIPS-TDES-decrypt-disallow.patch
+0039-FIPS-RSA-no-padding-sign-indicator.patch
+0040-FIPS-ML-KEM-zeroize-intermediate-buffers.patch
+0041-FIPS-RSA-X931-verify-disallow.patch
+0042-FIPS-RSA-verify-min-modulus-indicator.patch
+0043-FIPS-ECDSA-P192-verify-disallow.patch
+0044-FIPS-ML-KEM-encap-key-check.patch
+0045-FIPS-ML-KEM-decap-key-check.patch

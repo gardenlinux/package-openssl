@@ -1,0 +1,73 @@
+From 90e11fd22efd1874941b62bade6ba23994515a92 Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 12 Jun 2026 12:53:32 +0000
+Subject: [PATCH] providers: flag Triple-DES decryption as legacy-use only
+
+FIPS 140-3 marks Triple-DES decryption (in ECB and CBC modes) as
+legacy-use only. Mirror the existing tdes_encrypt_disallowed indicator
+on the decrypt path: tdes_encrypt_check_approved() now also fires
+OSSL_FIPS_IND_ON_UNAPPROVED with a new tdes_decrypt_disallowed config
+flag when called with enc=0, so the operation reports unapproved in
+FIPS mode unless the caller opts in via the indicator.
+---
+ providers/fips/include/fips_indicator_params.inc      |  1 +
+ .../implementations/ciphers/cipher_tdes_common.c      | 11 +++++++++++
+ util/perl/OpenSSL/paramnames.pm                       |  1 +
+ 3 files changed, 13 insertions(+)
+
+diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
+index de0e372548..96d55ea194 100644
+--- a/providers/fips/include/fips_indicator_params.inc
++++ b/providers/fips/include/fips_indicator_params.inc
+@@ -16,6 +16,7 @@ OSSL_FIPS_PARAM(dsa_sign_disallowed, DSA_SIGN_DISABLED, 1)
+ OSSL_FIPS_PARAM(dsa_verify_disallowed, DSA_VERIFY_DISABLED, 1)
+ OSSL_FIPS_PARAM(ecdsa_verify_disallowed, ECDSA_VERIFY_DISABLED, 1)
+ OSSL_FIPS_PARAM(tdes_encrypt_disallowed, TDES_ENCRYPT_DISABLED, 1)
++OSSL_FIPS_PARAM(tdes_decrypt_disallowed, TDES_DECRYPT_DISABLED, 1)
+ OSSL_FIPS_PARAM(rsa_pkcs15_padding_disabled, RSA_PKCS15_PAD_DISABLED, 1)
+ OSSL_FIPS_PARAM(rsa_no_padding_disabled, RSA_NO_PAD_DISABLED, 1)
+ OSSL_FIPS_PARAM(rsa_pss_saltlen_check, RSA_PSS_SALTLEN_CHECK, 1)
+diff --git a/providers/implementations/ciphers/cipher_tdes_common.c b/providers/implementations/ciphers/cipher_tdes_common.c
+index 80c38d9d32..3c46ba48f8 100644
+--- a/providers/implementations/ciphers/cipher_tdes_common.c
++++ b/providers/implementations/ciphers/cipher_tdes_common.c
+@@ -19,6 +19,9 @@
+ #include "cipher_tdes.h"
+ #include "prov/implementations.h"
+ #include "prov/providercommon.h"
++#ifdef FIPS_MODULE
++# include "internal/fips.h"
++#endif
+ 
+ void *ossl_tdes_newctx(void *provctx, int mode, size_t kbits, size_t blkbits,
+     size_t ivbits, uint64_t flags, const PROV_CIPHER_HW *hw)
+@@ -68,6 +71,14 @@ static int tdes_encrypt_check_approved(PROV_TDES_CTX *ctx, int enc)
+     /* Triple-DES encryption is not approved in FIPS 140-3 */
+     if (enc && !OSSL_FIPS_IND_ON_UNAPPROVED(ctx, OSSL_FIPS_IND_SETTABLE0, ctx->base.libctx, "Triple-DES", "Encryption", ossl_fips_config_tdes_encrypt_disallowed))
+         return 0;
++    /*
++     * Triple-DES decryption is only allowed for legacy use. Skip the check
++     * during the FIPS provider self-test, where the cipher KAT exercises the
++     * decrypt path before any caller has a chance to install the indicator.
++     */
++    if (!enc && !ossl_fips_self_testing()
++            && !OSSL_FIPS_IND_ON_UNAPPROVED(ctx, OSSL_FIPS_IND_SETTABLE1, ctx->base.libctx, "Triple-DES", "Decryption", ossl_fips_config_tdes_decrypt_disallowed))
++        return 0;
+     return 1;
+ }
+ #endif
+diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
+index 240b29cba3..ff7c723714 100644
+--- a/util/perl/OpenSSL/paramnames.pm
++++ b/util/perl/OpenSSL/paramnames.pm
+@@ -47,6 +47,7 @@ my %params = (
+     'PROV_PARAM_DSA_VERIFY_DISABLED' =>    "dsa-verify-disabled",    # uint
+     'PROV_PARAM_ECDSA_VERIFY_DISABLED' =>  "ecdsa-verify-disabled",  # uint
+     'PROV_PARAM_TDES_ENCRYPT_DISABLED' =>  "tdes-encrypt-disabled",  # uint
++    'PROV_PARAM_TDES_DECRYPT_DISABLED' =>  "tdes-decrypt-disabled",  # uint
+     'PROV_PARAM_RSA_PSS_SALTLEN_CHECK' =>  "rsa-pss-saltlen-check",  # uint
+     'PROV_PARAM_RSA_SIGN_X931_PAD_DISABLED' =>  "rsa-sign-x931-pad-disabled",   # uint
+     'PROV_PARAM_RSA_PKCS15_PAD_DISABLED' => "rsa-pkcs15-pad-disabled", # uint
+-- 
+2.47.3
+
