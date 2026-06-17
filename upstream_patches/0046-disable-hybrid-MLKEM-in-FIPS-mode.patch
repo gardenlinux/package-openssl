@@ -1,0 +1,19 @@
+:100644 100644 419878719e 0000000000 M	providers/fips/fipsprov.c
+
+diff --git a/providers/fips/fipsprov.c b/providers/fips/fipsprov.c
+index 419878719e..680d3dd56d 100644
+--- a/providers/fips/fipsprov.c
++++ b/providers/fips/fipsprov.c
+@@ -543,8 +542,8 @@ static const OSSL_ALGORITHM fips_asym_kem[] = {
+ #if !defined(OPENSSL_NO_ECX)
+-    { "X25519MLKEM768", FIPS_DEFAULT_PROPERTIES, ossl_mlx_kem_asym_kem_functions },
+-    { "X448MLKEM1024", FIPS_DEFAULT_PROPERTIES, ossl_mlx_kem_asym_kem_functions },
++    { "X25519MLKEM768", FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_kem_asym_kem_functions },
++    { "X448MLKEM1024", FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_kem_asym_kem_functions },
+ #endif
+ #if !defined(OPENSSL_NO_EC)
+-    { "SecP256r1MLKEM768", FIPS_DEFAULT_PROPERTIES, ossl_mlx_kem_asym_kem_functions },
+-    { "SecP384r1MLKEM1024", FIPS_DEFAULT_PROPERTIES, ossl_mlx_kem_asym_kem_functions },
++    { "SecP256r1MLKEM768", FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_kem_asym_kem_functions },
++    { "SecP384r1MLKEM1024", FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_kem_asym_kem_functions },
+ #endif
