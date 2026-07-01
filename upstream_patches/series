@@ -47,3 +47,7 @@ rsa_kem-test-RSA_public_encrypt-result-in-RSASVE.patch
 0044-FIPS-ML-KEM-encap-key-check.patch
 0045-FIPS-ML-KEM-decap-key-check.patch
 0046-disable-hybrid-MLKEM-in-FIPS-mode.patch
+0047-FIPS-RSA-no-padding-decrypt-indicator.patch
+0048-FIPS-ECDSA-sign-component-indicator.patch
+0049-FIPS-RSA-no-padding-verify-indicator.patch
+0050-disable-hybrid-MLKEM-keygen-and-check.patch

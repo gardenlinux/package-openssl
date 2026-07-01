@@ -1,0 +1,37 @@
+From f2b2545d228c209994d6cacd00e6844722b18ab7 Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Mon, 29 Jun 2026 13:12:06 +0000
+Subject: [PATCH] providers: flag RSA verify with no padding as unapproved
+
+FIPS 140-3 IG 2.4.B does not list the RSA signature verification
+primitive among the components that may be validated; running
+EVP_PKEY_verify() against a raw RSA modular exponentiation with
+RSA_NO_PADDING therefore must not be reported as an approved service.
+Patch 0039 already gates the equivalent sign-side path; add the
+matching hook in rsa_verify_directly() reusing the existing
+rsa_no_padding_disabled config flag.
+---
+ providers/implementations/signature/rsa_sig.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/providers/implementations/signature/rsa_sig.c b/providers/implementations/signature/rsa_sig.c
+index a6b7123709..cfe2a2381c 100644
+--- a/providers/implementations/signature/rsa_sig.c
++++ b/providers/implementations/signature/rsa_sig.c
+@@ -1074,6 +1074,13 @@ static int rsa_verify_directly(PROV_RSA_CTX *prsactx,
+         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_KEY_LENGTH);
+         return 0;
+     }
++    if (prsactx->pad_mode == RSA_NO_PADDING
++        && !OSSL_FIPS_IND_ON_UNAPPROVED(prsactx, OSSL_FIPS_IND_SETTABLE7,
++            prsactx->libctx, "RSA Verify", "No padding",
++            ossl_fips_config_rsa_no_padding_disabled)) {
++        ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE);
++        return 0;
++    }
+ #endif
+ 
+     if (prsactx->md != NULL) {
+-- 
+2.47.3
+
