@@ -1,0 +1,43 @@
+From 5c7d0f954e55c04c1f7ae22d6219e02b69b6e06b Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Mon, 29 Jun 2026 15:15:56 +0000
+Subject: [PATCH] providers: flag hybrid ML-KEM keygen and check as unapproved
+
+Patch 0046 marked the X25519MLKEM768, X448MLKEM1024, SecP256r1MLKEM768
+and SecP384r1MLKEM1024 hybrid schemes as unapproved in the FIPS
+provider's KEM dispatch table, which makes encapsulation and
+decapsulation report non-approved. The keymgmt dispatch table for the
+same schemes was left at FIPS_DEFAULT_PROPERTIES, so EVP_PKEY_keygen
+and EVP_PKEY_check still report approved. Flip those four entries to
+FIPS_UNAPPROVED_PROPERTIES as well.
+---
+ providers/fips/fipsprov.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/providers/fips/fipsprov.c b/providers/fips/fipsprov.c
+index 54de206b17..c03f240219 100644
+--- a/providers/fips/fipsprov.c
++++ b/providers/fips/fipsprov.c
+@@ -623,15 +623,15 @@ static const OSSL_ALGORITHM fips_keymgmt[] = {
+     { PROV_NAMES_ML_KEM_1024, FIPS_DEFAULT_PROPERTIES, ossl_ml_kem_1024_keymgmt_functions,
+         PROV_DESCS_ML_KEM_1024 },
+ #if !defined(OPENSSL_NO_ECX)
+-    { PROV_NAMES_X25519MLKEM768, FIPS_DEFAULT_PROPERTIES, ossl_mlx_x25519_kem_kmgmt_functions,
++    { PROV_NAMES_X25519MLKEM768, FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_x25519_kem_kmgmt_functions,
+         PROV_DESCS_X25519MLKEM768 },
+-    { PROV_NAMES_X448MLKEM1024, FIPS_DEFAULT_PROPERTIES, ossl_mlx_x448_kem_kmgmt_functions,
++    { PROV_NAMES_X448MLKEM1024, FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_x448_kem_kmgmt_functions,
+         PROV_DESCS_X448MLKEM1024 },
+ #endif
+ #if !defined(OPENSSL_NO_EC)
+-    { PROV_NAMES_SecP256r1MLKEM768, FIPS_DEFAULT_PROPERTIES, ossl_mlx_p256_kem_kmgmt_functions,
++    { PROV_NAMES_SecP256r1MLKEM768, FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_p256_kem_kmgmt_functions,
+         PROV_DESCS_SecP256r1MLKEM768 },
+-    { PROV_NAMES_SecP384r1MLKEM1024, FIPS_DEFAULT_PROPERTIES, ossl_mlx_p384_kem_kmgmt_functions,
++    { PROV_NAMES_SecP384r1MLKEM1024, FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_p384_kem_kmgmt_functions,
+         PROV_DESCS_SecP384r1MLKEM1024 },
+ #endif
+ #endif
+-- 
+2.47.3
+
