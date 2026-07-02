@@ -1,0 +1,62 @@
+:100644 100644 77c20daceb 0000000000 M	crypto/slh_dsa/slh_dsa.c
+
+diff --git a/crypto/slh_dsa/slh_dsa.c b/crypto/slh_dsa/slh_dsa.c
+index 77c20daceb..5843b62ae6 100644
+--- a/crypto/slh_dsa/slh_dsa.c
++++ b/crypto/slh_dsa/slh_dsa.c
+@@ -41,12 +41,19 @@ static int get_tree_ids(PACKET *pkt, const SLH_DSA_PARAMS *params,
+  */
+-static int slh_sign_internal(SLH_DSA_HASH_CTX *hctx,
+-    const uint8_t *msg, size_t msg_len,
+-    uint8_t *sig, size_t *sig_len, size_t sig_size,
+-    const uint8_t *opt_rand)
++static int slh_sign_internal(
++        SLH_DSA_HASH_CTX *hctx,
++        const uint8_t *msg, size_t msg_len,
++        uint8_t *sig, 
++        size_t *sig_len, 
++        size_t sig_size,
++        const uint8_t *opt_rand
++        )
+ {
+-    int ret = 0;
+-    const SLH_DSA_KEY *priv = hctx->key;
+-    const SLH_DSA_PARAMS *params = priv->params;
+-    size_t sig_len_expected = params->sig_len;
+-    uint8_t m_digest[SLH_MAX_M];
++    int ret = 0; // interal will be return
++                 //
++    const SLH_DSA_KEY *priv = hctx->key; // obj from hctx
++    const SLH_DSA_PARAMS *params = priv->params; // subobj from hctx
++    size_t sig_len_expected = params->sig_len; //subobj from hctx
++                                               
++    uint8_t m_digest[SLH_MAX_M]; //internal size for m_digest
++                                 //
+     const uint8_t *md; /* The first md_len bytes of m_digest */
+@@ -58,5 +65,6 @@ static int slh_sign_internal(SLH_DSA_HASH_CTX *hctx,
+     const uint8_t *pk_seed, *sk_seed; /* pointers to elements within |priv| */
+-    uint8_t pk_fors[SLH_MAX_N];
+-    uint64_t tree_id;
+-    uint32_t leaf_id;
++
++    uint8_t pk_fors[SLH_MAX_N]; // internal size of key.
++    uint64_t tree_id; //internal 
++    uint32_t leaf_id; //internal
+ 
+@@ -122,2 +130,16 @@ static int slh_sign_internal(SLH_DSA_HASH_CTX *hctx,
+     *sig_len = sig_len_expected;
++
++    OPENSSL_cleanse(m_digest, sizeof(m_digest));
++    OPENSSL_free(md);
++    OPENSSL_cleanse(*pk_seed, sizeof(*pk_seed));
++    OPENSSL_free(sk_seed);
++
++
++    //OPENSSL_cleanse(r_packet, sizeof(r_packet));
++    //OPENSSL_cleanse(*r, sizeof(*r));
++    //OPENSSL_cleanse(*sig_fors, sizeof(*sizeof));
++
++    //OPENSSL_cleanse(opt_rand, sizeof(opt_rand));
++    //OPENSSL_cleanse(leaf_id, sizeof(leaf_id));
++    //OPENSSL_cleanse(tree_id, sizeof(tree_id));
+     ret = 1;

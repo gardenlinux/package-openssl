@@ -6,4 +6,4 @@ index 3a61c8e4e3..dceba4cddb 100644
 +++ b/VERSION.dat
 @@ -7 +7,2 @@ RELEASE_DATE="27 Jan 2026"
  SHLIB_VERSION=3
-+FIPS_VENDOR="SAP SE Garden Linux nightly OpenSSL Cryptographic Module"
++FIPS_VENDOR="SAP SE Garden Linux 2150 OpenSSL Cryptographic Module"

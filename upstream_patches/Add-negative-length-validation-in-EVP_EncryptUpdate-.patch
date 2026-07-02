@@ -1,0 +1,118 @@
+From: Pranavjeet-Naidu <pranavjeetnaidu@gmail.com>
+Date: Wed, 25 Mar 2026 05:15:30 +0530
+Subject: Add negative length validation in EVP_EncryptUpdate and
+ EVP_DecryptUpdate
+
+Added input length validation checks to prevent potential security issues
+when negative values are passed to EVP_EncryptUpdate and EVP_DecryptUpdate.
+These functions cast inl (int) to size_t without validation, which could lead
+to unexpectedly large buffer allocation attempts or unintended behavior with
+negative inputs.
+
+Validation is performed early in both functions to ensure only valid,
+non-negative lengths are processed. Error is reported via EVP_R_INVALID_LENGTH.
+
+Fixes: https://github.com/openssl/openssl/issues/30486
+
+Reviewed-by: Paul Dale <paul.dale@oracle.com>
+Reviewed-by: Tomas Mraz <tomas@openssl.foundation>
+Reviewed-by: Eugene Syromiatnikov <esyr@openssl.org>
+MergeDate: Tue Mar 31 02:10:52 2026
+(Merged from https://github.com/openssl/openssl/pull/30560)
+
+(cherry picked from commit d29c165122bd480ca736a3eeb21d88a6b433ead3)
+---
+ crypto/evp/evp_enc.c  | 10 ++++++++++
+ test/evp_extra_test.c | 41 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
+
+diff --git a/crypto/evp/evp_enc.c b/crypto/evp/evp_enc.c
+index 5584e06d7e..97ea6fd153 100644
+--- a/crypto/evp/evp_enc.c
++++ b/crypto/evp/evp_enc.c
+@@ -979,6 +979,11 @@ int EVP_EncryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+     size_t soutl, inl_ = (size_t)inl;
+     int blocksize;
+ 
++    if (inl < 0) {
++        ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_LENGTH);
++        return 0;
++    }
++
+     if (ossl_likely(outl != NULL)) {
+         *outl = 0;
+     } else {
+@@ -1128,6 +1133,11 @@ int EVP_DecryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+     size_t soutl, inl_ = (size_t)inl;
+     int blocksize;
+ 
++    if (inl < 0) {
++        ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_LENGTH);
++        return 0;
++    }
++
+     if (ossl_likely(outl != NULL)) {
+         *outl = 0;
+     } else {
+diff --git a/test/evp_extra_test.c b/test/evp_extra_test.c
+index d45f497f03..573732bfec 100644
+--- a/test/evp_extra_test.c
++++ b/test/evp_extra_test.c
+@@ -6547,6 +6547,45 @@ static int test_invalid_ctx_for_digest(void)
+     return ret;
+ }
+ 
++static int test_evp_cipher_negative_length(void)
++{
++    EVP_CIPHER_CTX *ctx = NULL;
++    EVP_CIPHER *cipher = NULL;
++    unsigned char key[16] = { 0 };
++    unsigned char iv[16] = { 0 };
++    unsigned char buffer[32] = { 0 };
++    int outl = 0;
++    int ret = 0;
++
++    if (!TEST_ptr(ctx = EVP_CIPHER_CTX_new()))
++        goto end;
++
++    if (!TEST_ptr(cipher = EVP_CIPHER_fetch(testctx, "AES-128-CBC", testpropq)))
++        goto end;
++
++    /* Initialize encryption context */
++    if (!TEST_int_eq(EVP_EncryptInit_ex2(ctx, cipher, key, iv, NULL), 1))
++        goto end;
++
++    /* Test EVP_EncryptUpdate with negative length - should fail */
++    if (!TEST_int_eq(EVP_EncryptUpdate(ctx, buffer, &outl, (unsigned char *)"test", -1), 0))
++        goto end;
++
++    /* Reinitialize for decryption */
++    if (!TEST_int_eq(EVP_DecryptInit_ex2(ctx, cipher, key, iv, NULL), 1))
++        goto end;
++
++    /* Test EVP_DecryptUpdate with negative length - should fail */
++    if (!TEST_int_eq(EVP_DecryptUpdate(ctx, buffer, &outl, (unsigned char *)"test", -1), 0))
++        goto end;
++
++    ret = 1;
++end:
++    EVP_CIPHER_free(cipher);
++    EVP_CIPHER_CTX_free(ctx);
++    return ret;
++}
++
+ static int test_evp_cipher_pipeline(void)
+ {
+     OSSL_PROVIDER *fake_pipeline = NULL;
+@@ -6950,6 +6989,8 @@ int setup_tests(void)
+ 
+     ADD_TEST(test_invalid_ctx_for_digest);
+ 
++    ADD_TEST(test_evp_cipher_negative_length);
++
+     ADD_TEST(test_evp_cipher_pipeline);
+ 
+     return 1;
+-- 
+2.53.0
+
