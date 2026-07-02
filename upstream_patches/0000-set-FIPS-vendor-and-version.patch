@@ -6,7 +6,7 @@ index 3a61c8e4e3..dceba4cddb 100644
 +++ b/VERSION.dat
 @@ -7 +7,2 @@ RELEASE_DATE="27 Jan 2026"
  SHLIB_VERSION=3
-+FIPS_VENDOR="SAP SE Garden Linux nightly OpenSSL Cryptographic Module"
++FIPS_VENDOR="SAP SE Garden Linux 1877 OpenSSL Cryptographic Module"
 --- a/providers/fips/fipsprov.c
 +++ b/providers/fips/fipsprov.c
 @@ -204,10 +204,10 @@ static int fips_get_params(void *provctx, OSSL_PARAM params[])
