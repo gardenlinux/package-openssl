@@ -1,0 +1,15 @@
+:100644 100644 dd8a39197a 0000000000 M	crypto/ml_kem/ml_kem.c
+
+diff --git a/crypto/ml_kem/ml_kem.c b/crypto/ml_kem/ml_kem.c
+index dd8a39197a..5c5446435d 100644
+--- a/crypto/ml_kem/ml_kem.c
++++ b/crypto/ml_kem/ml_kem.c
+@@ -1897,2 +1900,8 @@ void ossl_ml_kem_key_reset(ML_KEM_KEY *key)
+     OPENSSL_free(key->t);
++
++    if (key->rho != NULL)
++        OPENSSL_cleanse(key->rho, sizeof(key->rho));
++    OPENSSL_cleanse((void *)key->pkhash, ML_KEM_PKHASH_BYTES);
++    OPENSSL_cleanse(key->m, sizeof(key->m));
++    OPENSSL_cleanse(key->seedbuf, ML_KEM_SEED_BYTES);
+     key->d = key->z = (uint8_t *)(key->s = key->m = key->t = NULL);
