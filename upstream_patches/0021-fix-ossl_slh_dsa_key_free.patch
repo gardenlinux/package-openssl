@@ -1,13 +1,29 @@
-:100644 100644 2fa59a6598 0000000000 M	crypto/slh_dsa/slh_dsa_key.c
+From b4f0ca101858db35d0bc2e7d907fa9cca893f70b Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 17 Jul 2026 19:22:29 +0000
+Subject: [PATCH] zeroization: SLH-DSA key - clear key material before free
+
+ossl_slh_dsa_key_free releases the SLH_DSA_KEY with OPENSSL_clear_free,
+clearing the key struct (including the inline priv[] and pub data) before
+the memory is freed.
+---
+ crypto/slh_dsa/slh_dsa_key.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/crypto/slh_dsa/slh_dsa_key.c b/crypto/slh_dsa/slh_dsa_key.c
-index 2fa59a6598..ab667a91b2 100644
+index 2fa59a6598..5628661790 100644
 --- a/crypto/slh_dsa/slh_dsa_key.c
 +++ b/crypto/slh_dsa/slh_dsa_key.c
-@@ -133,4 +133,4 @@ void ossl_slh_dsa_key_free(SLH_DSA_KEY *key)
+@@ -131,8 +131,7 @@ void ossl_slh_dsa_key_free(SLH_DSA_KEY *key)
+         return;
+ 
      slh_dsa_key_hash_cleanup(key);
 -    OPENSSL_cleanse(&key->priv, sizeof(key->priv) >> 1);
 -    OPENSSL_free(key);
-+    OPENSSL_cleanse(&key->priv, sizeof(&key->priv));
-+    OPENSSL_clear_free(key, sizeof(key));
++    OPENSSL_clear_free(key, sizeof(*key));
  }
+ 
+ /**
+-- 
+2.47.3
+
