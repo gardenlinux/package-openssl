@@ -1,16 +1,11 @@
-:100644 100644 3a61c8e4e3 0000000000 M	VERSION.dat
-
-diff --git a/VERSION.dat b/VERSION.dat
-index 3a61c8e4e3..dceba4cddb 100644
---- a/VERSION.dat
-+++ b/VERSION.dat
-@@ -7 +7,2 @@ RELEASE_DATE="27 Jan 2026"
- SHLIB_VERSION=3
-+FIPS_VENDOR="SAP SE Garden Linux 1877 OpenSSL Cryptographic Module"
 --- a/providers/fips/fipsprov.c
 +++ b/providers/fips/fipsprov.c
-@@ -204,10 +204,10 @@ static int fips_get_params(void *provctx, OSSL_PARAM params[])
-     if (p != NULL && !OSSL_PARAM_set_utf8_ptr(p, FIPS_VENDOR))
+@@ -201,13 +201,13 @@ static int fips_get_params(void *provctx, OSSL_PARAM params[])
+         OSSL_LIB_CTX_FIPS_PROV_INDEX);
+
+     p = OSSL_PARAM_locate(params, OSSL_PROV_PARAM_NAME);
+-    if (p != NULL && !OSSL_PARAM_set_utf8_ptr(p, FIPS_VENDOR))
++    if (p != NULL && !OSSL_PARAM_set_utf8_ptr(p, GL_FIPS_VENDOR))
          return 0;
      p = OSSL_PARAM_locate(params, OSSL_PROV_PARAM_VERSION);
 -    if (p != NULL && !OSSL_PARAM_set_utf8_ptr(p, OPENSSL_VERSION_STR))
