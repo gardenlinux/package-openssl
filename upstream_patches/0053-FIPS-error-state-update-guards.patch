@@ -1,0 +1,197 @@
+From db804a4bfc6c9abca017e1be75c3b32a6a607840 Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 24 Jul 2026 10:13:19 +0000
+Subject: [PATCH] FIPS: reject update operations when provider is in error
+ state
+
+The FIPS provider gated newctx/init/final (and one-shot) entry points on
+ossl_prov_is_running(), but the streaming *update* entry points did not.
+libcrypto's EVP *Update wrappers dispatch through cached provider function
+pointers without re-querying the provider, so once a context was fetched or
+initialised, EVP_DigestUpdate, EVP_MAC_update, EVP_DigestSignUpdate,
+EVP_DigestVerifyUpdate, EVP_EncryptUpdate and the PKEY sign/verify message
+update calls kept succeeding after the module entered the error state
+(e.g. after a failed KAT/PCT/integrity self-test) - a FIPS violation.
+
+Add the ossl_prov_is_running() check to the previously-unguarded update
+paths reachable in the FIPS provider:
+  - digests: wrap the generated update in digestcommon.h + keccak_update
+  - MACs: hmac, cmac, gmac, kmac update
+  - signatures: rsa/ecdsa/dsa streaming message-update choke points
+  - ciphers: aes-xts stream update (other AES modes already gated)
+---
+ providers/implementations/ciphers/cipher_aes_xts.c  |  3 +++
+ providers/implementations/digests/sha3_prov.c       |  3 +++
+ .../implementations/include/prov/digestcommon.h     | 13 ++++++++++++-
+ providers/implementations/macs/cmac_prov.c          |  3 +++
+ providers/implementations/macs/gmac_prov.c          |  3 +++
+ providers/implementations/macs/hmac_prov.c          |  3 +++
+ providers/implementations/macs/kmac_prov.c          |  3 +++
+ providers/implementations/signature/dsa_sig.c       |  3 +++
+ providers/implementations/signature/ecdsa_sig.c     |  3 +++
+ providers/implementations/signature/rsa_sig.c       |  3 +++
+ 10 files changed, 39 insertions(+), 1 deletion(-)
+
+diff --git a/providers/implementations/ciphers/cipher_aes_xts.c b/providers/implementations/ciphers/cipher_aes_xts.c
+index e0aeed723a..dacc23299a 100644
+--- a/providers/implementations/ciphers/cipher_aes_xts.c
++++ b/providers/implementations/ciphers/cipher_aes_xts.c
+@@ -219,6 +219,9 @@ static int aes_xts_stream_update(void *vctx, unsigned char *out, size_t *outl,
+ {
+     PROV_AES_XTS_CTX *ctx = (PROV_AES_XTS_CTX *)vctx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (outsize < inl) {
+         ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
+         return 0;
+diff --git a/providers/implementations/digests/sha3_prov.c b/providers/implementations/digests/sha3_prov.c
+index 80692ee7a0..9be24ebb7a 100644
+--- a/providers/implementations/digests/sha3_prov.c
++++ b/providers/implementations/digests/sha3_prov.c
+@@ -76,6 +76,9 @@ static int keccak_update(void *vctx, const unsigned char *inp, size_t len)
+     const size_t bsz = ctx->block_size;
+     size_t num, rem;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (len == 0)
+         return 1;
+ 
+diff --git a/providers/implementations/include/prov/digestcommon.h b/providers/implementations/include/prov/digestcommon.h
+index 14adc5507f..660a74b28f 100644
+--- a/providers/implementations/include/prov/digestcommon.h
++++ b/providers/implementations/include/prov/digestcommon.h
+@@ -49,6 +49,16 @@ extern "C" {
+         return 0;                                                                 \
+     }
+ 
++#define PROV_FUNC_DIGEST_UPDATE(name, upd)                                        \
++    static OSSL_FUNC_digest_update_fn name##_internal_update;                     \
++    static int name##_internal_update(void *ctx, const unsigned char *in,         \
++        size_t inl)                                                               \
++    {                                                                             \
++        if (!ossl_prov_is_running())                                              \
++            return 0;                                                             \
++        return upd(ctx, in, inl);                                                 \
++    }
++
+ #define PROV_DISPATCH_FUNC_DIGEST_CONSTRUCT_START(                               \
+     name, CTX, blksize, dgstsize, flags, upd, fin)                               \
+     static OSSL_FUNC_digest_newctx_fn name##_newctx;                             \
+@@ -79,10 +89,11 @@ extern "C" {
+         *outctx = *inctx;                                                        \
+     }                                                                            \
+     PROV_FUNC_DIGEST_FINAL(name, dgstsize, fin)                                  \
++    PROV_FUNC_DIGEST_UPDATE(name, upd)                                           \
+     PROV_FUNC_DIGEST_GET_PARAM(name, blksize, dgstsize, flags)                   \
+     const OSSL_DISPATCH ossl_##name##_functions[] = {                            \
+         { OSSL_FUNC_DIGEST_NEWCTX, (void (*)(void))name##_newctx },              \
+-        { OSSL_FUNC_DIGEST_UPDATE, (void (*)(void))upd },                        \
++        { OSSL_FUNC_DIGEST_UPDATE, (void (*)(void))name##_internal_update },     \
+         { OSSL_FUNC_DIGEST_FINAL, (void (*)(void))name##_internal_final },       \
+         { OSSL_FUNC_DIGEST_FREECTX, (void (*)(void))name##_freectx },            \
+         { OSSL_FUNC_DIGEST_DUPCTX, (void (*)(void))name##_dupctx },              \
+diff --git a/providers/implementations/macs/cmac_prov.c b/providers/implementations/macs/cmac_prov.c
+index 58a8427762..151ac5b2d0 100644
+--- a/providers/implementations/macs/cmac_prov.c
++++ b/providers/implementations/macs/cmac_prov.c
+@@ -185,6 +185,9 @@ static int cmac_update(void *vmacctx, const unsigned char *data,
+ {
+     struct cmac_data_st *macctx = vmacctx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     return CMAC_Update(macctx->ctx, data, datalen);
+ }
+ 
+diff --git a/providers/implementations/macs/gmac_prov.c b/providers/implementations/macs/gmac_prov.c
+index 36d089abfb..b1aa3a8f4c 100644
+--- a/providers/implementations/macs/gmac_prov.c
++++ b/providers/implementations/macs/gmac_prov.c
+@@ -130,6 +130,9 @@ static int gmac_update(void *vmacctx, const unsigned char *data,
+     EVP_CIPHER_CTX *ctx = macctx->ctx;
+     int outlen;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (datalen == 0)
+         return 1;
+ 
+diff --git a/providers/implementations/macs/hmac_prov.c b/providers/implementations/macs/hmac_prov.c
+index 9872519f3d..b0d8338d9e 100644
+--- a/providers/implementations/macs/hmac_prov.c
++++ b/providers/implementations/macs/hmac_prov.c
+@@ -216,6 +216,9 @@ static int hmac_update(void *vmacctx, const unsigned char *data,
+ {
+     struct hmac_data_st *macctx = vmacctx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (macctx->tls_data_size > 0) {
+         /* We're doing a TLS HMAC */
+         if (!macctx->tls_header_set) {
+diff --git a/providers/implementations/macs/kmac_prov.c b/providers/implementations/macs/kmac_prov.c
+index f91af2c1e4..7a029c0caf 100644
+--- a/providers/implementations/macs/kmac_prov.c
++++ b/providers/implementations/macs/kmac_prov.c
+@@ -364,6 +364,9 @@ static int kmac_update(void *vmacctx, const unsigned char *data,
+ {
+     struct kmac_data_st *kctx = vmacctx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     return EVP_DigestUpdate(kctx->ctx, data, datalen);
+ }
+ 
+diff --git a/providers/implementations/signature/dsa_sig.c b/providers/implementations/signature/dsa_sig.c
+index dda2ecd04b..1a978ae749 100644
+--- a/providers/implementations/signature/dsa_sig.c
++++ b/providers/implementations/signature/dsa_sig.c
+@@ -379,6 +379,9 @@ static int dsa_signverify_message_update(void *vpdsactx,
+ {
+     PROV_DSA_CTX *pdsactx = (PROV_DSA_CTX *)vpdsactx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (pdsactx == NULL)
+         return 0;
+ 
+diff --git a/providers/implementations/signature/ecdsa_sig.c b/providers/implementations/signature/ecdsa_sig.c
+index 25709b6fa0..61bd79c1df 100644
+--- a/providers/implementations/signature/ecdsa_sig.c
++++ b/providers/implementations/signature/ecdsa_sig.c
+@@ -381,6 +381,9 @@ static int ecdsa_signverify_message_update(void *vctx,
+ {
+     PROV_ECDSA_CTX *ctx = (PROV_ECDSA_CTX *)vctx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (ctx == NULL)
+         return 0;
+ 
+diff --git a/providers/implementations/signature/rsa_sig.c b/providers/implementations/signature/rsa_sig.c
+index cfe2a2381c..9366e996a5 100644
+--- a/providers/implementations/signature/rsa_sig.c
++++ b/providers/implementations/signature/rsa_sig.c
+@@ -858,6 +858,9 @@ static int rsa_signverify_message_update(void *vprsactx,
+ {
+     PROV_RSA_CTX *prsactx = (PROV_RSA_CTX *)vprsactx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (prsactx == NULL || prsactx->mdctx == NULL)
+         return 0;
+ 
+-- 
+2.47.3
+

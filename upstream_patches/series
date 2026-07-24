@@ -70,3 +70,4 @@ CVE-2026-7383.patch
 CVE-2026-9076.patch
 0051-zeroize-vars-mlkem.patch
 0052-zeroization-ossl_ml_kem_key_reset.patch
+0053-FIPS-error-state-update-guards.patch
