@@ -1,0 +1,32 @@
+From 32b4735b5bf51f61aa37360c98ce03fb2e1ff3dc Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Mon, 3 Aug 2026 18:29:40 +0000
+Subject: [PATCH] FIPS: reject AES-CCM update in error state
+
+0054 added ossl_prov_is_running() to the generic cipher update paths, GCM
+and ECDH, closing the ECB/CBC/CTR/GCM/ECDH cases atsec reported. AES-CCM
+uses its own ossl_ccm_stream_update() which was left unguarded, so
+EVP_EncryptUpdate for AES-*-CCM still executed after the module entered the
+error state. AES-CCM is a FIPS cipher (fips_ciphers table); add the same
+guard here.
+---
+ providers/implementations/ciphers/ciphercommon_ccm.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/providers/implementations/ciphers/ciphercommon_ccm.c b/providers/implementations/ciphers/ciphercommon_ccm.c
+index 2b5bddddeb..c3b051a64b 100644
+--- a/providers/implementations/ciphers/ciphercommon_ccm.c
++++ b/providers/implementations/ciphers/ciphercommon_ccm.c
+@@ -272,6 +272,9 @@ int ossl_ccm_stream_update(void *vctx, unsigned char *out, size_t *outl,
+ {
+     PROV_CCM_CTX *ctx = (PROV_CCM_CTX *)vctx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (outsize < inl) {
+         ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
+         return 0;
+-- 
+2.47.3
+
