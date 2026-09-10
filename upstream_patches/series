@@ -74,3 +74,4 @@ CVE-2026-9076.patch
 0054-FIPS-extra-error-state-update-guards.patch
 0055-FIPS-ccm-error-state-update-guard.patch
 CVE-2026-14457-Handle-signature_algorithms_cert-extension-in-key-on.patch
+CVE-2026-14456-QUIC-server-limit-number-of-pending-QUIC-channels-co.patch
