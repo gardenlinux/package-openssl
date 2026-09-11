@@ -1,0 +1,51 @@
+From ba4c73c0665a7cb40e1dbab64f778edaa4c19bfd Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Mon, 29 Jun 2026 12:12:09 +0000
+Subject: [PATCH] providers: flag RSA decrypt with no padding as unapproved
+
+FIPS 140-3 IG 2.4.B treats raw RSA primitives as component algorithms
+that must not be used standalone. Patch 0032 already gates the encrypt
+path against pad_mode == RSA_NO_PADDING; mirror that behaviour in
+rsa_decrypt() so a decrypt call with no padding goes through
+OSSL_FIPS_IND_ON_UNAPPROVED and reuses the existing
+rsa_no_padding_disabled config flag.
+---
+ providers/fips/self_test_kats.c                 | 2 +-
+ providers/implementations/asymciphers/rsa_enc.c | 8 ++++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/providers/fips/self_test_kats.c b/providers/fips/self_test_kats.c
+index e17cd2cd8e..e96aba1613 100644
+--- a/providers/fips/self_test_kats.c
++++ b/providers/fips/self_test_kats.c
+@@ -880,7 +880,7 @@ static int self_test_asym_cipher(const ST_KAT_ASYM_CIPHER *t, OSSL_SELF_TEST *st
+ 
+     OSSL_SELF_TEST_onbegin(st, OSSL_SELF_TEST_TYPE_KAT_ASYM_CIPHER, t->desc);
+ 
+-    if (t->encrypt && strcmp(t->algorithm, "RSA") == 0)
++    if (strcmp(t->algorithm, "RSA") == 0)
+         extra_postinit_params = rsa_encrypt_fips_params;
+ 
+     bnctx = BN_CTX_new_ex(libctx);
+diff --git a/providers/implementations/asymciphers/rsa_enc.c b/providers/implementations/asymciphers/rsa_enc.c
+index 330fc71f7b..fa5181c99e 100644
+--- a/providers/implementations/asymciphers/rsa_enc.c
++++ b/providers/implementations/asymciphers/rsa_enc.c
+@@ -259,6 +259,14 @@ static int rsa_decrypt(void *vprsactx, unsigned char *out, size_t *outlen,
+         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE);
+         return 0;
+     }
++    if (prsactx->pad_mode == RSA_NO_PADDING
++        && !OSSL_FIPS_IND_ON_UNAPPROVED(prsactx, OSSL_FIPS_IND_SETTABLE2,
++            prsactx->libctx, "RSA Decrypt",
++            "No padding",
++            ossl_fips_config_rsa_no_padding_disabled)) {
++        ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE);
++        return 0;
++    }
+ #endif
+ 
+     if (prsactx->pad_mode == RSA_PKCS1_WITH_TLS_PADDING) {
+-- 
+2.47.3
+

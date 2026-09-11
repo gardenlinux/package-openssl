@@ -1,0 +1,34 @@
+commit 434e9dda51fb8bf8944060550b2f613160c855d9
+Author: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date:   Mon Jun 1 16:37:00 2026 +0200
+
+    slh_dsa: zeroize intermediate buffers
+
+diff --git a/crypto/slh_dsa/slh_dsa.c b/crypto/slh_dsa/slh_dsa.c
+index 77c20daceb..6164237572 100644
+--- a/crypto/slh_dsa/slh_dsa.c
++++ b/crypto/slh_dsa/slh_dsa.c
+@@ -124,6 +124,11 @@ static int slh_sign_internal(SLH_DSA_HASH_CTX *hctx,
+ err:
+     if (!WPACKET_finish(wpkt))
+         ret = 0;
++    OPENSSL_cleanse(m_digest, sizeof(m_digest));
++    OPENSSL_cleanse(pk_fors, sizeof(pk_fors));
++    OPENSSL_cleanse(adrs, sizeof(adrs));
++    OPENSSL_cleanse(&tree_id, sizeof(tree_id));
++    OPENSSL_cleanse(&leaf_id, sizeof(leaf_id));
+     return ret;
+ }
+ 
+diff --git a/crypto/slh_dsa/slh_dsa_key.c b/crypto/slh_dsa/slh_dsa_key.c
+index 2fa59a6598..edeb18e33b 100644
+--- a/crypto/slh_dsa/slh_dsa_key.c
++++ b/crypto/slh_dsa/slh_dsa_key.c
+@@ -393,6 +393,7 @@ err:
+     out->pub = NULL;
+     out->has_priv = 0;
+     OPENSSL_cleanse(priv, secret_key_len);
++    OPENSSL_cleanse(pub, ossl_slh_dsa_key_get_pub_len(out));
+     return 0;
+ }
+ 

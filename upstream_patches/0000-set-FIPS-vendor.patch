@@ -1,9 +1,0 @@
-:100644 100644 3a61c8e4e3 0000000000 M	VERSION.dat
-
-diff --git a/VERSION.dat b/VERSION.dat
-index 3a61c8e4e3..dceba4cddb 100644
---- a/VERSION.dat
-+++ b/VERSION.dat
-@@ -7 +7,2 @@ RELEASE_DATE="27 Jan 2026"
- SHLIB_VERSION=3
-+FIPS_VENDOR="SAP SE Garden Linux 1877 OpenSSL Cryptographic Module"

@@ -1,0 +1,119 @@
+From 40fe9b653b5efadc707a7e7c35bc25aa9308af2c Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Wed, 3 Jun 2026 18:11:59 +0200
+Subject: [PATCH] providers: add FIPS DSA key check indicator
+
+---
+ crypto/dsa/dsa_lib.c                          |  5 ++++
+ include/crypto/dsa.h                          |  1 +
+ .../fips/include/fips_indicator_params.inc    |  1 +
+ providers/implementations/keymgmt/dsa_kmgmt.c | 26 +++++++++++++++++++
+ util/perl/OpenSSL/paramnames.pm               |  1 +
+ 5 files changed, 34 insertions(+)
+
+diff --git a/crypto/dsa/dsa_lib.c b/crypto/dsa/dsa_lib.c
+index 382fe9d0f1..b8670506ac 100644
+--- a/crypto/dsa/dsa_lib.c
++++ b/crypto/dsa/dsa_lib.c
+@@ -253,6 +253,11 @@ int DSA_up_ref(DSA *r)
+     return ((i > 1) ? 1 : 0);
+ }
+ 
++OSSL_LIB_CTX *ossl_dsa_get0_libctx(DSA *d)
++{
++    return d->libctx;
++}
++
+ void ossl_dsa_set0_libctx(DSA *d, OSSL_LIB_CTX *libctx)
+ {
+     d->libctx = libctx;
+diff --git a/include/crypto/dsa.h b/include/crypto/dsa.h
+index 73a61e7a88..f0b64ad410 100644
+--- a/include/crypto/dsa.h
++++ b/include/crypto/dsa.h
+@@ -25,6 +25,7 @@
+ #define DSA_PARAMGEN_TYPE_FIPS_DEFAULT 2
+ 
+ DSA *ossl_dsa_new(OSSL_LIB_CTX *libctx);
++OSSL_LIB_CTX *ossl_dsa_get0_libctx(DSA *d);
+ void ossl_dsa_set0_libctx(DSA *d, OSSL_LIB_CTX *libctx);
+ 
+ int ossl_dsa_generate_ffc_parameters(DSA *dsa, int type, int pbits, int qbits,
+diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
+index ef675d6ebf..a3808a9bdb 100644
+--- a/providers/fips/include/fips_indicator_params.inc
++++ b/providers/fips/include/fips_indicator_params.inc
+@@ -11,6 +11,7 @@ OSSL_FIPS_PARAM(tls1_prf_digest_check, TLS1_PRF_DIGEST_CHECK, 1)
+ OSSL_FIPS_PARAM(sshkdf_digest_check, SSHKDF_DIGEST_CHECK, 1)
+ OSSL_FIPS_PARAM(sskdf_digest_check, SSKDF_DIGEST_CHECK, 1)
+ OSSL_FIPS_PARAM(x963kdf_digest_check, X963KDF_DIGEST_CHECK, 1)
++OSSL_FIPS_PARAM(dsa_key_check_disallowed, DSA_KEY_CHECK_DISABLED, 1)
+ OSSL_FIPS_PARAM(dsa_sign_disallowed, DSA_SIGN_DISABLED, 1)
+ OSSL_FIPS_PARAM(dsa_verify_disallowed, DSA_VERIFY_DISABLED, 1)
+ OSSL_FIPS_PARAM(tdes_encrypt_disallowed, TDES_ENCRYPT_DISABLED, 1)
+diff --git a/providers/implementations/keymgmt/dsa_kmgmt.c b/providers/implementations/keymgmt/dsa_kmgmt.c
+index c54e4143f9..e9d68088f6 100644
+--- a/providers/implementations/keymgmt/dsa_kmgmt.c
++++ b/providers/implementations/keymgmt/dsa_kmgmt.c
+@@ -17,6 +17,7 @@
+ #include <openssl/core_names.h>
+ #include <openssl/bn.h>
+ #include <openssl/err.h>
++#include <openssl/proverr.h>
+ #include "prov/securitycheck.h"
+ #include "prov/providercommon.h"
+ #include "prov/implementations.h"
+@@ -376,6 +377,26 @@ static int dsa_validate_private(const DSA *dsa)
+     return ossl_dsa_check_priv_key(dsa, priv_key, &status);
+ }
+ 
++#ifdef FIPS_MODULE
++static int dsa_validate_check_approved(const DSA *dsa, int selection)
++{
++    OSSL_FIPS_IND indicator;
++    OSSL_LIB_CTX *libctx = ossl_dsa_get0_libctx((DSA *)dsa);
++    const char *opname = (selection & OSSL_KEYMGMT_SELECT_KEYPAIR) != 0
++        ? "Key Check"
++        : "Param Check";
++
++    ossl_FIPS_IND_init(&indicator);
++    if (!ossl_FIPS_IND_on_unapproved(&indicator, OSSL_FIPS_IND_SETTABLE0,
++            libctx, "DSA", opname,
++            ossl_fips_config_dsa_key_check_disallowed)) {
++        ERR_raise(ERR_LIB_PROV, PROV_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
++        return 0;
++    }
++    return 1;
++}
++#endif
++
+ static int dsa_validate(const void *keydata, int selection, int checktype)
+ {
+     const DSA *dsa = keydata;
+@@ -387,6 +408,11 @@ static int dsa_validate(const void *keydata, int selection, int checktype)
+     if ((selection & DSA_POSSIBLE_SELECTIONS) == 0)
+         return 1; /* nothing to validate */
+ 
++#ifdef FIPS_MODULE
++    if (!dsa_validate_check_approved(dsa, selection))
++        return 0;
++#endif
++
+     if ((selection & OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS) != 0)
+         ok = ok && dsa_validate_domparams(dsa, checktype);
+ 
+diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
+index ef56713f2a..aaeb14f01d 100644
+--- a/util/perl/OpenSSL/paramnames.pm
++++ b/util/perl/OpenSSL/paramnames.pm
+@@ -42,6 +42,7 @@ my %params = (
+     'PROV_PARAM_SSHKDF_DIGEST_CHECK' =>    "sshkdf-digest-check",    # uint
+     'PROV_PARAM_SSKDF_DIGEST_CHECK' =>     "sskdf-digest-check",     # uint
+     'PROV_PARAM_X963KDF_DIGEST_CHECK' =>   "x963kdf-digest-check",   # uint
++    'PROV_PARAM_DSA_KEY_CHECK_DISABLED' => "dsa-key-check-disabled", # uint
+     'PROV_PARAM_DSA_SIGN_DISABLED' =>      "dsa-sign-disabled",      # uint
+     'PROV_PARAM_DSA_VERIFY_DISABLED' =>    "dsa-verify-disabled",    # uint
+     'PROV_PARAM_TDES_ENCRYPT_DISABLED' =>  "tdes-encrypt-disabled",  # uint
+-- 
+2.54.0
+

@@ -1,0 +1,130 @@
+commit d74eed962c746ff76e92818e926437642b1e08cf
+Author: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date:   Tue Apr 28 10:45:23 2026 +0000
+
+    ml-dsa: add FIPS indicator for caller-provided key generation seed
+    
+    Mark key generation using OSSL_PKEY_PARAM_ML_DSA_SEED as unapproved in
+    FIPS mode unless tolerated via indicator, as key generation randomness
+    must originate from an approved RBG per FIPS 204 Section 3.6.1.
+
+diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
+index 667fb46852..f3b3445b9b 100644
+--- a/providers/fips/include/fips_indicator_params.inc
++++ b/providers/fips/include/fips_indicator_params.inc
+@@ -28,3 +28,4 @@ OSSL_FIPS_PARAM(pbkdf2_lower_bound_check, PBKDF2_LOWER_BOUND_CHECK, 1)
+ OSSL_FIPS_PARAM(ecdh_cofactor_check, ECDH_COFACTOR_CHECK, 1)
+ OSSL_FIPS_PARAM(ml_kem_ikme_check, ML_KEM_IKME_CHECK, 1)
+ OSSL_FIPS_PARAM(ml_kem_seed_check, ML_KEM_SEED_CHECK, 1)
++OSSL_FIPS_PARAM(ml_dsa_seed_check, ML_DSA_SEED_CHECK, 1)
+diff --git a/providers/fips/self_test_kats.c b/providers/fips/self_test_kats.c
+index 849e583fc5..6f78c90a2b 100644
+--- a/providers/fips/self_test_kats.c
++++ b/providers/fips/self_test_kats.c
+@@ -621,6 +621,10 @@ static int self_test_asym_keygen(const ST_KAT_ASYM_KEYGEN *t, OSSL_SELF_TEST *st
+         ST_KAT_PARAM_INT(OSSL_KEM_PARAM_FIPS_SEED_CHECK, seed_check),
+         ST_KAT_PARAM_END()
+     };
++    const ST_KAT_PARAM ml_dsa_keygen_fips_params[] = {
++        ST_KAT_PARAM_INT(OSSL_PKEY_PARAM_FIPS_ML_DSA_SEED_CHECK, seed_check),
++        ST_KAT_PARAM_END()
++    };
+ 
+     OSSL_SELF_TEST_onbegin(st, OSSL_SELF_TEST_TYPE_KAT_ASYM_KEYGEN, t->desc);
+ 
+@@ -630,6 +634,8 @@ static int self_test_asym_keygen(const ST_KAT_ASYM_KEYGEN *t, OSSL_SELF_TEST *st
+     if (t->keygen_params != NULL) {
+         if (strncmp(t->algorithm, "ML-KEM-", 7) == 0)
+             extra_keygen_params = ml_kem_keygen_fips_params;
++        else if (strncmp(t->algorithm, "ML-DSA-", 7) == 0)
++            extra_keygen_params = ml_dsa_keygen_fips_params;
+         key_params = kat_params_to_ossl_params(libctx, t->keygen_params,
+                                                extra_keygen_params, NULL);
+         if (key_params == NULL)
+diff --git a/providers/implementations/keymgmt/ml_dsa_kmgmt.c b/providers/implementations/keymgmt/ml_dsa_kmgmt.c
+index 5ebeaae662..c18d17d55b 100644
+--- a/providers/implementations/keymgmt/ml_dsa_kmgmt.c
++++ b/providers/implementations/keymgmt/ml_dsa_kmgmt.c
+@@ -19,6 +19,7 @@
+ #include "prov/implementations.h"
+ #include "prov/providercommon.h"
+ #include "prov/provider_ctx.h"
++#include "prov/securitycheck.h"
+ #include "prov/ml_dsa.h"
+ 
+ static OSSL_FUNC_keymgmt_free_fn ml_dsa_free_key;
+@@ -45,6 +46,7 @@ struct ml_dsa_gen_ctx {
+     char *propq;
+     uint8_t entropy[32];
+     size_t entropy_len;
++    OSSL_FIPS_IND_DECLARE
+ };
+ 
+ #ifdef FIPS_MODULE
+@@ -456,6 +458,7 @@ static void *ml_dsa_gen_init(void *provctx, int selection,
+ 
+     if ((gctx = OPENSSL_zalloc(sizeof(*gctx))) != NULL) {
+         gctx->provctx = provctx;
++        OSSL_FIPS_IND_INIT(gctx)
+         if (!ml_dsa_gen_set_params(gctx, params)) {
+             OPENSSL_free(gctx);
+             gctx = NULL;
+@@ -502,6 +505,16 @@ static int ml_dsa_gen_set_params(void *genctx, const OSSL_PARAM params[])
+     if (gctx == NULL)
+         return 0;
+ 
++#ifdef FIPS_MODULE
++    if (!OSSL_FIPS_IND_SET_CTX_PARAM(
++        gctx,
++        OSSL_FIPS_IND_SETTABLE0,
++        params,
++        OSSL_PKEY_PARAM_FIPS_ML_DSA_SEED_CHECK
++    ))
++        return 0;
++#endif
++
+     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_ML_DSA_SEED);
+     if (p != NULL) {
+         void *vp = gctx->entropy;
+@@ -511,6 +524,21 @@ static int ml_dsa_gen_set_params(void *genctx, const OSSL_PARAM params[])
+             gctx->entropy_len = 0;
+             return 0;
+         }
++#ifdef FIPS_MODULE
++        if (!OSSL_FIPS_IND_ON_UNAPPROVED(
++            gctx,
++            OSSL_FIPS_IND_SETTABLE0,
++            PROV_LIBCTX_OF(gctx->provctx),
++            "ML-DSA",
++            "Explicit key generation seed",
++            ossl_fips_config_ml_dsa_seed_check
++        )) {
++            ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_SEED_LENGTH);
++            OPENSSL_cleanse(gctx->entropy, gctx->entropy_len);
++            gctx->entropy_len = 0;
++            return 0;
++        }
++#endif
+     }
+ 
+     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PROPERTIES);
+diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
+index 74858a45bb..42b0cab307 100644
+--- a/util/perl/OpenSSL/paramnames.pm
++++ b/util/perl/OpenSSL/paramnames.pm
+@@ -60,6 +60,7 @@ my %params = (
+     'PROV_PARAM_SIGNATURE_DIGEST_CHECK' => "signature-digest-check", # uint
+     'PROV_PARAM_ML_KEM_IKME_CHECK' =>      "ml-kem-ikme-check",      # uint
+     'PROV_PARAM_ML_KEM_SEED_CHECK' =>      "ml-kem-seed-check",      # uint
++    'PROV_PARAM_ML_DSA_SEED_CHECK' =>      "ml-dsa-seed-check",      # uint
+ 
+ # Self test callback parameters
+     'PROV_PARAM_SELF_TEST_PHASE' =>  "st-phase",# utf8_string
+@@ -448,6 +449,7 @@ my %params = (
+     'PKEY_PARAM_ML_DSA_PREFER_SEED' =>      "ml-dsa.prefer_seed",
+     'PKEY_PARAM_ML_DSA_INPUT_FORMATS' =>    "ml-dsa.input_formats",
+     'PKEY_PARAM_ML_DSA_OUTPUT_FORMATS' =>   "ml-dsa.output_formats",
++    'PKEY_PARAM_FIPS_ML_DSA_SEED_CHECK' =>  '*PROV_PARAM_ML_DSA_SEED_CHECK',
+ 
+ # SLH_DSA Key generation parameters
+     'PKEY_PARAM_SLH_DSA_SEED' =>              "seed",

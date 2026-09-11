@@ -1,0 +1,36 @@
+From 4ea90b2abd845715f7e9a7481466d15bda48cb35 Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 12 Jun 2026 13:30:37 +0000
+Subject: [PATCH] providers: flag RSA signing with no padding as unapproved
+
+FIPS 140-3 IG 2.4.B treats raw RSA signature primitives as component
+algorithms that must not be used standalone. Patch 0032 already gates
+the encrypt path against pad_mode == RSA_NO_PADDING; mirror that
+behaviour in rsa_sign_directly() so a sign call with no padding goes
+through OSSL_FIPS_IND_ON_UNAPPROVED and reuses the existing
+rsa_no_padding_disabled config flag.
+---
+ providers/implementations/signature/rsa_sig.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/providers/implementations/signature/rsa_sig.c b/providers/implementations/signature/rsa_sig.c
+index 54d9e9abb8..e38f14224b 100644
+--- a/providers/implementations/signature/rsa_sig.c
++++ b/providers/implementations/signature/rsa_sig.c
+@@ -704,6 +704,13 @@ static int rsa_sign_directly(PROV_RSA_CTX *prsactx,
+ #ifdef FIPS_MODULE
+     if (!rsa_pkcs15_primitive_padding_allowed(prsactx, "RSA Sign"))
+         return 0;
++    if (prsactx->pad_mode == RSA_NO_PADDING
++        && !OSSL_FIPS_IND_ON_UNAPPROVED(prsactx, OSSL_FIPS_IND_SETTABLE5,
++            prsactx->libctx, "RSA Sign", "No padding",
++            ossl_fips_config_rsa_no_padding_disabled)) {
++        ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE);
++        return 0;
++    }
+ #endif
+ 
+     if (sig == NULL) {
+-- 
+2.47.3
+

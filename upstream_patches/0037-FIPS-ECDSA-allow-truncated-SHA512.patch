@@ -1,0 +1,30 @@
+From 06de4513841d9c942591ddeb4eb961d8378a6f8e Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 12 Jun 2026 12:35:07 +0000
+Subject: [PATCH] providers: allow truncated SHA-512 digests for ECDSA in FIPS
+
+FIPS 186-5 lists SHA2-512/224 and SHA2-512/256 as approved digests for
+ECDSA signature generation and verification. The truncated-SHA-512 gate
+in ossl_fips_ind_digest_sign_check is currently passed sha512_trunc_allowed=0
+on the ECDSA call site, while RSA already passes 1. Flip the ECDSA flag
+so SHA2-512/224 and SHA2-512/256 stop showing as unapproved.
+---
+ providers/implementations/signature/ecdsa_sig.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/providers/implementations/signature/ecdsa_sig.c b/providers/implementations/signature/ecdsa_sig.c
+index d57c2d745a..253c711ce5 100644
+--- a/providers/implementations/signature/ecdsa_sig.c
++++ b/providers/implementations/signature/ecdsa_sig.c
+@@ -219,7 +219,7 @@ static int ecdsa_setup_md(PROV_ECDSA_CTX *ctx,
+         if (!ossl_fips_ind_digest_sign_check(OSSL_FIPS_IND_GET(ctx),
+                 OSSL_FIPS_IND_SETTABLE1,
+                 ctx->libctx,
+-                md_nid, sha1_allowed, 0, desc,
++                md_nid, sha1_allowed, 1, desc,
+                 ossl_fips_config_signature_digest_check))
+             goto err;
+     }
+-- 
+2.47.3
+

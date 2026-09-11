@@ -1,0 +1,122 @@
+From: Abel Tom <abeltom.kernel@gmail.com>
+Date: Sun, 26 Apr 2026 15:52:10 +0200
+Subject: Fixes #30966: return value for certain cases in
+ EVP_cipher_get_type
+
+The function previously returned `NID_des_cfb64` even when nid of the
+passed cipher was NID_des_ede3_cfb64, NID_des_ede3_cfb8,
+NID_des_ede3_cfb1.
+
+Corrected now to return `NID_des_ede3_cfb64`.
+
+Added an extra test to verify the change.
+
+Reviewed-by: Paul Dale <paul.dale@oracle.com>
+Reviewed-by: Eugene Syromiatnikov <esyr@openssl.org>
+MergeDate: Wed May  6 19:13:57 2026
+(Merged from https://github.com/openssl/openssl/pull/30977)
+---
+ crypto/evp/evp_lib.c  |  2 +-
+ test/evp_extra_test.c | 66 ++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 66 insertions(+), 2 deletions(-)
+
+diff --git a/crypto/evp/evp_lib.c b/crypto/evp/evp_lib.c
+index ddf5fd54b3..95eeca3c4d 100644
+--- a/crypto/evp/evp_lib.c
++++ b/crypto/evp/evp_lib.c
+@@ -297,7 +297,7 @@ int EVP_CIPHER_get_type(const EVP_CIPHER *cipher)
+     case NID_des_ede3_cfb8:
+     case NID_des_ede3_cfb1:
+ 
+-        return NID_des_cfb64;
++        return NID_des_ede3_cfb64;
+ 
+     default:
+ #ifdef FIPS_MODULE
+diff --git a/test/evp_extra_test.c b/test/evp_extra_test.c
+index 573732bfec..aacc433618 100644
+--- a/test/evp_extra_test.c
++++ b/test/evp_extra_test.c
+@@ -6585,6 +6585,69 @@ end:
+     EVP_CIPHER_CTX_free(ctx);
+     return ret;
+ }
++#ifndef OPENSSL_NO_DES
++static int test_EVP_CIPHER_get_type_des_ede3(void)
++{
++    const EVP_CIPHER *cipher = NULL;
++    int base_type, variant_type, nid;
++    int ret = 0;
++
++    /* Get the base type from CFB64 (should be NID_des_ede3_cfb64) */
++    cipher = EVP_des_ede3_cfb64();
++    base_type = EVP_CIPHER_get_type(cipher);
++
++    /* Test CFB64 - should map to the same base_type */
++    variant_type = EVP_CIPHER_get_type(cipher);
++    nid = EVP_CIPHER_get_nid(cipher);
++
++    /* Verify the returned type */
++    if (!TEST_int_eq(variant_type, base_type))
++        goto end;
++
++    /* Verify that variant_type and nid are same for 64-bit variants */
++    if (!TEST_int_eq(variant_type, nid))
++        goto end;
++
++    if (!TEST_int_eq(NID_des_ede3_cfb64, variant_type))
++        goto end;
++
++    /* Test CFB8 - should map to the same base_type */
++    cipher = EVP_des_ede3_cfb8();
++    variant_type = EVP_CIPHER_get_type(cipher);
++    nid = EVP_CIPHER_get_nid(cipher);
++
++    /* Verify the returned type */
++    if (!TEST_int_eq(variant_type, base_type))
++        goto end;
++
++    /* Verify that variant_type and nid are different for variants */
++    if (!TEST_int_ne(variant_type, nid))
++        goto end;
++
++    if (!TEST_int_eq(NID_des_ede3_cfb64, variant_type))
++        goto end;
++
++    /* Test CFB1 - should map to the same base_type */
++    cipher = EVP_des_ede3_cfb1();
++    variant_type = EVP_CIPHER_get_type(cipher);
++    nid = EVP_CIPHER_get_nid(cipher);
++
++    /* Verify the returned type */
++    if (!TEST_int_eq(variant_type, base_type))
++        goto end;
++
++    /* Verify that variant_type and nid are different for variants */
++    if (!TEST_int_ne(variant_type, nid))
++        goto end;
++
++    if (!TEST_int_eq(NID_des_ede3_cfb64, variant_type))
++        goto end;
++
++    ret = 1;
++end:
++    return ret;
++}
++#endif /*OPENSSL_NO_DES */
+ 
+ static int test_evp_cipher_pipeline(void)
+ {
+@@ -6932,7 +6995,8 @@ int setup_tests(void)
+     ADD_ALL_TESTS(test_evp_iv_aes, 12);
+ #ifndef OPENSSL_NO_DES
+     ADD_ALL_TESTS(test_evp_iv_des, 6);
+-#endif
++    ADD_TEST(test_EVP_CIPHER_get_type_des_ede3);
++#endif /* OPENSSL_NO_DES */
+ #ifndef OPENSSL_NO_BF
+     ADD_ALL_TESTS(test_evp_bf_default_keylen, 4);
+ #endif
+-- 
+2.53.0
+

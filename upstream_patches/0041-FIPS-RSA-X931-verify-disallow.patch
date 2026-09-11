@@ -1,0 +1,53 @@
+From dcef8612e3ef5b997ed2e0e7081ec9e2511f707f Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 12 Jun 2026 14:27:45 +0000
+Subject: [PATCH] providers: flag RSA verify with X9.31 padding as unapproved
+
+FIPS 186-5 (and the corresponding FIPS 140-3 IG D.K guidance) does not
+list X9.31 as an approved padding scheme for new RSA signature use; the
+verify side is at most legacy-use. The existing rsa_x931_padding_allowed()
+check only covered the sign operations; extend the operation mask to
+cover EVP_PKEY_OP_VERIFYMSG / EVP_PKEY_OP_VERIFY too, and add a matching
+OSSL_FIPS_IND_ON_UNAPPROVED hook in rsa_verify_directly() so the
+indicator also fires when the X9.31 padding is inherited from a context
+where the padding was already set.
+---
+ providers/implementations/signature/rsa_sig.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/providers/implementations/signature/rsa_sig.c b/providers/implementations/signature/rsa_sig.c
+index e38f14224b..08469803ae 100644
+--- a/providers/implementations/signature/rsa_sig.c
++++ b/providers/implementations/signature/rsa_sig.c
+@@ -1060,6 +1060,13 @@ static int rsa_verify_directly(PROV_RSA_CTX *prsactx,
+ #ifdef FIPS_MODULE
+     if (!rsa_pkcs15_primitive_padding_allowed(prsactx, "RSA Verify"))
+         return 0;
++    if (prsactx->pad_mode == RSA_X931_PADDING
++        && !OSSL_FIPS_IND_ON_UNAPPROVED(prsactx, OSSL_FIPS_IND_SETTABLE2,
++            prsactx->libctx, "RSA Verify", "X931 Padding",
++            ossl_fips_config_rsa_sign_x931_disallowed)) {
++        ERR_raise(ERR_LIB_PROV, PROV_R_ILLEGAL_OR_UNSUPPORTED_PADDING_MODE);
++        return 0;
++    }
+ #endif
+ 
+     if (prsactx->md != NULL) {
+@@ -1546,11 +1553,12 @@ static const OSSL_PARAM *rsa_gettable_ctx_params(ossl_unused void *vprsactx,
+ static int rsa_x931_padding_allowed(PROV_RSA_CTX *ctx)
+ {
+     if ((ctx->operation
+-            & (EVP_PKEY_OP_SIGNMSG | EVP_PKEY_OP_SIGN))
++            & (EVP_PKEY_OP_SIGNMSG | EVP_PKEY_OP_SIGN
++                | EVP_PKEY_OP_VERIFYMSG | EVP_PKEY_OP_VERIFY))
+         != 0) {
+         if (!OSSL_FIPS_IND_ON_UNAPPROVED(ctx, OSSL_FIPS_IND_SETTABLE2,
+                 ctx->libctx,
+-                "RSA Sign set ctx", "X931 Padding",
++                "RSA", "X931 Padding",
+                 ossl_fips_config_rsa_sign_x931_disallowed)) {
+             ERR_raise(ERR_LIB_PROV,
+                 PROV_R_ILLEGAL_OR_UNSUPPORTED_PADDING_MODE);
+-- 
+2.47.3
+
