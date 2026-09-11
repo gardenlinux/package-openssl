@@ -3,4 +3,4 @@ import_upstream_patches
 fips_version_suffix="${version_suffix}"
 sed "s/SED_MARKER_FOR_FIPS_VERSION/$fips_version_suffix/" <patches-debian/rules.patch.tpl > patches-debian/rules.patch
 apply_patches patches-debian
-version_suffix="gl51~bp2150"
+version_suffix="gl57~bp2150"
