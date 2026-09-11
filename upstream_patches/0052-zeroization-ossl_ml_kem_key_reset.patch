@@ -1,0 +1,58 @@
+From 2209874540108f88ed2d61f2bf14cce3c538be58 Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 17 Jul 2026 15:09:20 +0000
+Subject: [PATCH] FIPS: ML-KEM zeroize full key allocation in key_reset
+
+ossl_ml_kem_key_reset failed to wipe the public vector |t| and matrix
+|m| (only the private |s|/|z|/|d| tail was cleansed), so on freeing a
+public key those SSPs survived; the prior fix attempt cleansed |m| with
+sizeof(pointer) (8 bytes) *after* OPENSSL_free(key->t), a use-after-free.
+
+|t|, |m|, |s|, |z|/|d| are consecutive slices of the single allocation
+starting at key->t (add_storage()), so cleanse the whole allocation
+(puballoc/prvalloc) before freeing it. |rho|/|pkhash| alias the in-struct
+|seedbuf|, cleansed separately.
+---
+ crypto/ml_kem/ml_kem.c | 23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
+
+diff --git a/crypto/ml_kem/ml_kem.c b/crypto/ml_kem/ml_kem.c
+index f29912581a..fc528317bb 100644
+--- a/crypto/ml_kem/ml_kem.c
++++ b/crypto/ml_kem/ml_kem.c
+@@ -1909,16 +1909,25 @@ void ossl_ml_kem_key_reset(ML_KEM_KEY *key)
+     if (key->t == NULL)
+         return;
+     /*-
+-     * Cleanse any sensitive data:
+-     * - The private vector |s| is immediately followed by the FO failure
+-     *   secret |z|, and seed |d|, we can cleanse all three in one call.
++     * Cleanse all key material before releasing it.
+      *
+-     * - Otherwise, when key->d is set, cleanse the stashed seed.
++     * |t|, |m|, |s| and |z|/|d| are consecutive slices of the single
++     * allocation that begins at |key->t| (see add_storage()), so a single
++     * cleanse over the whole allocation covers the public vector |t| and
++     * matrix |m| as well as the private vector |s| and the FO failure secret
++     * |z| (plus the optional seed |d|). This must happen *before* the
++     * OPENSSL_free() below, while the memory is still ours.
+      */
+-    if (ossl_ml_kem_have_prvkey(key))
+-        OPENSSL_cleanse(key->s,
+-            key->vinfo->rank * sizeof(scalar) + 2 * ML_KEM_RANDOM_BYTES);
++    OPENSSL_cleanse(key->t, ossl_ml_kem_have_prvkey(key)
++                            ? key->vinfo->prvalloc
++                            : key->vinfo->puballoc);
+     OPENSSL_free(key->t);
++    /*
++     * |rho| and |pkhash| are aliases into the in-struct |seedbuf|, so wiping
++     * |seedbuf| clears both. |seedbuf| is not part of the freed allocation
++     * above, so the order here is immaterial.
++     */
++    OPENSSL_cleanse(key->seedbuf, sizeof(key->seedbuf));
+     key->d = key->z = (uint8_t *)(key->s = key->m = key->t = NULL);
+ }
+ 
+-- 
+2.47.3
+

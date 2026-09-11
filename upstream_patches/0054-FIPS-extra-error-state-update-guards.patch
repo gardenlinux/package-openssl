@@ -1,0 +1,52 @@
+diff --git a/providers/implementations/ciphers/ciphercommon.c b/providers/implementations/ciphers/ciphercommon.c
+index ba2a9b6808..86bc030efc 100644
+--- a/providers/implementations/ciphers/ciphercommon.c
++++ b/providers/implementations/ciphers/ciphercommon.c
+@@ -276,6 +276,9 @@ int ossl_cipher_generic_block_update(void *vctx, unsigned char *out,
+     size_t blksz = ctx->blocksize;
+     size_t nextblocks;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (!ctx->key_set) {
+         ERR_raise(ERR_LIB_PROV, PROV_R_NO_KEY_SET);
+         return 0;
+@@ -492,6 +495,9 @@ int ossl_cipher_generic_stream_update(void *vctx, unsigned char *out,
+ {
+     PROV_CIPHER_CTX *ctx = (PROV_CIPHER_CTX *)vctx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (!ctx->key_set) {
+         ERR_raise(ERR_LIB_PROV, PROV_R_NO_KEY_SET);
+         return 0;
+diff --git a/providers/implementations/ciphers/ciphercommon_gcm.c b/providers/implementations/ciphers/ciphercommon_gcm.c
+index a1fdf10401..4bf046573c 100644
+--- a/providers/implementations/ciphers/ciphercommon_gcm.c
++++ b/providers/implementations/ciphers/ciphercommon_gcm.c
+@@ -329,6 +329,9 @@ int ossl_gcm_stream_update(void *vctx, unsigned char *out, size_t *outl,
+ {
+     PROV_GCM_CTX *ctx = (PROV_GCM_CTX *)vctx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     if (inl == 0) {
+         *outl = 0;
+         return 1;
+diff --git a/providers/implementations/exchange/ecdh_exch.c b/providers/implementations/exchange/ecdh_exch.c
+index 43f3515878..473b794eac 100644
+--- a/providers/implementations/exchange/ecdh_exch.c
++++ b/providers/implementations/exchange/ecdh_exch.c
+@@ -606,6 +606,9 @@ static int ecdh_derive(void *vpecdhctx, unsigned char *secret,
+ {
+     PROV_ECDH_CTX *pecdhctx = (PROV_ECDH_CTX *)vpecdhctx;
+ 
++    if (!ossl_prov_is_running())
++        return 0;
++
+     switch (pecdhctx->kdf_type) {
+     case PROV_ECDH_KDF_NONE:
+         return ecdh_plain_derive(vpecdhctx, secret, psecretlen, outlen);

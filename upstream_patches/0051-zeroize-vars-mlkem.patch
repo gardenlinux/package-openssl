@@ -1,0 +1,53 @@
+--- a/crypto/ml_kem/ml_kem.c
++++ b/crypto/ml_kem/ml_kem.c
+@@ -1309,6 +1309,7 @@ static __owur int matrix_expand(EVP_MD_CTX *mdctx, ML_KEM_KEY *key)
+     uint8_t input[ML_KEM_RANDOM_BYTES + 2];
+     int rank = key->vinfo->rank;
+     int i, j;
++    int ret = 0;
+ 
+     memcpy(input, key->rho, ML_KEM_RANDOM_BYTES);
+     for (i = 0; i < rank; i++) {
+@@ -1318,10 +1319,13 @@ static __owur int matrix_expand(EVP_MD_CTX *mdctx, ML_KEM_KEY *key)
+             if (!EVP_DigestInit_ex(mdctx, key->shake128_md, NULL)
+                 || !EVP_DigestUpdate(mdctx, input, sizeof(input))
+                 || !sample_scalar(out++, mdctx))
+-                return 0;
++                goto end;
+         }
+     }
+-    return 1;
++    ret = 1;
++end:
++    OPENSSL_cleanse(input, sizeof(input));
++    return ret;
+ }
+ 
+ /*
+@@ -1739,6 +1743,7 @@ static __owur int genkey(const uint8_t seed[ML_KEM_SEED_BYTES],
+ end:
+     OPENSSL_cleanse((void *)augmented_seed, ML_KEM_RANDOM_BYTES);
+     OPENSSL_cleanse((void *)sigma, ML_KEM_RANDOM_BYTES);
++    OPENSSL_cleanse((void *)hashed, ML_KEM_RANDOM_BYTES);
+     if (ret == 0) {
+         ERR_raise_data(ERR_LIB_CRYPTO, ERR_R_INTERNAL_ERROR,
+             "internal error while generating %s private key",
+@@ -2323,6 +2328,7 @@ int ossl_ml_kem_decap(uint8_t *shared_secret, size_t slen,
+      */
+     if (!hash_h_pubkey(expected_pkhash, mdctx, (ML_KEM_KEY *)key)) {
+         EVP_MD_CTX_free(mdctx);
++        OPENSSL_cleanse((void *)expected_pkhash, ML_KEM_PKHASH_BYTES);
+         return 0;
+     }
+     if (memcmp(expected_pkhash, key->pkhash, ML_KEM_PKHASH_BYTES) != 0) {
+@@ -2330,8 +2336,10 @@ int ossl_ml_kem_decap(uint8_t *shared_secret, size_t slen,
+         ERR_raise_data(ERR_LIB_CRYPTO, ERR_R_PASSED_INVALID_ARGUMENT,
+             "%s decapsulation key hash mismatch",
+             vinfo->algorithm_name);
++        OPENSSL_cleanse((void *)expected_pkhash, ML_KEM_PKHASH_BYTES);
+         return 0;
+     }
++    OPENSSL_cleanse((void *)expected_pkhash, ML_KEM_PKHASH_BYTES);
+ #if defined(OPENSSL_CONSTANT_TIME_VALIDATION)
+     /*
+      * Data derived from |s| and |z| defaults secret, and to avoid side-channel

@@ -1,28 +1,52 @@
-:100644 100644 87613c937d 0000000000 M	crypto/ml_dsa/ml_dsa_key.c
+From 514723dac12c8149d5d2588ca537bd0c265968ae Mon Sep 17 00:00:00 2001
+From: nkraetzschmar <9020053+nkraetzschmar@users.noreply.github.com>
+Date: Fri, 17 Jul 2026 16:02:35 +0000
+Subject: [PATCH] zeroization: ML-DSA key - clear key material before free
+
+Clear ML-DSA key encodings with OPENSSL_clear_free before releasing them:
+key->priv_encoding and key->seed on the ossl_ml_dsa_set_prekey error path,
+and key->pub_encoding (over key->params->pk_len) in ossl_ml_dsa_key_reset.
+---
+ crypto/ml_dsa/ml_dsa_key.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/crypto/ml_dsa/ml_dsa_key.c b/crypto/ml_dsa/ml_dsa_key.c
-index 87613c937d..0c6a4e3a6c 100644
+index 87613c937d..87ba513268 100644
 --- a/crypto/ml_dsa/ml_dsa_key.c
 +++ b/crypto/ml_dsa/ml_dsa_key.c
-@@ -62,4 +62,4 @@ end:
+@@ -60,8 +60,8 @@ int ossl_ml_dsa_set_prekey(ML_DSA_KEY *key, int flags_set, int flags_clr,
+ 
+ end:
      if (!ret) {
 -        OPENSSL_free(key->priv_encoding);
 -        OPENSSL_free(key->seed);
-+        OPENSSL_cleanse(key->priv_encoding, sizeof(key->priv_encoding));
-+        OPENSSL_cleanse(key->seed, seed_len);
++        OPENSSL_clear_free(key->priv_encoding, sk_len);
++        OPENSSL_clear_free(key->seed, seed_len);
          key->priv_encoding = key->seed = NULL;
-@@ -160,5 +160,6 @@ void ossl_ml_dsa_key_reset(ML_DSA_KEY *key)
+     }
+     return ret;
+@@ -156,15 +156,20 @@ void ossl_ml_dsa_key_reset(ML_DSA_KEY *key)
+         key->t0.poly = NULL;
+     }
      /* The |t1| vector is public and allocated separately */
 +    vector_zero(&key->t1);
      vector_free(&key->t1);
      OPENSSL_cleanse(key->K, sizeof(key->K));
 -    OPENSSL_free(key->pub_encoding);
-+    OPENSSL_clear_free(key->pub_encoding, sizeof(key->pub_encoding));
++    OPENSSL_clear_free(key->pub_encoding, key->params->pk_len);
      key->pub_encoding = NULL;
-@@ -168,2 +168,6 @@ void ossl_ml_dsa_key_reset(ML_DSA_KEY *key)
+     if (key->priv_encoding != NULL)
+         OPENSSL_clear_free(key->priv_encoding, key->params->sk_len);
+     key->priv_encoding = NULL;
+     if (key->seed != NULL)
          OPENSSL_clear_free(key->seed, ML_DSA_SEED_BYTES);
 +    if (key->rho != NULL)
 +        OPENSSL_cleanse(key->rho, sizeof(key->rho));
 +    if (key->tr != NULL)
 +        OPENSSL_cleanse(key->tr, sizeof(key->tr));
      key->seed = NULL;
+ }
+ 
+-- 
+2.47.3
+
