@@ -1,6 +1,9 @@
-git_src -b debian/openssl-3.5.5-1 https://salsa.debian.org/debian/openssl.git
+version_orig=3.5.9
+version="$version_orig-1"
+version_suffix="_deb13u1"
+git_src -b debian/openssl-$version$version_suffix https://salsa.debian.org/debian/openssl.git
 import_upstream_patches
 fips_version_suffix="${version_suffix}"
 sed "s/SED_MARKER_FOR_FIPS_VERSION/$fips_version_suffix/" <patches-debian/rules.patch.tpl > patches-debian/rules.patch
 apply_patches patches-debian
-version_suffix="gl57~bp2150"
+version_suffix="gl0~bp2150"
