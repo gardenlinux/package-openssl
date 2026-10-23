@@ -1,1 +1,2 @@
 .build
+patches-debian/rules.patch

@@ -1,14 +1,16 @@
-:100644 100644 8723ead41e 0000000000 M	crypto/ec/ec_key.c
-
 diff --git a/crypto/ec/ec_key.c b/crypto/ec/ec_key.c
-index 8723ead41e..24a905ebd6 100644
+index 71f1c63..06930c8 100644
 --- a/crypto/ec/ec_key.c
 +++ b/crypto/ec/ec_key.c
-@@ -386,2 +386,7 @@ static int ec_generate_key(EC_KEY *eckey, int pairwise_test)
-             && ecdsa_keygen_knownanswer_test(eckey, ctx, cb, cbarg);
+@@ -333,6 +333,11 @@ static int ec_generate_key(EC_KEY *eckey, int pairwise_test)
+ 
+         OSSL_SELF_TEST_get_callback(eckey->libctx, &cb, &cbarg);
+         ok = ecdsa_keygen_pairwise_test(eckey, cb, cbarg);
 +
 +#ifdef FIPS_MODULE
 +        ok &= ossl_ec_key_public_check(eckey, ctx);
 +        ok &= ossl_ec_key_pairwise_check(eckey, ctx);
 +#endif /* FIPS_MODULE */
      }
+ err:
+     /* Step (9): If there is an error return an invalid keypair. */

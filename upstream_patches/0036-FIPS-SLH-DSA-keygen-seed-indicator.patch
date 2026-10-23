@@ -11,15 +11,9 @@ module and explicitly forbids passing them in from outside.
 
 Wire the corresponding KAT to opt out of strict mode so the
 deterministic SLH-DSA keygen self-test still passes.
----
- .../fips/include/fips_indicator_params.inc    |  1 +
- providers/fips/self_test_kats.c               |  6 +++++
- .../implementations/keymgmt/slh_dsa_kmgmt.c   | 27 +++++++++++++++++++
- util/perl/OpenSSL/paramnames.pm               |  2 ++
- 4 files changed, 36 insertions(+)
 
 diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
-index 168dd6c968..de0e372548 100644
+index 168dd6c..de0e372 100644
 --- a/providers/fips/include/fips_indicator_params.inc
 +++ b/providers/fips/include/fips_indicator_params.inc
 @@ -34,3 +34,4 @@ OSSL_FIPS_PARAM(ml_kem_ikme_check, ML_KEM_IKME_CHECK, 1)
@@ -28,7 +22,7 @@ index 168dd6c968..de0e372548 100644
  OSSL_FIPS_PARAM(slh_dsa_sign_entropy_check, SLH_DSA_SIGN_ENTROPY_CHECK, 1)
 +OSSL_FIPS_PARAM(slh_dsa_seed_check, SLH_DSA_SEED_CHECK, 1)
 diff --git a/providers/fips/self_test_kats.c b/providers/fips/self_test_kats.c
-index f856c7ffab..e17cd2cd8e 100644
+index 06d0846..d21d5cc 100644
 --- a/providers/fips/self_test_kats.c
 +++ b/providers/fips/self_test_kats.c
 @@ -644,6 +644,10 @@ static int self_test_asym_keygen(const ST_KAT_ASYM_KEYGEN *t, OSSL_SELF_TEST *st
@@ -52,18 +46,10 @@ index f856c7ffab..e17cd2cd8e 100644
                                                 extra_keygen_params, NULL);
          if (key_params == NULL)
 diff --git a/providers/implementations/keymgmt/slh_dsa_kmgmt.c b/providers/implementations/keymgmt/slh_dsa_kmgmt.c
-index 8a67621390..88963e5c4d 100644
+index f35be00..a018076 100644
 --- a/providers/implementations/keymgmt/slh_dsa_kmgmt.c
 +++ b/providers/implementations/keymgmt/slh_dsa_kmgmt.c
-@@ -18,6 +18,7 @@
- #include "prov/implementations.h"
- #include "prov/providercommon.h"
- #include "prov/provider_ctx.h"
-+#include "prov/securitycheck.h"
- 
- #ifdef FIPS_MODULE
- static int slh_dsa_fips140_pairwise_test(const SLH_DSA_KEY *key,
-@@ -49,6 +50,7 @@ struct slh_dsa_gen_ctx {
+@@ -50,6 +50,7 @@ struct slh_dsa_gen_ctx {
      char *propq;
      uint8_t entropy[SLH_DSA_MAX_N * 3];
      size_t entropy_len;
@@ -71,7 +57,7 @@ index 8a67621390..88963e5c4d 100644
  };
  
  static void *slh_dsa_new_key(void *provctx, const char *alg)
-@@ -275,6 +277,7 @@ static void *slh_dsa_gen_init(void *provctx, int selection,
+@@ -282,6 +283,7 @@ static void *slh_dsa_gen_init(void *provctx, int selection,
  
      if ((gctx = OPENSSL_zalloc(sizeof(*gctx))) != NULL) {
          gctx->libctx = libctx;
@@ -79,7 +65,7 @@ index 8a67621390..88963e5c4d 100644
          if (!slh_dsa_gen_set_params(gctx, params)) {
              OPENSSL_free(gctx);
              gctx = NULL;
-@@ -387,6 +390,16 @@ static int slh_dsa_gen_set_params(void *genctx, const OSSL_PARAM params[])
+@@ -392,6 +394,16 @@ static int slh_dsa_gen_set_params(void *genctx, const OSSL_PARAM params[])
      if (gctx == NULL)
          return 0;
  
@@ -96,7 +82,7 @@ index 8a67621390..88963e5c4d 100644
      p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_SLH_DSA_SEED);
      if (p != NULL) {
          void *vp = gctx->entropy;
-@@ -396,6 +409,20 @@ static int slh_dsa_gen_set_params(void *genctx, const OSSL_PARAM params[])
+@@ -401,6 +413,20 @@ static int slh_dsa_gen_set_params(void *genctx, const OSSL_PARAM params[])
              gctx->entropy_len = 0;
              return 0;
          }
@@ -118,7 +104,7 @@ index 8a67621390..88963e5c4d 100644
  
      p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PROPERTIES);
 diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
-index 9f0d2009d7..240b29cba3 100644
+index d32391c..ddef1d7 100644
 --- a/util/perl/OpenSSL/paramnames.pm
 +++ b/util/perl/OpenSSL/paramnames.pm
 @@ -66,6 +66,7 @@ my %params = (
@@ -129,7 +115,7 @@ index 9f0d2009d7..240b29cba3 100644
  
  # Self test callback parameters
      'PROV_PARAM_SELF_TEST_PHASE' =>  "st-phase",# utf8_string
-@@ -458,6 +459,7 @@ my %params = (
+@@ -459,6 +460,7 @@ my %params = (
  
  # SLH_DSA Key generation parameters
      'PKEY_PARAM_SLH_DSA_SEED' =>              "seed",
@@ -137,6 +123,3 @@ index 9f0d2009d7..240b29cba3 100644
  
  # Key Exchange parameters
      'EXCHANGE_PARAM_PAD' =>                   "pad",# uint
--- 
-2.47.3
-

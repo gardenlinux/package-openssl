@@ -6,11 +6,12 @@ Date:   Fri Apr 10 15:03:32 2026 +0200
     
     Mark encapsulation using OSSL_KEM_PARAM_IKME as unapproved in FIPS mode unless tolerated via indicator, as randomness must originate from an approved RBG.
 
+
 diff --git a/providers/fips/fipsprov.c b/providers/fips/fipsprov.c
-index a5f0ae335b..8f26c3ad56 100644
+index 1016a7f..8cb88f5 100644
 --- a/providers/fips/fipsprov.c
 +++ b/providers/fips/fipsprov.c
-@@ -145,7 +145,18 @@ static int fips_random_bytes(ossl_unused void *vprov, int which,
+@@ -144,7 +144,18 @@ static int fips_random_bytes(ossl_unused void *vprov, int which,
   */
  static int fips_get_params_from_core(FIPS_GLOBAL *fgbl)
  {
@@ -31,7 +32,7 @@ index a5f0ae335b..8f26c3ad56 100644
  #define OSSL_FIPS_PARAM(structname, paramname)                 \
      *p++ = OSSL_PARAM_construct_utf8_ptr(                      \
 diff --git a/providers/fips/include/fips_indicator_params.inc b/providers/fips/include/fips_indicator_params.inc
-index 2f97ffde4a..68dfce36c1 100644
+index 2f97ffd..68dfce3 100644
 --- a/providers/fips/include/fips_indicator_params.inc
 +++ b/providers/fips/include/fips_indicator_params.inc
 @@ -26,3 +26,4 @@ OSSL_FIPS_PARAM(x963kdf_key_check, X963KDF_KEY_CHECK, 1)
@@ -40,7 +41,7 @@ index 2f97ffde4a..68dfce36c1 100644
  OSSL_FIPS_PARAM(ecdh_cofactor_check, ECDH_COFACTOR_CHECK, 1)
 +OSSL_FIPS_PARAM(ml_kem_ikme_check, ML_KEM_IKME_CHECK, 1)
 diff --git a/providers/fips/self_test_kats.c b/providers/fips/self_test_kats.c
-index f453b2f2fb..065663486e 100644
+index 0559a30..a2d08ef 100644
 --- a/providers/fips/self_test_kats.c
 +++ b/providers/fips/self_test_kats.c
 @@ -661,10 +661,11 @@ static int self_test_kem_encapsulate(const ST_KAT_KEM *t, OSSL_SELF_TEST *st,
@@ -70,28 +71,28 @@ index f453b2f2fb..065663486e 100644
          goto err;
  
 diff --git a/providers/implementations/kem/ml_kem_kem.c b/providers/implementations/kem/ml_kem_kem.c
-index 722eadf228..66c219d794 100644
+index 5cc3fca..0faed19 100644
 --- a/providers/implementations/kem/ml_kem_kem.c
 +++ b/providers/implementations/kem/ml_kem_kem.c
-@@ -35,6 +35,8 @@ typedef struct {
-     uint8_t entropy_buf[ML_KEM_RANDOM_BYTES];
+@@ -36,6 +36,8 @@ typedef struct {
      uint8_t *entropy;
      int op;
+     int test_entropy_used;
 +    void *provctx;
 +    OSSL_FIPS_IND_DECLARE
  } PROV_ML_KEM_CTX;
  
  static void *ml_kem_newctx(void *provctx)
-@@ -47,6 +49,8 @@ static void *ml_kem_newctx(void *provctx)
-     ctx->key = NULL;
+@@ -49,6 +51,8 @@ static void *ml_kem_newctx(void *provctx)
      ctx->entropy = NULL;
      ctx->op = 0;
+     ctx->test_entropy_used = 0;
 +    ctx->provctx = provctx;
 +    OSSL_FIPS_IND_INIT(ctx)
      return ctx;
  }
  
-@@ -112,6 +116,16 @@ static int ml_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+@@ -127,6 +131,16 @@ static int ml_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
      if (ossl_param_is_empty(params))
          return 1;
  
@@ -108,12 +109,10 @@ index 722eadf228..66c219d794 100644
      /* Encapsulation ephemeral input key material "ikmE" */
      if (ctx->op == EVP_PKEY_OP_ENCAPSULATE
          && (p = OSSL_PARAM_locate_const(params, OSSL_KEM_PARAM_IKME)) != NULL) {
-@@ -120,8 +134,24 @@ static int ml_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
-         ctx->entropy = ctx->entropy_buf;
+@@ -136,6 +150,21 @@ static int ml_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
          if (OSSL_PARAM_get_octet_string(p, (void **)&ctx->entropy,
                  len, &len)
--            && len == ML_KEM_RANDOM_BYTES)
-+            && len == ML_KEM_RANDOM_BYTES) {
+             && len == ML_KEM_RANDOM_BYTES) {
 +#ifdef FIPS_MODULE
 +            if (!OSSL_FIPS_IND_ON_UNAPPROVED(
 +                ctx,
@@ -129,13 +128,11 @@ index 722eadf228..66c219d794 100644
 +                return 0;
 +            }
 +#endif
+             ctx->test_entropy_used = 1;
              return 1;
-+        }
- 
-         /* Possibly, but much less likely wrong type */
-         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_SEED_LENGTH);
+         }
 diff --git a/util/perl/OpenSSL/paramnames.pm b/util/perl/OpenSSL/paramnames.pm
-index 262c184ca2..e681747e83 100644
+index 0920931..7de799e 100644
 --- a/util/perl/OpenSSL/paramnames.pm
 +++ b/util/perl/OpenSSL/paramnames.pm
 @@ -58,6 +58,7 @@ my %params = (
@@ -146,7 +143,7 @@ index 262c184ca2..e681747e83 100644
  
  # Self test callback parameters
      'PROV_PARAM_SELF_TEST_PHASE' =>  "st-phase",# utf8_string
-@@ -543,6 +544,7 @@ my %params = (
+@@ -544,6 +545,7 @@ my %params = (
      'KEM_PARAM_OPERATION' =>            "operation",
      'KEM_PARAM_IKME' =>                 "ikme",
      'KEM_PARAM_FIPS_KEY_CHECK' =>       '*PKEY_PARAM_FIPS_KEY_CHECK',

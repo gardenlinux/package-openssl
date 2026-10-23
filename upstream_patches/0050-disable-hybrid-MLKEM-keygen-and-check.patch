@@ -10,23 +10,19 @@ decapsulation report non-approved. The keymgmt dispatch table for the
 same schemes was left at FIPS_DEFAULT_PROPERTIES, so EVP_PKEY_keygen
 and EVP_PKEY_check still report approved. Flip those four entries to
 FIPS_UNAPPROVED_PROPERTIES as well.
----
- providers/fips/fipsprov.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/providers/fips/fipsprov.c b/providers/fips/fipsprov.c
-index 54de206b17..c03f240219 100644
+index 79ae5c1..4d98140 100644
 --- a/providers/fips/fipsprov.c
 +++ b/providers/fips/fipsprov.c
-@@ -623,15 +623,15 @@ static const OSSL_ALGORITHM fips_keymgmt[] = {
+@@ -622,15 +622,15 @@ static const OSSL_ALGORITHM fips_keymgmt[] = {
      { PROV_NAMES_ML_KEM_1024, FIPS_DEFAULT_PROPERTIES, ossl_ml_kem_1024_keymgmt_functions,
          PROV_DESCS_ML_KEM_1024 },
  #if !defined(OPENSSL_NO_ECX)
 -    { PROV_NAMES_X25519MLKEM768, FIPS_DEFAULT_PROPERTIES, ossl_mlx_x25519_kem_kmgmt_functions,
 +    { PROV_NAMES_X25519MLKEM768, FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_x25519_kem_kmgmt_functions,
          PROV_DESCS_X25519MLKEM768 },
--    { PROV_NAMES_X448MLKEM1024, FIPS_DEFAULT_PROPERTIES, ossl_mlx_x448_kem_kmgmt_functions,
-+    { PROV_NAMES_X448MLKEM1024, FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_x448_kem_kmgmt_functions,
+     { PROV_NAMES_X448MLKEM1024, FIPS_UNAPPROVED_PROPERTIES, ossl_mlx_x448_kem_kmgmt_functions,
          PROV_DESCS_X448MLKEM1024 },
  #endif
  #if !defined(OPENSSL_NO_EC)
@@ -38,6 +34,3 @@ index 54de206b17..c03f240219 100644
          PROV_DESCS_SecP384r1MLKEM1024 },
  #endif
  #endif
--- 
-2.47.3
-

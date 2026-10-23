@@ -1,11 +1,5 @@
----
- crypto/rand/prov_seed.c                       |  9 ++-
- providers/implementations/rands/drbg.c        | 11 ++-
- .../implementations/rands/seeding/rand_unix.c | 70 ++-----------------
- 3 files changed, 23 insertions(+), 67 deletions(-)
-
 diff --git a/crypto/rand/prov_seed.c b/crypto/rand/prov_seed.c
-index 8466ded8ab..24feab20e5 100644
+index 8466ded..24feab2 100644
 --- a/crypto/rand/prov_seed.c
 +++ b/crypto/rand/prov_seed.c
 @@ -23,7 +23,14 @@ size_t ossl_rand_get_entropy(ossl_unused OSSL_LIB_CTX *ctx,
@@ -25,7 +19,7 @@ index 8466ded8ab..24feab20e5 100644
          ERR_raise(ERR_LIB_RAND, ERR_R_RAND_LIB);
          return 0;
 diff --git a/providers/implementations/rands/drbg.c b/providers/implementations/rands/drbg.c
-index f9d90d5d43..6b23d55cf5 100644
+index f9d90d5..6b23d55 100644
 --- a/providers/implementations/rands/drbg.c
 +++ b/providers/implementations/rands/drbg.c
 @@ -556,6 +556,9 @@ static int ossl_prov_drbg_reseed_unlocked(PROV_DRBG *drbg,
@@ -55,7 +49,7 @@ index f9d90d5d43..6b23d55cf5 100644
      if (reseed_required || prediction_resistance) {
          if (!ossl_prov_drbg_reseed_unlocked(drbg, prediction_resistance, NULL,
 diff --git a/providers/implementations/rands/seeding/rand_unix.c b/providers/implementations/rands/seeding/rand_unix.c
-index 80ae817313..1e73a1ec28 100644
+index 0b8a9ec..5af3c76 100644
 --- a/providers/implementations/rands/seeding/rand_unix.c
 +++ b/providers/implementations/rands/seeding/rand_unix.c
 @@ -47,12 +47,14 @@
@@ -134,7 +128,7 @@ index 80ae817313..1e73a1ec28 100644
 -    return getrandom(buf, buflen, 0);
 -#elif (defined(__FreeBSD__) || defined(__NetBSD__)) && defined(KERN_ARND)
 -    return sysctl_random(buf, buflen);
--#elif defined(__wasi__)
+-#elif defined(__wasi__) || defined(__EMSCRIPTEN__)
 -    if (getentropy(buf, buflen) == 0)
 -        return (ssize_t)buflen;
 -    return -1;
@@ -147,6 +141,3 @@ index 80ae817313..1e73a1ec28 100644
  }
  #endif /* defined(OPENSSL_RAND_SEED_GETRANDOM) */
  
--- 
-2.52.0
-
