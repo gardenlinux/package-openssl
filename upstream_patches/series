@@ -93,3 +93,13 @@ CVE-2026-54872.patch
 CVE-2026-35189.patch
 CVE-2026-35191.patch
 Add-a-red-black-tree-implementation.patch
+Add-ossl_list_TYPE_join-head-tail-function.patch
+quic-move-the-RXE-definition-to-a-local-header.patch
+test-cover-the-packet-pinning-path-of-QUIC-stream-re.patch
+test-cover-a-long-lagging-read-of-packet-backed-stre.patch
+test-reassemble-small-out-of-order-frames-and-check-.patch
+CVE-2026-42772.patch
+CVE-2026-54873.patch
+Enforce-final-size-for-streams.patch
+Add-explicit-tests-to-check-some-typical-stream-reas.patch
+CVE-2026-77696.patch
